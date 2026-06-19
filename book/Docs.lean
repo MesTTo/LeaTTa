@@ -14,6 +14,7 @@ import Docs.Metatheory
 import Docs.Operational
 import Docs.Correspondence
 import Docs.Blockchain
+import Docs.MeTTaIL
 import Docs.FutureWork
 import Docs.Discussion
 import Docs.Appendices
@@ -140,6 +141,8 @@ of the development's current limitations and open problems.
 {include 1 Docs.Correspondence}
 
 {include 1 Docs.Blockchain}
+
+{include 1 Docs.MeTTaIL}
 
 {include 1 Docs.FutureWork}
 

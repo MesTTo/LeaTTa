@@ -44,6 +44,11 @@ lean_lib «Operational» where
 lean_lib «MeTTaIL» where
   roots := #[`MeTTaIL]
 
+-- Machine-checked sanity tests for the MeTTaIL formalization, kept out of the shipped library.
+@[default_target]
+lean_lib «MeTTaILTests» where
+  roots := #[`MeTTaILTests]
+
 @[default_target]
 lean_exe «LeaTTa» where
   root := `Main

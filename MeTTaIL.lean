@@ -12,3 +12,9 @@ reduction are computable and Mathlib-free; the proofs about them live in a Mathl
 
 -- Layer 1: the object syntax of presentations.
 import MeTTaIL.Syntax
+-- Layer 1: the theory-instance algebra elaborated to presentations.
+import MeTTaIL.Theory.Instance
+-- Layer 1: pure presentation operations (union, intersection, difference, accessors).
+import MeTTaIL.Theory.Ops
+-- Layer 1: the elaboration interpreter.
+import MeTTaIL.Theory.Elaborate

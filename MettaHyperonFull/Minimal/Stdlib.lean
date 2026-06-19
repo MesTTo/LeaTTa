@@ -108,10 +108,11 @@ def subtractionAtomOp : List Atom → ReduceResult
   | [Atom.expr xs, Atom.expr ys] => ReduceResult.ok [Atom.expr (msSubtract xs ys)]
   | _ => ReduceResult.incorrectArgument "subtraction-atom expects two expressions"
 
-/-- Hyperon's `result_items` (`stdlib/debug.rs`): a *collapsed bag* is an explicit comma-tuple
-    `(, x …)`, so a leading `,` is stripped to recover the bare item list `x …`; any other
-    expression is already its own item list. Stripping the `,` lets `(collapse …)` (which yields
-    `(, …)`) compare and re-spread against the bare tuples that assertions and `superpose` work with. -/
+/-- Hyperon's `result_items` (`stdlib/debug.rs`), operating on the children of a collapsed bag.
+    A collapsed bag is a comma-tuple `(, x …)`, so a leading `,` child is stripped to recover the
+    bare item list `x …`; any other children list is returned unchanged. Stripping the `,` lets
+    `(collapse …)` (which yields `(, …)`) compare and re-spread against the bare tuples that
+    assertions and `superpose` work with. -/
 def resultItems : List Atom → List Atom
   | Atom.sym "," :: rest => rest
   | xs => xs
@@ -569,7 +570,7 @@ def preludeAtoms : List Atom :=
 /-- A knowledge base = the stdlib prelude plus the user's atoms. -/
 def stdKb (userAtoms : List Atom) : Space := ⟨preludeAtoms ++ userAtoms⟩
 
-/-- Evaluate `query` one minimal step against the prelude+user knowledge base. -/
+/-- Evaluate `query` with the fuel-bounded interpreter against the prelude+user knowledge base. -/
 def runStd (userAtoms : List Atom) (fuel : Nat) (query : Atom) : List Atom :=
   evalAtomMin (MinEnv.ofAtomsGT (preludeAtoms ++ userAtoms) stdGroundings) fuel query
 

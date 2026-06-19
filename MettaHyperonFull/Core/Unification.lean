@@ -44,8 +44,8 @@ def decomposeAll : List (Atom × Atom) → Option (List (VarName × Atom))
     worklist, then eliminates one variable: it substitutes `x ↦ t` into the remaining constraints
     and records the binding. Because every round removes one distinct variable from the problem,
     the number of rounds is bounded by the number of distinct variables, so `unifyTop` supplies a
-    `fuel` (the total term size) that is always sufficient; the `fuel = 0` clause with constraints
-    still pending is unreachable. -/
+    `fuel` (the total term size) that exceeds that bound; if the `fuel = 0` clause is reached with
+    constraints still pending, it returns `none`. -/
 def unifyRounds : Nat → List (Atom × Atom) → Subst → Option Subst
   | 0, eqs, s =>
       match decomposeAll eqs with

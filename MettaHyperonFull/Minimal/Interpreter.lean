@@ -430,7 +430,8 @@ def restrictBnd (vars : List VarName) (b : Bindings) : Bindings :=
 def scopeVars (b : Bindings) (prev : Stack) : List VarName :=
   prev.flatMap fun f => Atom.vars (instantiate b f.atom)
 
-/-- Emit one alternative of `superpose-bind`: extract the atom from a `(atom bindings)` pair. -/
+/-- Emit one alternative of `superpose-bind`: take the first element of a `(atom bindings)` pair.
+    The match accepts any non-empty expression; `collapse-bind` is what produces the two-element pairs. -/
 def superposeItem (prev : Stack) (b : Bindings) : Atom → Item
   | Atom.expr (a :: _) => finItem prev a b
   | other => finItem prev other b

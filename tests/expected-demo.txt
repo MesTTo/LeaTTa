@@ -1,0 +1,5 @@
+Expected behaviour, modulo pretty-printer details:
+- `(double Bob)` reduces directionally through `(= (double $x) ($x $x))`.
+- `(match &self (has Sam $o) $o)` returns `balloon` and `ball` for the example space.
+- `transform` instantiates its output template for each binding returned by matching.
+- `add-atom` mutates the runtime knowledge space; `remove-atom` removes one matching atom.

@@ -1,0 +1,202 @@
+/*
+LeaTTa book theme: dark, matching metta-lang.dev's dark mode.
+
+Verso has no built-in dark mode, so this overrides the page background, the
+Verso CSS variables (text, links, table of contents, syntax-highlight tokens),
+and the few elements that hardcode light colours.
+
+Palette (metta-lang.dev dark):
+  background      #1b1b1f      panels/sidebar  #161618      soft  #202127
+  text            #dfdfd6      secondary       #98989f
+  accent (links)  #a8b1ff      divider         #2e2e32      border #3c3f44
+*/
+
+:root {
+  /* Typography: Inter for text and headings, JetBrains Mono for code. */
+  --verso-text-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --verso-structure-font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --verso-code-font-family: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
+  --verso-font-size: 17px;
+
+  /* Colours. The off-white is softened to lower the contrast against the dark background. */
+  --verso-background-color: #1b1b1f;
+  --verso-text-color: #c6c6be;
+  --verso-structure-color: #e6e6df;
+  --verso-code-color: #c9c9c1;
+  --verso-link-color: #a8b1ff;
+  --verso-muted-color: #98989f;
+  --verso-selected-color: #2a2a32;
+
+  /* Table of contents (left sidebar). */
+  --verso-toc-background-color: #161618;
+  --verso-toc-text-color: #c9c9c2;
+  --verso-toc-border-color: #2e2e32;
+
+  /* Syntax highlighting, tuned for the dark panel. */
+  --verso-code-keyword-color: #d2a8ff;  /* keywords: violet */
+  --verso-code-keyword-weight: 600;
+  --verso-code-const-color: #79c0ff;    /* constants and types: blue */
+  --verso-code-var-color: #ffa657;      /* local bindings: orange */
+  --verso-code-var-style: normal;
+}
+
+/* Page background: the deep blue-charcoal from metta-lang.dev. */
+html, body {
+  background-color: #1b1b1f;
+  color: var(--verso-text-color);
+  font-family: var(--verso-text-font-family);
+}
+
+/* Header bar. */
+header {
+  background: #161618 !important;
+  box-shadow: 0 1px 0 0 #2e2e32 !important;
+}
+/* Logo at the top left, with the metta-lang.dev gradient. */
+header { padding-left: 1.25rem; }
+/* The empty logo slot reserves sidebar-width space; drop it so the title sits in the corner. */
+.header-logo-wrapper { display: none !important; }
+.header-title-wrapper { flex: 0 1 auto !important; margin-right: auto !important; }
+.header-title {
+  display: inline-block !important;   /* size to the text, not collapse to width 0 */
+  width: auto !important;
+  margin: 0 !important;
+  max-width: none !important;
+  font-weight: 700;
+  background: linear-gradient(120deg, #47caff 0%, #a855f7 55%, #bd34fe 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent !important;
+}
+header a:not(.header-title) { color: var(--verso-text-color); }
+
+/* Table of contents. */
+#toc a { color: var(--verso-toc-text-color) !important; line-height: 1.5; }
+#toc a:hover { color: #e6e6df !important; }
+/* Give the sidebar links vertical breathing room, they were squashed. */
+#toc li { margin: 0.18rem 0; }
+#toc .split-toc { margin: 0.25rem 0; }
+/* Disclosure triangles (were solid black). */
+#toc .split-toc label.toggle-split-toc::before { background-color: #98989f !important; }
+
+/* Search box: dark, in keeping with the theme (it used an unset background variable). */
+#search-wrapper .combobox .cb_edit {
+  background-color: #202127 !important;
+  border-bottom: 1px solid #2e2e32 !important;
+  color: var(--verso-text-color) !important;
+}
+.search-page-input {
+  background-color: #202127 !important;
+  border: 1px solid #2e2e32 !important;
+  color: var(--verso-text-color) !important;
+}
+#search-wrapper ul[role="listbox"] { border-color: #2e2e32 !important; }
+
+/* Links in the indigo accent. */
+a, a:link, a:visited { color: var(--verso-link-color); }
+
+/* Code blocks: dark panel with a subtle border. */
+.hl.lean.block, pre {
+  background-color: #161618;
+  border: 1px solid #2e2e32;
+  border-radius: 8px;
+  padding: 0.9em 1.1em;
+  line-height: 1.5;
+}
+
+/* Inline code: a faint chip with accent-coloured text. */
+.hl.lean.inline {
+  background-color: rgba(101, 117, 133, 0.16);
+  color: #a8b1ff;
+  border-radius: 4px;
+  padding: 0.08em 0.34em;
+}
+
+/* Headings: Inter, a touch brighter than body for hierarchy, slightly tightened. */
+h1, h2, h3, h4 {
+  font-family: var(--verso-structure-font-family);
+  color: var(--verso-structure-color);
+  letter-spacing: -0.01em;
+}
+h1 { font-weight: 600; }
+
+/* Previous / next navigation links (were black). */
+.prev-next-buttons > * { color: var(--verso-text-color) !important; }
+
+/* Tables and rules. */
+table, th, td { border-color: #2e2e32; }
+hr { border-color: #2e2e32; }
+
+/* ---- Reading comfort: vertical rhythm and a comfortable line length ---- */
+:root { --verso-content-max-width: 42rem; }   /* ~75-char measure instead of ~94 */
+main p, main li, main dd, main dt { line-height: 1.7; }
+main p { margin: 0 0 1.15em; }
+main ul, main ol { margin: 0 0 1.15em; padding-left: 1.4em; }
+main li { margin: 0.4em 0; }
+main li > p { margin: 0 0 0.45em; }
+main h2 { margin-top: 2.4rem; margin-bottom: 0.7rem; }
+main h3 { margin-top: 1.9rem; margin-bottom: 0.5rem; }
+main h4 { margin-top: 1.5rem; }
+
+/* ---- Text selection: visible on the dark theme (was the browser default) ---- */
+::selection { background-color: rgba(120, 140, 230, 0.32); }
+
+/* ---- Hover tooltips (type info, hypotheses, docstrings): match the dark theme ---- */
+.tippy-box {
+  background-color: #202127 !important;
+  color: var(--verso-text-color) !important;
+  border-color: #202127 !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
+}
+.tippy-content { background-color: #202127 !important; color: var(--verso-text-color) !important; }
+
+/* ---- Page navigation ---- */
+/* Drop the prev/next bar above the title; the sidebar and the bottom bar are enough. */
+.content-wrapper > .prev-next-buttons:first-child { display: none; }
+/* The bottom prev/next bar in smaller text. */
+.prev-next-buttons { font-size: 0.9rem; }
+
+/* ---- Pull content next to the table of contents (it was centered, leaving a big gap) ---- */
+main > .content-wrapper, .content-wrapper {
+  margin-left: 2.5rem !important;
+  margin-right: auto !important;
+}
+
+/* ---- Dark scrollbars ---- */
+* { scrollbar-color: #3a3a41 #161618; scrollbar-width: thin; }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: #161618; }
+::-webkit-scrollbar-thumb { background: #3a3a41; border-radius: 6px; border: 2px solid #161618; }
+::-webkit-scrollbar-thumb:hover { background: #4a4a52; }
+
+/* ---- Tooltip prose stays light (some was dark on the dark box) ---- */
+.tippy-content p, .tippy-content dt, .tippy-content dd,
+.tippy-content td, .tippy-content th, .tippy-content li {
+  color: var(--verso-text-color) !important;
+}
+
+/* ---- Homepage hero: a sunset-banner band behind the title; the body sits below it ---- */
+main .titlepage {
+  position: relative;
+  padding-top: 0;
+  margin: 0.5rem 0 2.5rem;
+}
+main .titlepage::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 19rem;
+  background-image:
+    linear-gradient(rgba(15, 15, 22, 0.28), rgba(15, 15, 22, 0.60)),
+    url("banner_sunset.png");
+  background-size: cover;
+  background-position: center 30%;
+  border-radius: 14px;
+  z-index: 0;
+}
+main .titlepage > * { position: relative; z-index: 1; }
+main .titlepage > h1 { color: #ffffff; margin-top: 0; padding: 2.6rem 1.5rem 0.3rem; }
+main .titlepage > .authors,
+main .titlepage > .authors * { color: #ededeb !important; }
+main .titlepage > .authors { padding: 0 1.5rem 3.2rem; }

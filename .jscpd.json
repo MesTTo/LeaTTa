@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/kucherenko/jscpd/master/schemas/jscpd-schema.json",
+  "minTokens": 30,
+  "minLines": 3,
+  "pattern": "**/*.lean",
+  "formatsExts": {
+    "haskell": [
+      "lean"
+    ]
+  },
+  "ignore": [
+    "**/.git/**",
+    "**/.lake/**",
+    "**/lake-packages/**",
+    "**/node_modules/**",
+    "**/target/**",
+    "**/build/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/report/**"
+  ]
+}

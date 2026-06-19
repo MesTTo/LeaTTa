@@ -1,0 +1,7 @@
+/.lake/
+*.olean
+/book/.lake/
+/book/_out/
+/.playwright-mcp/
+/leatta-*.png
+/leatta-*.jpeg

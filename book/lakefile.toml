@@ -1,0 +1,14 @@
+name = "leatta"
+defaultTargets = ["Docs", "docs"]
+
+[[require]]
+name = "verso"
+git = "https://github.com/leanprover/verso"
+rev = "v4.31.0"
+
+[[lean_lib]]
+name = "Docs"
+
+[[lean_exe]]
+name = "docs"
+root = "Main"

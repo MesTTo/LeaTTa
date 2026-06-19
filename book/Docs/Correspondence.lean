@@ -1,0 +1,68 @@
+/-
+LeaTTa: Chapter: Interpreter ⇔ Specification Correspondence.
+-/
+import VersoManual
+import Illuminate
+import Docs.Cd
+import Docs.Papers
+
+open Verso.Genre Manual
+open Verso.Genre.Manual.InlineLean
+open Illuminate
+open Docs
+
+set_option pp.rawOnError true
+set_option verso.code.warnLineLength 100
+
+#doc (Manual) "Interpreter ⇔ Specification" =>
+%%%
+tag := "sec-correspondence"
+%%%
+
+LeaTTa contains two semantics for MeTTa: the efficient, first-argument-indexed interpreter
+({ref "sec-interpreter"}[the kernel]) and the published whole-knowledge-base operational semantics
+({ref "sec-operational"}[MOPS]). The 2025 Hyperon whitepaper's vision (its "GSLT", which derives an
+interpreter and a type system from one semantics together with *a formal proof establishing their
+correspondence*) calls for exactly a proof that these two agree. This chapter delivers that
+correspondence at the level of which rules fire and what they produce.
+
+# QUERY Reduces to the Same Set
+
+The headline lemma `kernel_query_eq_mops_query` proves that, for a head-keyed query, the kernel's
+*indexed* candidate firing produces *exactly* the MOPS whole-space `QUERY` reduct set: the
+optimisation drops no reduct and invents none. It follows directly from the indexing soundness and
+completeness of {ref "sec-meta"}[the metatheory] (`candidates_sound`, `candidates_complete`): the
+head bucket is precisely the rules that could match, so scanning it loses nothing.
+
+# A Bisimulation
+
+Lifting from a single step to the whole reduction relation: the kernel's one-step rewriting
+(`KernelStep`) and the MOPS one-step rewriting (`MopsStep`) *coincide* (`kernelStep_iff_mopsStep`),
+so the identity on atoms is a bisimulation between them (`kernel_mops_bisim`), and their
+reflexive-transitive closures agree (`reflTransGen_kernelStep_iff_mops`); the two semantics match
+over entire evaluation sequences, not merely per step.
+
+```diagram (cssWidth := "24em")
+cd do
+  let a ← CDM.node "t" cdBlue
+  let a' ← CDM.node "t'" cdBlue
+  let b ← CDM.node "t" cdGreen
+  let b' ← CDM.node "t'" cdGreen
+  CDM.grid #[#[some a, some a'], #[some b, some b']]
+  CDM.arrow a a' (some "KernelStep") cdBlue .above
+  CDM.arrow b b' (some "MopsStep") cdGreen .below
+  CDM.arrow a b (some "=") cdInk .left
+  CDM.arrow a' b' (some "=") cdInk .right
+```
+
+# Honest Scope
+
+LeaTTa is precise about what this establishes. `KernelStep` is the kernel's indexed *rule-firing
+core*: the `candidates` matched against the redex. It is faithful to MOPS at the reduct-set level. It is
+*not yet* the full `queryOp`: rule-variable freshening, ambient-binding merge, and cyclic-substitution
+pruning are abstracted out. A lemma bridging `queryOp` to `KernelStep` up to α-equivalence (the
+α-equivalence setoid already exists in the development) is the natural next increment, recorded in the
+discussion chapter. What is proved, that first-argument indexing leaves the reduct set unchanged,
+namely which rules fire and what they produce, is the substantive content of the
+interpreter-specification correspondence, and it is exactly the part a blockchain VM's optimiser must
+get right.

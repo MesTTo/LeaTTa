@@ -1,0 +1,57 @@
+name: Deploy the LeaTTa book to GitHub Pages
+
+# Builds the Verso book under book/ and publishes book/_out/html-multi to GitHub Pages.
+# The book is its own Lean project and does not depend on Mathlib, so this build is fast.
+#
+# One-time setup: in the repository Settings, under Pages, set "Source" to "GitHub Actions".
+
+on:
+  push:
+    branches: [main, master, metatheory]
+    paths:
+      - 'book/**'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install elan
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Build the book
+        working-directory: book
+        run: lake exe docs
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: book/_out/html-multi
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+# (deploy pipeline)

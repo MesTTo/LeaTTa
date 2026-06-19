@@ -1,0 +1,14 @@
+/-
+MeTTaIL in Lean 4: a faithful formalization of F1R3FLY-io's MeTTaIL (Meta Type Talk Intermediate
+Language), built alongside the LeaTTa MeTTa kernel, operational semantics, and metatheory.
+
+MeTTaIL is a meta-language: a `.module` is a program in an algebra of theory presentations, and the
+tool elaborates a chosen theory instance into a presentation (a graph-structured lambda theory) and
+can lift it from an untyped calculus to a typed one. See `MeTTaIL/SPECIFICATION.md` for the plan.
+
+This library follows LeaTTa's computability split: the data model, elaboration, transformations, and
+reduction are computable and Mathlib-free; the proofs about them live in a Mathlib-backed layer.
+-/
+
+-- Layer 1: the object syntax of presentations.
+import MeTTaIL.Syntax

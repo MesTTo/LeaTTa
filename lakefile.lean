@@ -34,6 +34,16 @@ lean_lib «Metatheory» where
 lean_lib «Operational» where
   roots := #[`MettaHyperonFull.Operational]
 
+-- The MeTTaIL formalization: F1R3FLY-io's Meta Type Talk Intermediate Language. A meta-language of
+-- graph-structured lambda theories (presentations + the elaboration algebra), its type-lifting
+-- transformation, the GSLT operational semantics, the hypercube typing, and the spice/mq-calculus
+-- extensions. The computable core (data model, elaboration, transforms, reduction) is Mathlib-free,
+-- like the kernel; a separate target so it is machine-checked in CI and the `LeaTTa` binary never
+-- links it.
+@[default_target]
+lean_lib «MeTTaIL» where
+  roots := #[`MeTTaIL]
+
 @[default_target]
 lean_exe «LeaTTa» where
   root := `Main

@@ -16,5 +16,7 @@ import MeTTaIL.Syntax
 import MeTTaIL.Theory.Instance
 -- Layer 1: pure presentation operations (union, intersection, difference, accessors).
 import MeTTaIL.Theory.Ops
+-- Layer 1: category renaming and constructor relabeling (addExports rename, addReplacements).
+import MeTTaIL.Theory.Rename
 -- Layer 1: the elaboration interpreter.
 import MeTTaIL.Theory.Elaborate

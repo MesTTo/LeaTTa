@@ -29,16 +29,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Lean (elan + lake)
+      # lean-action installs elan and the pinned toolchain, then runs the build in a
+      # shell where lake is on PATH. We let it run the build itself (build-args targets
+      # only the interpreter exe), because a separate `run: lake build` step defaults to
+      # PowerShell on Windows, where lake is not found.
+      - name: Build LeaTTa (sets up elan + lake)
         uses: leanprover/lean-action@v1
         with:
-          auto-config: false
-          build: false
+          build-args: "LeaTTa"
           test: false
           lint: false
-
-      - name: Build LeaTTa
-        run: lake build LeaTTa
 
       - name: Package bundle (Linux, macOS)
         if: runner.os != 'Windows'

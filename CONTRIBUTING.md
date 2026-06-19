@@ -33,12 +33,18 @@ Invariants the project keeps. Any change must keep them too:
 ## Building and checking
 
 ```bash
-lake build                   # kernel, the LeaTTa executable, and the Mathlib metatheory
-./scripts/run-oracle.sh      # differential oracle against Hyperon's corpus, 270 / 270
-./scripts/run-regression.sh  # the added-feature regression tests
+lake build                          # kernel, the LeaTTa executable, and the Mathlib metatheory
+make oracle                         # differential oracle against Hyperon's corpus, 270 / 270
+make regression                     # the added-feature regression tests
+scripts/ci/check-no-forbidden.sh    # the no-placeholder invariant
 ```
 
-If all three are green and the invariants above still hold, a bug-fix change is ready to propose.
+CI runs all of these on every pull request (`.github/workflows/ci.yml`), and a change does not merge
+until they pass. If all are green locally and the invariants above still hold, a bug-fix change is
+ready to propose.
+
+The proof status, coverage, and the comparison with Hyperon are documented in the book's appendix at
+https://mestto.github.io/LeaTTa/.
 
 ## The exploratory archive
 

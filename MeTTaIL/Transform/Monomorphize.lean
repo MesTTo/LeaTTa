@@ -5,7 +5,9 @@ Mirrors the Scala `BNFCRenderer.monomorphizeArrowsAndProducts`.
 
 For an arrow `s -> t`, the sort is `ArrowCC<s>_<t>DD` with an application `α{ f (x) }`, a variable
 `Ident`, and a lambda `λ{ (x) => body }`, plus a variable rule for the domain sort. For a product,
-a `Make...` constructor. Lists are not yet handled (none occur in the modules tested).
+a `Make...` constructor. List sorts are mangled and monomorphized like any other, but no list
+constructor rules are generated (no list sorts occur in the tested modules), matching the Scala
+renderer, which generates none either.
 -/
 import MeTTaIL.Theory.Ops
 

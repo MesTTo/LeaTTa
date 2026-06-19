@@ -1,6 +1,7 @@
 /-
-Confluence (Church-Rosser) of beta reduction for the simply-typed lambda calculus of
-`MeTTaIL/Calculi/Lambda.lean`.
+Confluence (Church-Rosser) of beta reduction for the lambda calculus over the term language of
+`MeTTaIL/Calculi/Lambda.lean`. The theorem needs no typing hypothesis, so it holds whether or not the
+terms are well-typed (the de Bruijn term language is that of the untyped calculus).
 
 We reuse `Tm`, `shift`, `subst` and `Step` from `Lambda.lean` unchanged. The proof is the standard
 Tait / Martin-Löf / Takahashi argument by parallel reduction.
@@ -332,7 +333,8 @@ theorem reflTransGen_step_eq_par : ReflTransGen Step = ReflTransGen ParRed := by
   · exact fun h => h.mono (fun _ _ => step_to_par)
   · exact fun h => reflTransGen_closed (fun _ _ => par_to_redstep) h
 
-/-- **Confluence (Church-Rosser) of beta reduction** for the simply-typed lambda calculus. If a term
+/-- **Confluence (Church-Rosser) of beta reduction** for the lambda calculus (no typing hypothesis, so
+    it holds for well-typed and ill-typed terms alike). If a term
     `a` reduces (in any number of steps) to both `b` and `c`, the two reducts can be brought back
     together: there is a common `d` reachable from each. The proof routes through parallel reduction:
     `ParRed` has the diamond property (`par_diamond`, from the complete development), its closure

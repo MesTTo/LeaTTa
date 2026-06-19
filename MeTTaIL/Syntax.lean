@@ -138,10 +138,11 @@ deriving Inhabited, BEq
     dotted-path prefixes in rewrites.
 
     The `references` field makes the type recursive, exactly as `BasePres.listmapentry_` does
-    (`MakeMapEntry . MapEntry ::= Ident "=>" Pres`). Elaboration of a `TheoryInst` never populates
-    it, so every elaborated presentation has empty references; it is non-empty only for presentations
-    written as literals. The type is an `inductive` rather than a `structure` because Lean structures
-    may not be recursive; named accessors are defined just below. -/
+    (`MakeMapEntry . MapEntry ::= Ident "=>" Pres`). Our `elaborate` never populates it, so every
+    presentation this development produces has empty references; the field is kept to mirror `BasePres`
+    faithfully, where a literal presentation can carry references. The type is an `inductive` rather
+    than a `structure` because Lean structures may not be recursive; named accessors are defined just
+    below. -/
 inductive Presentation where
   | mk (exports : List Cat) (terms : List Rule) (equations : List Equation)
        (rewrites : List RewriteDecl) (references : List (String × Presentation))

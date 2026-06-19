@@ -9,8 +9,9 @@ rewrites are the congruence/context rules (par1, par2, RNew, ...). This is the p
 "presentations of GSLTs describe the operational semantics of computational calculi."
 
 The relation is built on the executable matcher/instantiator of `Semantics/Reduce.lean`. The final
-theorem links the two: every reduct the executable `applyBaseRewrite` produces is a real reduction.
-Mathlib-free.
+theorem is a soundness result: every reduct the executable `applyBaseRewrite` produces is a genuine
+one-step reduction. The converse (completeness, that every reduction is produced by the matcher) is
+not proved. Mathlib-free.
 -/
 import MeTTaIL.Semantics.Reduce
 

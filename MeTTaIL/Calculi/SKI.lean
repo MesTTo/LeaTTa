@@ -1,11 +1,14 @@
 /-
-SKI combinatory logic: the binder-free calculus presented as a GSLT in `hypercube.md`.
+SKI combinatory logic: the binder-free combinatory calculus. `hypercube.md` gives a GSLT presentation
+of it through intermediate combinators (`S1`, `S2`, `K1`) and six named one-step rules; here we use
+the standard direct `S`/`K`/`I` rules with congruence, which is the same calculus by a different
+presentation.
 
-This is a concrete type-soundness result (emphasis: the typed discipline a GSLT's hypercube aims to
-provide). Because combinatory logic has no variables or binders, the typing and reduction are
-first-order, and subject reduction is a clean structural induction with no substitution machinery.
-The full modal hypercube typing for binder calculi (the RHO calculus) is left open by the source
-notes, so the determinate, binder-free case is what we prove here.
+This is a concrete subject-reduction (preservation) result for the kind of typed discipline a GSLT's
+hypercube aims to provide. Because combinatory logic has no variables or binders, the typing and
+reduction are first-order, and subject reduction is a clean structural induction with no substitution
+machinery. The full modal hypercube typing for binder calculi (the RHO calculus) is left open by the
+source notes, so the determinate, binder-free case is what we prove here.
 
 `Step` is the combinator reduction (S, K, I rules plus congruence); `HasTy` is the standard
 simply-typed combinatory-logic system; `preservation` is subject reduction.

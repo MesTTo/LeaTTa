@@ -12,9 +12,10 @@ without proof, that this is well-founded, grounding out via `Q --0--> {Q}`.
 Decomposed to its essence, the construction is bounded reachability over any one-step relation,
 defined by recursion on the fuel n. This file formalizes that core: `reachUpTo`, its grounding at
 n = 0, and the fact that it is a total, computable function (so the apparent circularity is resolved
-by construction). The rho-calculus instance takes `step` to be the one-step spice reduction, whose
-COMM case consults `reachUpTo` at strictly smaller fuel, so the same fuel structure makes the mutual
-definition well-founded.
+by construction). For the rho-calculus instance, one would take `step` to be the one-step spice
+reduction, its COMM case consulting `reachUpTo` at strictly smaller fuel. That instantiation is not
+formalized here, but the fuel argument is exactly the one that would make the mutual definition
+well-founded by the same structural-recursion principle.
 
 `reachUpTo` is structurally recursive on the fuel, so it computes (the example below is by `decide`).
 This layer is Mathlib-free.
@@ -22,9 +23,10 @@ This layer is Mathlib-free.
 
 namespace MeTTaIL.Spice
 
-/-- One breadth-first level of lookahead: keep the current frontier, then recurse on its successors
-    with one less fuel. Structural recursion on the fuel `n`, so it computes; this is the well-founded
-    core that the paper's modified COMM rule rests on. -/
+/-- Bounded reachability: keep the current frontier and append one level of successors, recursing with
+    one less fuel. The fuel `n` controls how many levels accumulate, so `stepN` at fuel `n` collects
+    everything reachable in 0 to n steps, not just one level. Structural recursion on the fuel, so it
+    computes; this is the well-founded core that the paper's modified COMM rule rests on. -/
 def stepN {α : Type} (step : α → List α) : Nat → List α → List α
   | 0, frontier => frontier
   | n + 1, frontier => frontier ++ stepN step n (frontier.flatMap step)
@@ -54,8 +56,10 @@ theorem self_mem_reachUpTo {α : Type} (step : α → List α) (n : Nat) (q : α
 example :
     (reachUpTo (fun k => if k = 0 then [] else [k - 1]) 2 3 == [3, 2, 1]) = true := by decide
 
-/-- With fuel 0 the modified COMM rule sends the singleton `{Q}`, i.e. just `Q`, recovering the
-    ordinary rho-calculus COMM rule. -/
+/-- With fuel 0 the modified COMM rule sends the singleton `{Q}`, which grounds the recursion.
+    Extracting `Q` from `{Q}` then recovers the original COMM rule, the step the paper notes is needed
+    (page 3); `@{Q}` is the code of the set, not the name `@Q`. The example restates the grounding
+    `Q --0--> {Q}`. -/
 example {α : Type} (step : α → List α) (q : α) :
     reachUpTo step 0 q = [q] := reachUpTo_zero step q
 

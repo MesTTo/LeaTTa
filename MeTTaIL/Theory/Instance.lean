@@ -19,7 +19,9 @@ deriving Inhabited, BEq
 /-- A replacement clause `[perm] target . cat => newDef` inside `Replacements { ... }`: replace the
     rule labelled `target` of output sort `cat` by `newDef`, applying the argument permutation `perm`
     when propagating the relabel through equations and rewrites. Mirrors BNFC
-    `SimpleRepl . Replacement ::= IntList Label "." Cat "=>" Def`. -/
+    `SimpleRepl . Replacement ::= IntList Label "." Cat "=>" Def`, with `newDef` restricted to the
+    `Rule` case of `Def` (the only case the interpreter handles; `Def` also covers comments and
+    pragmas). -/
 structure Replacement where
   perm : List Nat
   target : Label
@@ -38,8 +40,9 @@ deriving Inhabited, BEq
     `addReplacements`, `addTerms`, `addEquations`, `addRewrites`), and the presentation-lattice
     operators (`conj` = intersection `/\`, `disj` = union `\/`, `subtract` = difference `\`).
 
-    `letIn name val body` is `let name = val in (body)`. The constructor is named `letIn` rather than
-    `rec` because every inductive already has an auto-generated `TheoryInst.rec`. -/
+    `letIn name val body` is `let name = val in (body)`; Scala parses it as `TheoryInstRec` and
+    handles it in `handleRec`. The constructor is named `letIn` rather than `rec` because every
+    inductive already has an auto-generated `TheoryInst.rec`. -/
 inductive TheoryInst where
   | empty
   | ref (name : String)

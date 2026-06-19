@@ -1,6 +1,7 @@
 /-
-Reduction examples, checked by computation: SKI combinator steps and an RComm step that exercises
-the built-in `Subst`. These confirm the matching, substitution, and rewrite-application core.
+Reduction examples, checked by computation: the I and K (second-step) combinator rules and an RComm
+step that exercises the built-in `Subst`. These confirm the matching, substitution, and
+rewrite-application core.
 
 Results are compared with `BEq` (`==`) since `AST` carries `BEq`, not `DecidableEq`.
 -/

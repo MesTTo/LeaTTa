@@ -3,8 +3,9 @@ The GSLT reduction core: a presentation's rewrites drive computation on terms.
 
 A rewrite `lhs ~> rhs` applies to a term `t` when `lhs` matches `t` (first-order matching binds the
 pattern variables to subterms); the contractum is `rhs` instantiated with those bindings, with the
-built-in `Subst` resolved. This is the base-rewrite step (no premises). Premised rewrites
-(congruence) and structural congruence from the equations build on this and come next.
+built-in `Subst` resolved. This is the base-rewrite step (no premises). Premised rewrites (the
+congruence rules) build on this in `Semantics/Relation.lean`. The equations are stored on the
+presentation but are not yet reflected in any reduction relation.
 
 Matching and the traversals are hand-written by mutual recursion because `AST` nests through `List`.
 -/

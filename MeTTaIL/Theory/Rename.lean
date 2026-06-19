@@ -2,10 +2,12 @@
 Category renaming and constructor relabeling, the traversals behind `addExports` rename and
 `addReplacements`.
 
-A `RenameExport old new` renames a sort everywhere (Scala `replaceCats`/`updateDef`): we replace the
-category `old` by `new` throughout a presentation. A `Replacement [perm] target . cat => newDef`
-swaps the rule labelled `target` for `newDef` and, in every equation and rewrite, relabels each
-applied `target` to `newDef`'s label while permuting its arguments by `perm` (Scala `updateAST`).
+A `RenameExport old new` renames a sort in the exported sort list and in the function-symbol
+definitions, exactly as Scala `handleAddExports` does: its `RenameExport` branch updates `listcat_`
+and `listdef_` (via `replaceCats`/`updateDef`) and leaves equations and rewrites alone, since a term
+carries a sort only inside a list label. A `Replacement [perm] target . cat => newDef` swaps the rule
+labelled `target` for `newDef` and, in every equation and rewrite, relabels each applied `target` to
+`newDef`'s label while permuting its arguments by `perm` (Scala `updateAST`).
 
 The traversals over `Cat` and `AST` are hand-written by mutual recursion because both nest through
 `List` (`prod` and `sexp`), which structural recursion handles in definitions but `deriving` does
@@ -53,39 +55,15 @@ def Rule.replaceCat (old new : Cat) (r : Rule) : Rule :=
     cat := Cat.replace old new r.cat
     items := r.items.map (Item.replaceCat old new) }
 
-mutual
-  /-- Rename a sort inside a term (it can appear inside a list label). -/
-  def AST.replaceCat (old new : Cat) : AST → AST
-    | .var p       => .var p
-    | .sexp l args => .sexp (l.replaceCat old new) (AST.replaceCatList old new args)
-    | .subst b r v => .subst (AST.replaceCat old new b) (AST.replaceCat old new r) v
-  /-- Rename a sort in each term of a list. -/
-  def AST.replaceCatList (old new : Cat) : List AST → List AST
-    | []      => []
-    | a :: as => AST.replaceCat old new a :: AST.replaceCatList old new as
-end
-
-/-- Rename a sort inside an equation. -/
-def Equation.replaceCat (old new : Cat) : Equation → Equation
-  | .impl l r    => .impl (l.replaceCat old new) (r.replaceCat old new)
-  | .fresh x y e => .fresh x y (Equation.replaceCat old new e)
-
-/-- Rename a sort inside a rewrite. -/
-def Rewrite.replaceCat (old new : Cat) : Rewrite → Rewrite
-  | .base l r => .base (l.replaceCat old new) (r.replaceCat old new)
-  | .ctx h r  => .ctx h (Rewrite.replaceCat old new r)
-
-/-- Rename a sort inside a named rewrite. -/
-def RewriteDecl.replaceCat (old new : Cat) (rd : RewriteDecl) : RewriteDecl :=
-  { rd with rw := rd.rw.replaceCat old new }
-
-/-- Rename a sort everywhere in a presentation: exports, terms, equations, and rewrites. References
-    are left untouched (elaborated presentations have none). Mirrors the Scala export rename. -/
+/-- Rename a sort in a presentation's exported sort list and its function-symbol definitions, leaving
+    equations, rewrites, and references untouched. Mirrors Scala `handleAddExports`, whose
+    `RenameExport` branch updates only `listcat_` and `listdef_`. A term carries a sort only inside a
+    list label, so the equations and rewrites of the tested modules are unaffected either way. -/
 def Presentation.replaceCat (old new : Cat) (p : Presentation) : Presentation :=
   .mk (Cat.replaceList old new p.exports)
       (p.terms.map (Rule.replaceCat old new))
-      (p.equations.map (Equation.replaceCat old new))
-      (p.rewrites.map (RewriteDecl.replaceCat old new))
+      p.equations
+      p.rewrites
       p.references
 
 /-! ### Constructor relabeling with argument permutation -/

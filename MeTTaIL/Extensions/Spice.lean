@@ -37,12 +37,17 @@ def reachUpTo {α : Type} (step : α → List α) (n : Nat) (q : α) : List α :
 theorem reachUpTo_zero {α : Type} (step : α → List α) (q : α) :
     reachUpTo step 0 q = [q] := rfl
 
+/-- The current frontier is always contained in its bounded reachable set, at any fuel. -/
+theorem mem_frontier_stepN {α : Type} (step : α → List α) :
+    ∀ (n : Nat) (frontier : List α) {x : α}, x ∈ frontier → x ∈ stepN step n frontier
+  | 0, _, _, h => h
+  | n + 1, frontier, _, h =>
+      List.mem_append_left (stepN step n (frontier.flatMap step)) h
+
 /-- The starting term is always within its own bounded reachable set, at any fuel. -/
 theorem self_mem_reachUpTo {α : Type} (step : α → List α) (n : Nat) (q : α) :
-    q ∈ reachUpTo step n q := by
-  cases n with
-  | zero => simp [reachUpTo, stepN]
-  | succ m => simp [reachUpTo, stepN]
+    q ∈ reachUpTo step n q :=
+  mem_frontier_stepN step n [q] (List.mem_singleton.mpr rfl)
 
 /-- A concrete lookahead: counting down from 3 with a single successor each step. At fuel 2 the
     reachable list is `[3, 2, 1]`. The definition computes, so this is checked by `decide`. -/

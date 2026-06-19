@@ -379,12 +379,24 @@ def evalOp (env : MinEnv) (st : St) (prev : Stack) (x : Atom) (b : Bindings) : L
       else queryOp env st prev x' b
 
 /-- `(unify <atom> <pattern> <then> <else>)` (Rust `unify`): the matches of `atom` against
-    `pattern` each yield `then` under the merged bindings; if none match, `else`. -/
+    `pattern` each yield `then` under the merged bindings; if none match, `else`.
+
+    Match by equality (minimal-MeTTa spec, "Syntax to match atom by equality"): a 2-element pattern
+    `(:= x)` switches to matching by structural equality. `then` is taken iff `atom` is structurally
+    equal to `x` under the current bindings, with no new variable bindings. So
+    `(unify $a (:= Empty) then else)` takes `else` for a free `$a`, since a variable is not the symbol
+    `Empty`, whereas the ordinary `unify` would bind `$a` to `Empty` and take `then`. This is scoped to
+    `unify` exactly as the spec frames it, leaving the general matcher and rule indexing untouched. -/
 def unifyOp (prev : Stack) (a p t e : Atom) (b : Bindings) : List Item :=
-  let ms := (matchAtoms a p).flatMap (fun mb =>
-    (Bindings.merge b mb).filterMap (fun m =>
-      if Bindings.hasLoop m then none else some (finItem prev (instantiate m t) m)))
-  if ms.isEmpty then [finItem prev e b] else ms
+  match p with
+  | Atom.expr [Atom.sym ":=", x] =>
+      if instantiate b a == instantiate b x then [finItem prev (instantiate b t) b]
+      else [finItem prev e b]
+  | _ =>
+      let ms := (matchAtoms a p).flatMap (fun mb =>
+        (Bindings.merge b mb).filterMap (fun m =>
+          if Bindings.hasLoop m then none else some (finItem prev (instantiate m t) m)))
+      if ms.isEmpty then [finItem prev e b] else ms
 
 /-- Is this item a finished final result (a single finished frame with no parent)? -/
 def isFinal : Item → Bool

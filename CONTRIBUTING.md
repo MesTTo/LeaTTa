@@ -37,7 +37,7 @@ A few invariants this project keeps, so any change has to keep them too:
 ## Building and checking
 
 ```bash
-lake build                   # kernel, the metta_full executable, and the Mathlib metatheory
+lake build                   # kernel, the LeaTTa executable, and the Mathlib metatheory
 ./scripts/run-oracle.sh      # differential oracle against Hyperon's corpus, 270 / 270
 ./scripts/run-regression.sh  # the added-feature regression tests
 ```

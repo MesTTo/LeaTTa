@@ -1,0 +1,95 @@
+# Build the LeaTTa interpreter binary on Linux, macOS, and Windows, and attach the
+# bundles to the GitHub release for the pushed tag. Trigger by pushing a tag like
+# `v0.3.0`, or run manually from the Actions tab. The interpreter binary does not link
+# Mathlib, so these jobs build only the small kernel and finish quickly.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x86_64
+          - os: macos-latest
+            platform: macos-arm64
+          - os: windows-latest
+            platform: windows-x86_64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Lean (elan + lake)
+        uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          build: false
+          test: false
+          lint: false
+
+      - name: Build LeaTTa
+        run: lake build LeaTTa
+
+      - name: Package bundle (Linux, macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(grep -oE 'version := v!"[^"]+"' lakefile.lean | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          NAME="leatta-${VERSION}-${{ matrix.platform }}"
+          mkdir -p "dist/$NAME/bin" "dist/$NAME/examples"
+          cp .lake/build/bin/LeaTTa "dist/$NAME/bin/"
+          strip "dist/$NAME/bin/LeaTTa" || true
+          cp scripts/install.sh "dist/$NAME/"; chmod +x "dist/$NAME/install.sh"
+          cp LICENSE "dist/$NAME/" || true
+          for f in a1_symbols b1_equal_chain c1_grounded_basic d1_gadt test_stdlib; do
+            cp "tests/corpus/$f.metta" "dist/$NAME/examples/" 2>/dev/null || true
+          done
+          ( cd dist && tar czf "$NAME.tar.gz" "$NAME" )
+          ( cd dist && (sha256sum "$NAME.tar.gz" || shasum -a 256 "$NAME.tar.gz") > "$NAME.tar.gz.sha256" )
+
+      - name: Package bundle (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(grep -oE 'version := v!"[^"]+"' lakefile.lean | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          NAME="leatta-${VERSION}-windows-x86_64"
+          mkdir -p "dist/$NAME/bin" "dist/$NAME/examples"
+          cp .lake/build/bin/LeaTTa.exe "dist/$NAME/bin/"
+          cp LICENSE "dist/$NAME/" || true
+          for f in a1_symbols b1_equal_chain c1_grounded_basic d1_gadt test_stdlib; do
+            cp "tests/corpus/$f.metta" "dist/$NAME/examples/" 2>/dev/null || true
+          done
+          ( cd dist && 7z a "$NAME.zip" "$NAME" >/dev/null )
+          ( cd dist && certutil -hashfile "$NAME.zip" SHA256 > "$NAME.zip.sha256" )
+
+      - name: Upload bundle as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: leatta-${{ matrix.platform }}
+          path: |
+            dist/*.tar.gz
+            dist/*.tar.gz.sha256
+            dist/*.zip
+            dist/*.zip.sha256
+
+      - name: Attach bundle to the GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/*.tar.gz.sha256
+            dist/*.zip
+            dist/*.zip.sha256

@@ -3,7 +3,7 @@
 # These guard the stdlib/grounded-op coverage added on top of the vendored Hyperon oracle.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-BIN=.lake/build/bin/metta_full
+BIN=.lake/build/bin/LeaTTa
 [ -x "$BIN" ] || { echo "build first: lake build"; exit 1; }
 tot_pass=0; tot_fail=0; rc=0
 for f in tests/regression/*.metta; do

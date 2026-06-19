@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Reproducible oracle. Runs the minimal-MeTTa interpreter (`metta_full --oracle`)
+# Reproducible oracle. Runs the minimal-MeTTa interpreter (`LeaTTa --oracle`)
 # over Hyperon's own test corpus, vendored under tests/corpus/ (MIT, commit 3f76dc4), and checks
 # every `!`-assertion against the
 # expected results in tests/corpus/EXPECTED.txt.
@@ -16,10 +16,10 @@ export PATH="$HOME/.elan/bin:$PATH"
 
 CORPUS="tests/corpus"
 EXPECTED="$CORPUS/EXPECTED.txt"
-BIN=".lake/build/bin/metta_full"
+BIN=".lake/build/bin/LeaTTa"
 
-echo "Building metta_full ..."
-if ! lake build metta_full >/dev/null 2>&1; then
+echo "Building LeaTTa ..."
+if ! lake build LeaTTa >/dev/null 2>&1; then
   echo "BUILD FAILED"; exit 2
 fi
 

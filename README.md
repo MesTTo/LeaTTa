@@ -36,7 +36,7 @@ mismatch, so it doubles as the regression gate.
 
 ```bash
 ./scripts/run-oracle.sh                                       # 270 / 270, ORACLE OK
-lake exe metta_full --oracle tests/corpus/test_stdlib.metta   # or a single file
+lake exe LeaTTa --oracle tests/corpus/test_stdlib.metta   # or a single file
 ```
 
 | Hyperon test file | result |
@@ -119,13 +119,29 @@ browser, or serve it locally:
 python3 -m http.server 8137 --directory book/_out/html-multi   # then open http://localhost:8137/
 ```
 
-## Build and run
+## Install and run
+
+The interpreter ships as a single native binary, `LeaTTa`. It links only against the standard
+C library, so a prebuilt release runs on any glibc Linux of the same architecture with no Lean
+toolchain installed. Download an archive from the [releases page](https://github.com/MesTTo/LeaTTa/releases),
+then:
+
+```bash
+tar xzf leatta-0.3.0-linux-x86_64.tar.gz
+cd leatta-0.3.0-linux-x86_64 && ./install.sh   # installs to ~/.local/bin
+LeaTTa --min '!(+ 1 (* 2 (- 10 4)))'             # [13]
+```
+
+Full install, usage, and build-from-source notes are in [INSTALL.md](INSTALL.md).
+
+To build from source instead:
 
 ```bash
 lake build                                           # kernel + exe + Mathlib metatheory; 0 sorry
-lake exe metta_full --min '!(+ 1 (* 2 (- 10 4)))'    # [13]
-lake exe metta_full --min '!(map-atom (1 2 3) $x (* $x $x))'  # [(1 4 9)]
-lake exe metta_full --min '!(case (+ 1 1) ((1 one) (2 two)))' # [two]
+lake exe LeaTTa --min '!(+ 1 (* 2 (- 10 4)))'    # [13]
+lake exe LeaTTa --min '!(map-atom (1 2 3) $x (* $x $x))'  # [(1 4 9)]
+lake exe LeaTTa --min '!(case (+ 1 1) ((1 one) (2 two)))' # [two]
+make release                                         # package dist/leatta-<version>-<platform>.tar.gz
 ./scripts/run-oracle.sh                              # differential oracle vs Hyperon's corpus, 270/270
 ```
 

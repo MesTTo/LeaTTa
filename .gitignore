@@ -1,5 +1,6 @@
 /.lake/
 *.olean
+/dist/
 /book/.lake/
 /book/_out/
 /.playwright-mcp/

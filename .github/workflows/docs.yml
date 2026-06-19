@@ -1,15 +1,21 @@
-name: Deploy the LeaTTa book to GitHub Pages
+name: Deploy the LeaTTa book and API docs to GitHub Pages
 
-# Builds the Verso book under book/ and publishes book/_out/html-multi to GitHub Pages.
-# The book is its own Lean project and does not depend on Mathlib, so this build is fast.
+# Builds two things and publishes them as one GitHub Pages site:
+#   * the Verso book (book/), served at the site root;
+#   * the doc-gen4 API reference (docbuild/), served at /api.
+# The book does not depend on Mathlib and builds quickly. The API build elaborates the
+# whole development, so it fetches the prebuilt Mathlib cache first.
 #
-# One-time setup: in the repository Settings, under Pages, set "Source" to "GitHub Actions".
+# One-time setup: in Settings > Pages, set "Source" to "GitHub Actions".
 
 on:
   push:
     branches: [main, master, metatheory]
     paths:
       - 'book/**'
+      - 'MettaHyperonFull/**'
+      - 'docbuild/**'
+      - 'lakefile.lean'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
@@ -38,6 +44,22 @@ jobs:
         working-directory: book
         run: lake exe docs
 
+      - name: Fetch the prebuilt Mathlib cache (shared with the API build)
+        run: lake exe cache get
+
+      - name: Build the API documentation (doc-gen4)
+        working-directory: docbuild
+        run: lake build MettaHyperonFull:docs Metatheory:docs Operational:docs
+
+      - name: Trim API docs for hosting (retarget Mathlib links, drop local Mathlib tree)
+        working-directory: docbuild
+        run: ./finalize-docs.sh .lake/build/doc
+
+      - name: Assemble the site (book at root, API reference at /api)
+        run: |
+          mkdir -p book/_out/html-multi/api
+          cp -r docbuild/.lake/build/doc/. book/_out/html-multi/api/
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -53,5 +75,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-# (deploy pipeline)

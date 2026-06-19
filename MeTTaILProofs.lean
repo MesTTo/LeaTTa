@@ -6,5 +6,7 @@ lattice laws, and proofs about elaboration, transformations, and reduction.
 import MeTTaILProofs.MQCalculus
 -- Elaboration / transformation pipeline invariants.
 import MeTTaILProofs.Pipeline
--- DecEq / SKIConfluence / LambdaConfluence are added as their modules land.
+-- Church-Rosser / confluence for SKI combinatory logic.
+import MeTTaILProofs.SKIConfluence
+-- DecEq / LambdaConfluence are added as their modules land.
 

@@ -17,8 +17,8 @@ Download the archive for your platform from the
 [releases page](https://github.com/MesTTo/LeaTTa/releases), then unpack and install it:
 
 ```bash
-tar xzf leatta-0.3.0-linux-x86_64.tar.gz
-cd leatta-0.3.0-linux-x86_64
+tar xzf leatta-0.3.1-linux-x86_64.tar.gz
+cd leatta-0.3.1-linux-x86_64
 ./install.sh                 # installs to ~/.local/bin by default
 ```
 

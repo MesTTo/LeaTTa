@@ -143,8 +143,8 @@ the Lean toolchain. Download an archive from the [releases page](https://github.
 then:
 
 ```bash
-tar xzf leatta-0.3.0-linux-x86_64.tar.gz
-cd leatta-0.3.0-linux-x86_64 && ./install.sh   # installs to ~/.local/bin
+tar xzf leatta-0.3.1-linux-x86_64.tar.gz
+cd leatta-0.3.1-linux-x86_64 && ./install.sh   # installs to ~/.local/bin
 LeaTTa --min '!(+ 1 (* 2 (- 10 4)))'             # [13]
 ```
 

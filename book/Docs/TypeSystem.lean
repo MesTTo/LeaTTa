@@ -18,19 +18,20 @@ set_option verso.code.warnLineLength 100
 tag := "sec-types"
 %%%
 
-MeTTa is *gradually* typed {citep siekTaha}[]: a declared arrow signature `(: op (-> T₁ … Tₙ R))`
-triggers argument checking, an undeclared operator is left unchecked, and the special types
-`%Undefined%` (the dynamic type) and `Atom` (the top meta-type) are compatible with everything.
-LeaTTa formalizes this discipline operationally through `getTypes`, `matchType`, `typeCheckArgs`, and
-`typeMismatch` in `Minimal/Interpreter.lean`, and proves its key properties.
+MeTTa is *gradually* typed {citep siekTaha}[]. Write a declaration `(: op (-> T₁ … Tₙ R))` and
+argument checking is on; leave it out and arguments pass unchecked. Two special types,
+`%Undefined%` (the dynamic type) and `Atom` (the top meta-type), are compatible with everything, so
+you can mix typed and untyped code freely. LeaTTa formalizes this discipline operationally through
+`getTypes`, `matchType`, `typeCheckArgs`, and `typeMismatch` in `Minimal/Interpreter.lean`, and
+proves its key properties.
 
 # Type Compatibility Is *Consistency*, Not Equality
 
-The relation deciding whether an actual type may be supplied where a parameter type is expected is
-Siek and Taha's *consistency* `~`. It is *reflexive and symmetric but _not_ transitive*: routing
-through the dynamic type would otherwise relate *all* types and make the discipline vacuous. The
-following is a self-contained, fully checked rendering of that result (the development also proves it
-for the real `matchType`):
+When you pass an argument, the question is not "are these types equal?" but "are these types
+*consistent*?" Consistency is Siek and Taha's relation `~`. It is *reflexive and symmetric but
+_not_ transitive*: if it were transitive, routing through `%Undefined%` would relate every pair of
+types and make checking vacuous. The code below is a self-contained, fully checked rendering of that
+result (the development also proves it for the real `matchType`):
 
 ```lean
 /-- A miniature type language: named types plus the two gradual wildcards. -/
@@ -61,7 +62,7 @@ theorem consistent_not_transitive :
     (h _ .undef _ (.undefR _) (.undefL _))
 ```
 
-Compatibility is a *tolerance* relation, not a preorder. That is what keeps the `%Undefined%`/`Atom`
+Consistency is a *tolerance* relation, not a preorder. That is what keeps the `%Undefined%`/`Atom`
 escape hatch sound without collapsing the type discipline. `Gradual.lean` proves `Consistent.refl`,
 `Consistent.symm`, and `Consistent.not_transitive` for the full `Atom` type, and
 `matchType_not_transitive` shows the *executable* matcher inherits the property.
@@ -69,17 +70,18 @@ escape hatch sound without collapsing the type discipline. `Gradual.lean` proves
 # What the Type System Guarantees
 
 For MeTTa's intended on-chain use, a well-typed program must never be rejected spuriously, and a
-reported type error must be faithful. LeaTTa proves both against the real kernel functions:
+reported type error must be faithful. LeaTTa proves both against the real kernel functions. Here is
+what each guarantee says and where to find the proof:
 
  * *Permissiveness*: undeclared operators, arguments beyond the declared arity, and the
-   `%Undefined%`/`Atom` wildcards are never rejected (`typeMismatch_undeclared`,
-   `typeCheckArgs_no_param`, `matchType_undefined_left`/`right`, `matchType_atom_left`/`right`).
- * *Totality*: `getTypes` assigns every atom at least one type (`getTypes_ne_nil`): gradual
+   `%Undefined%`/`Atom` wildcards are never rejected. See `typeMismatch_undeclared`,
+   `typeCheckArgs_no_param`, `matchType_undefined_left`/`right`, `matchType_atom_left`/`right`.
+ * *Totality*: `getTypes` assigns every atom at least one type (`getTypes_ne_nil`). Gradual
    typing has no "untyped gap".
  * *Faithful errors*: when the checker flags a mismatch at position `pos`, one evaluation step
    returns *exactly* the corresponding `(Error … (BadArgType pos expected actual))`
    (`mettaEval_badArgType`), and the reported `actual` is a genuine type of the offending argument
-   (`typeCheckArgs_act_real`); never fabricated.
+   (`typeCheckArgs_act_real`). It is never fabricated.
  * *Grounded-core preservation*: arithmetic is closed on `Number`, comparison and `==` yield
    `Bool` or faithfully propagate an error (`numBin_isNumber`, `numCmp_isBool`,
    `eqAtom_isBoolOrError`).

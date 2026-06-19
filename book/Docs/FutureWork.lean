@@ -18,36 +18,17 @@ set_option verso.code.warnLineLength 100
 tag := "sec-future"
 %%%
 
-The development has two branches. The `metatheory` branch covers MeTTa as it stands today: the
-minimal-MeTTa kernel and standard library, validated against Hyperon's corpus, with the full
-machine-checked metatheory and no `sorry`. The `future-work` branch prototypes the directions the
-minimal-MeTTa specification itself lists under "future work", together with a fuller module system. A
-feature is admitted to the branch only once the metatheory still goes through, or its interaction
-with the metatheory is documented precisely.
+The development has two branches. The `metatheory` branch covers MeTTa as it stands today: the minimal-MeTTa kernel and standard library, validated against Hyperon's corpus, with the full machine-checked metatheory and no `sorry`. The `future-work` branch prototypes the directions the minimal-MeTTa specification itself lists under "future work", together with a fuller module system. A feature is admitted to the branch only once the metatheory still goes through, or its interaction with the metatheory is documented precisely.
 
 # A Feature, and a Finding
 
-The first feature on the branch is match-by-equality, written `(:= x)`, which the specification
-lists as "syntax to match an atom by equality". Inside `unify`, the pattern `(:= x)` matches by
-structural equality rather than by unification: the `then` branch is taken exactly when the queried
-atom equals `x` under the current bindings, and no new variable bindings are produced.
-`(unify $a (:= Empty) then else)` therefore takes the `else` branch for a free `$a`, whereas
-ordinary `unify` would bind `$a` to `Empty`. The feature is implemented in `unifyOp`, and the full
-build passes the corpus at 270 of 270.
+The first feature on the branch is match-by-equality, written `(:= x)`, which the specification lists as "syntax to match an atom by equality". Inside `unify`, the pattern `(:= x)` matches by structural equality rather than by unification: the `then` branch is taken exactly when the queried atom equals `x` under the current bindings, and no new variable bindings are produced. So `(unify $a (:= Empty) then else)` takes the `else` branch for a free `$a`, whereas ordinary `unify` would bind `$a` to `Empty`. The feature is implemented in `unifyOp`, and the full build passes the corpus at 270 of 270.
 
-The feature was first prototyped not in `unify` but in the general matcher `matchAtomsWith`, and
-the machine-checked proofs caught a design problem. A `(:= x)` left-hand side can fire on a query
-with a different head, so such a rule no longer belongs in its head's first-argument-indexing bucket.
-This contradicts the indexing-soundness theorem of {ref "sec-meta"}[the metatheory]
-(`matchAtoms_headKey`, "matching forces head agreement"). Preserving the theorem would require either
-bucketing by the head of `x` (sound only when `x` is symbol-headed) or treating every `(:= x)` rule
-as head-less (sound, but skipping indexing for those rules). The specification's intended feature, a
-modifier scoped to `unify`, avoids the problem entirely. The proofs caught this before any test did.
+The feature was first prototyped not in `unify` but in the general matcher `matchAtomsWith`, and the machine-checked proofs caught a design problem. A `(:= x)` left-hand side can fire on a query with a different head, so such a rule no longer belongs in its head's first-argument-indexing bucket. This contradicts the indexing-soundness theorem of {ref "sec-meta"}[the metatheory] (`matchAtoms_headKey`, "matching forces head agreement"). Preserving the theorem would require either bucketing by the head of `x` (sound only when `x` is symbol-headed) or treating every `(:= x)` rule as head-less (sound, but skipping indexing for those rules). The specification's intended feature, a modifier scoped to `unify`, avoids the problem entirely. The proofs caught this before any test did.
 
 # The Roadmap
 
-The branch records the remaining items from the specification's future-work section, each annotated
-with its interaction with the existing metatheory.
+The branch records the remaining items from the specification's future-work section, each annotated with its interaction with the existing metatheory.
 
  * *Gap matching* `(A ... D ...)`, which matches part of an expression with holes. Like `(:= x)`,
    this is a matcher-level feature whose interaction with first-argument indexing must be worked out,

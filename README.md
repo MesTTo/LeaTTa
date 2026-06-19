@@ -14,7 +14,8 @@ dependencies: no Mathlib, no Batteries.
 The aim is simple. This should be a reference the Hyperon developers can actually use. It runs
 Hyperon's own test files and agrees with them, every function is total (no `partial`, no `sorry`, no
 `unsafe`), and wherever it differs from the current implementation, it differs by being cleaner. The
-full comparison is in [IMPROVEMENTS_OVER_HYPERON.md](IMPROVEMENTS_OVER_HYPERON.md).
+full comparison is in the book's Improvements over Hyperon appendix at
+[mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/).
 
 ## The faithful core
 
@@ -102,8 +103,8 @@ The metatheory layer lives in `MettaHyperonFull/Proofs/`. It uses Mathlib and ke
 A separate `MettaHyperonFull.Operational.*` library machine-checks the published Meta-MeTTa
 operational semantics (arXiv 2305.17218): the four-register machine ⟨i,k,w,o⟩, its barbed
 bisimulation, and a resource-bounded (gas) extension. The bridge between the indexed kernel and that
-specification is in `Proofs/Correspondence.lean`. See
-[SEMANTICS_CORRESPONDENCE.md](SEMANTICS_CORRESPONDENCE.md).
+specification is in `Proofs/Correspondence.lean`, covered in the book's operational-semantics and
+correspondence chapters at [mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/).
 
 ## Documentation
 
@@ -164,8 +165,8 @@ make release                                         # package dist/leatta-<vers
 
 The minimal interpreter in `hyperon-experimental` is openly provisional. Its source carries a
 self-described "hack" and several `TODO` notes at the points that decide evaluation. This
-formalization replaces those with declarative, total constructs. The full table is in
-[IMPROVEMENTS_OVER_HYPERON.md](IMPROVEMENTS_OVER_HYPERON.md):
+formalization replaces those with declarative, total constructs. The full table is in the book's
+Improvements over Hyperon appendix at [mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/):
 
 - the mutable `is_evaluated()` bit, commented "a hack" at `interpreter.rs:1142`, becomes static
   return-type gating taken from each function's declared type;

@@ -8,7 +8,7 @@ rules by the head symbol of their left-hand side and, to reduce `toEval`, only c
 whose head matches `toEval`'s (its `AtomIndex`). The kernel does the same: `MinEnv.ruleIndex`
 buckets `(= lhs rhs)` rules by `headKey lhs`, and `MinEnv.candidates` returns the bucket for the
 query's head together with the head-less (`varRules`) rules (`Minimal/Interpreter.lean`). See
-"improvement #9" in `IMPROVEMENTS_OVER_HYPERON.md`.
+the Improvements over Hyperon appendix in the book (the `Space::visit` undercounting case).
 
 For that optimisation to be *sound* it must never drop a rule that could actually fire. This
 file proves the semantic guarantee:

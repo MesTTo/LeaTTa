@@ -16,6 +16,7 @@ import Docs.Correspondence
 import Docs.Blockchain
 import Docs.FutureWork
 import Docs.Discussion
+import Docs.Appendices
 
 open Verso.Genre Manual
 open Verso.Genre.Manual.InlineLean
@@ -140,3 +141,5 @@ of the development's current limitations and open problems.
 {include 1 Docs.FutureWork}
 
 {include 1 Docs.Discussion}
+
+{include 1 Docs.Appendices}

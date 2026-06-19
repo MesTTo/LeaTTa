@@ -196,10 +196,14 @@ quote the source's own annotations.
 
 ### 3.7 The papers' calculi (extensions)
 
-- Spice calculus (`present-moment`): the n-step reachable-set relation `Q --n--> S` and the modified
-  COMM rule, plus the `surf`/`int`/`PM` (present moment) definitions.
-- mq-calculus: the Born-rule COMM transition and the `p (P | Q) = p P | p Q` hypothesis. This needs
-  real and complex numbers, so it is noncomputable and lives only in the proof layer.
+- Spice calculus (`present-moment`): the n-step reachable-set function `reachUpTo` (the paper's
+  `Q --n--> S`) and its grounding `Q --0--> {Q}`. The modified COMM rule and the `surf`/`int`/`PM`
+  definitions from the paper are not formalized; the file gives the well-founded reachability core the
+  rule rests on.
+- mq-calculus: the Born-rule probability model (`QState`, `bornProb`) with probability conservation
+  and interference. The COMM-as-measurement transition and the `p (P | Q) = p P | p Q` hypothesis are
+  not formalized. This needs real and complex numbers, so it is noncomputable and lives only in the
+  proof layer.
 
 
 ## 4. Layered plan and theorems
@@ -267,11 +271,13 @@ Theorems:
 - Typing is well-defined for RHO/lambda/SKI; the structural-type formation and term rules are
   consistent; subject reduction (preservation) for the determinate fragment. Open modal points are
   flagged, not faked.
-- Spice: grounding (`Q --0--> {Q}`), `n = 0` recovers ordinary rho COMM, and well-foundedness of the
-  modified COMM. The last is a genuine contribution; the source asserts it without proof.
-- mq-calculus: the COMM-as-measurement transition; probability conservation (the Born weights sum to
-  one); the parallel-distribution hypothesis as a definitional law; normalization and interference
-  invariants.
+- Spice: grounding (`Q --0--> {Q}`) and the computable, well-founded reachability core (`reachUpTo`,
+  structurally recursive on the fuel). The rho-calculus instance (the mutual COMM/reduction definition
+  that the fuel structure would make well-founded) is argued in the file header but not yet formalized
+  as a Lean `WellFounded` theorem; that remains future work.
+- mq-calculus: probability conservation (the Born weights sum to one), the unit-interval bounds, and
+  interference. The COMM-as-measurement transition and the parallel-distribution hypothesis
+  `p (P | Q) = p P | p Q` are not yet formalized.
 
 
 ## 5. Repository layout and LeaTTa integration
@@ -280,16 +286,18 @@ A new Lean library, a sibling of the existing `Metatheory` and `Operational` tar
 `LeaTTa` binary never links it and CI machine-checks it on its own.
 
 ```
-MeTTaIL/                         -- new top-level lean_lib, root `MeTTaIL`
-  Syntax/                        -- Cat, Item, Label, Rule, AST, Equation, Rewrite, Presentation
-  Theory/                        -- TheoryInst, WellFormed, Elaborate
+MeTTaIL/                         -- computable top-level lean_lib, root `MeTTaIL` (Mathlib-free)
+  Syntax.lean                    -- Cat, Item, Label, Rule, AST, Equation, Rewrite, Presentation
+  Theory/                        -- Instance, Ops, Rename, Check, Elaborate
   Transform/                     -- Desugar, TypeLift, Monomorphize
-  Semantics/                     -- Reduce, Congruence
-  Calculi/                       -- Rho, Lambda, SKI
-  Typing/                        -- Hypercube, Soundness            (Layer 4)
-  Extensions/                    -- Spice, MQCalculus               (Layer 4; MQCalculus is proof-only)
+  Semantics/                     -- Reduce, Relation
+  Calculi/                       -- Lambda, SKI
+  Extensions/                    -- Spice
   Bridge/                        -- Operational (to MettaHyperonFull.Operational)
-  Proofs/                        -- the Mathlib-backed proofs about Layers 1 to 3
+MeTTaILProofs/                   -- Mathlib-backed proof lean_lib, root `MeTTaILProofs`
+                                 -- DecEq, MQCalculus (proof-only), Pipeline, Lattice,
+                                 -- SKIConfluence, LambdaConfluence
+MeTTaILTests/                    -- the oracle and reduction examples (Rholang, Reduce)
 ```
 
 `lakefile.lean` gains a computable `lean_lib MeTTaIL` (Mathlib-free, like the kernel) and a
@@ -373,7 +381,8 @@ rules, its reflexive-transitive closure, and matcher soundness).
 Layer 4 (typing, calculi, extensions). `Calculi/SKI.lean` (combinatory logic, subject reduction);
 `Calculi/Lambda.lean` (STLC de Bruijn, preservation and progress); `MeTTaILProofs/SKIConfluence.lean`
 and `MeTTaILProofs/LambdaConfluence.lean` (Church-Rosser, via Takahashi parallel reduction);
-`Extensions/Spice.lean` (the present-moment bounded-lookahead rule: grounding and well-foundedness);
+`Extensions/Spice.lean` (the present-moment bounded-lookahead rule: grounding and a computable,
+structurally-recursive reachability core);
 `MeTTaILProofs/MQCalculus.lean` (the mq-calculus measurement semantics: Born-rule probability
 conservation and interference).
 

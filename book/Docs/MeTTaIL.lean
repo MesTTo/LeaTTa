@@ -110,8 +110,10 @@ The present-moment paper gives the rho-calculus a "spice" rule: a modified COMM 
 it uses includes COMM itself, and the paper asserts, without proof, that it is well-founded. We
 formalize the heart of it as bounded reachability over any one-step relation, defined by structural
 recursion on the fuel `n`, and we prove the grounding `Q --0--> {Q}` that resolves the apparent
-circularity. The definition is total by construction, which is the well-foundedness the source leaves
-unproved.
+circularity. Our reachability function is total by construction (structural recursion on the fuel),
+which is the termination guarantee the source asserts without proof. The full modified COMM rule over
+an actual rho-calculus process type is not formalized here; we capture the reachability core it rests
+on.
 
 The mq-calculus paper builds a process calculus where communication is measurement. We formalize the
 semantic core that makes its COMM rule well-defined: a finite quantum state is a normalized vector of

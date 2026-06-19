@@ -10,6 +10,7 @@ rewrites `RPar1 RPar2 RNew RComm`. So our elaborator agrees with MeTTaIL on the 
 -/
 import MeTTaIL.Theory.Elaborate
 import MeTTaIL.Transform.Desugar
+import MeTTaIL.Transform.Monomorphize
 
 namespace MeTTaILTests.Rholang
 open MeTTaIL
@@ -186,5 +187,31 @@ private def expectedDesugared : Presentation :=
 /-- ORACLE: desugaring the elaborated Rholang matches the tool's `[Desugared Presentation]` (the
     `PNewToArrow` and `PRecvToArrow` companions inserted after `PNew` and `PRecv`). -/
 example : (desugarBinds expectedRholang == expectedDesugared) = true := by decide
+
+/-! ### Monomorphize oracle: matches the tool's `[Generated BNFC]` grammar -/
+
+private def aSort : Cat := idc "ArrowCCName_ProcDD"
+private def rPNewToArrowMono : Rule :=
+  { label := .id "PNewToArrow", cat := idc "Proc", items := [tm "PNewToArrow", tm "(", .nterminal aSort, tm ")"] }
+private def rPRecvToArrowMono : Rule :=
+  { label := .id "PRecvToArrow", cat := idc "Proc", items := [tm "PRecvToArrow", tm "(", nt "Name", .nterminal aSort, tm ")"] }
+private def rApp : Rule :=
+  { label := .id "AppCCName_ProcDD", cat := idc "Proc", items := [tm "α", tm "{", .nterminal aSort, tm "(", nt "Name", tm ")", tm "}"] }
+private def rIdentArrow : Rule := { label := .id "IdentCCName_ProcDD", cat := aSort, items := [nt "Ident"] }
+private def rLam : Rule :=
+  { label := .id "LamCCName_ProcDD", cat := aSort, items := [tm "λ", tm "{", tm "(", nt "Ident", tm ")", tm "=>", nt "Proc", tm "}"] }
+private def rIdentDom : Rule := { label := .id "IdentCCNameDD", cat := idc "Name", items := [nt "Ident"] }
+
+private def expectedGenerated : Presentation :=
+  .mk [idc "Proc", idc "Name"]
+      [rPZero, rPPar, rPRepl, rPNew, rPNewToArrowMono, rPDrop, rNQuote, rPSend, rPRecv, rPRecvToArrowMono,
+       rApp, rIdentArrow, rLam, rIdentDom]
+      [eAssoc, eRUnit, eLUnit, eComm, eFresh, eNewIdem, eNewSwap, eRepl, eQD1, eQD2]
+      [wRPar1, wRPar2, wRNew, wRComm]
+      []
+
+/-- ORACLE: monomorphizing the desugared Rholang matches the tool's `[Generated BNFC]` grammar (the
+    arrow `Name -> Proc` becomes `ArrowCCName_ProcDD`, with the `App`/`Ident`/`Lam` constructors). -/
+example : (monomorphize expectedDesugared == expectedGenerated) = true := by decide
 
 end MeTTaILTests.Rholang

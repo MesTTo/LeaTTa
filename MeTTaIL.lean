@@ -30,3 +30,5 @@ import MeTTaIL.Transform.Monomorphize
 import MeTTaIL.Semantics.Reduce
 -- Layer 4: SKI combinatory logic instance with subject reduction (type soundness).
 import MeTTaIL.Calculi.SKI
+-- Layer 4 (extension): the present-moment "spice" rule, bounded lookahead and its grounding.
+import MeTTaIL.Extensions.Spice

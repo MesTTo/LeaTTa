@@ -43,13 +43,13 @@ cd do
   CDM.arrow i k (some "ADD/REM") cdRed .left
 ```
 
-The named small-step rules are formalized as an inductive `Step : State → State → Prop`
-(`Operational/Semantics.lean`): *QUERY* reduces an input term against `k`'s equations, depositing all
-matching instantiated right-hand sides into the workspace; *CHAIN* does the same for a workspace term;
-*TRANSFORM* applies an explicit `transform`; *ADDATOM*/*REMATOM* mutate the knowledge base and emit
-unit; and *OUTPUT* moves an irreducible (`insensitive`) workspace term to the output. The matcher
-`unify` is the kernel's own `matchAtoms`, so the spec is wired to the same matcher the interpreter
-runs.
+The small-step semantics is a computable function `smallStep?` (`Operational/Semantics.lean`) that
+returns the next state tagged with a `StepKind`: *QUERY* reduces an input term against `k`'s
+equations, depositing all matching instantiated right-hand sides into the workspace; *CHAIN* does the
+same for a workspace term; *ADDATOM*/*REMATOM* mutate the knowledge base and emit unit; and *OUTPUT*
+moves an irreducible (`insensitive`) workspace term to the output. A `transform` atom reduces under
+*QUERY*, not as a separate step. The matcher `unify` is the kernel's own `matchAtoms`, so the spec is
+wired to the same matcher the interpreter runs.
 
 # Verified Properties
 

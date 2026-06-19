@@ -58,7 +58,9 @@ cd do
 
 `KernelStep` is the kernel's indexed *rule-firing core*: the `candidates` matched against the redex.
 It corresponds to MOPS at the reduct-set level. It is *not yet* the full `queryOp`: rule-variable
-freshening, ambient-binding merge, and cyclic-substitution pruning are abstracted out. A lemma
-connecting `queryOp` to `KernelStep` up to α-equivalence (the α-equivalence setoid already exists in
-the development) is recorded as future work in the discussion chapter. What is proved here is that
+freshening, ambient-binding merge, and cyclic-substitution pruning are abstracted out, as are rules
+added to the space at runtime (`world.selfExtra`, consulted by `candidatesW`): the correspondence is
+stated over the static knowledge base. A lemma connecting `queryOp` to `KernelStep` up to
+α-equivalence (the α-equivalence setoid already exists in the development) is recorded as future work
+in the discussion chapter. What is proved here is that
 first-argument indexing leaves the reduct set unchanged: which rules fire and what they produce.

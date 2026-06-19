@@ -47,7 +47,7 @@ Every theorem named here is checked by Lean's kernel in `MettaHyperonFull/Proofs
    user-defined `=`-rewriting holds under its stated type-preserving-rule hypothesis:
    `reduction_preserves_type` (`Proofs/Preservation.lean`).
  * *Gradual consistency is not transitive*, for the relation and for the executable matcher:
-   `not_consistent_distinct_syms` (`Proofs/Gradual.lean`).
+   `Consistent.not_transitive` and `matchType_not_transitive` (`Proofs/Gradual.lean`).
  * *Alpha-equivalence* is an equivalence relation, preserves size, and coincides with `=` on closed
    atoms: `alphaEq_equivalence`, `AlphaEq.size_eq`, `alphaEq_iff_eq_of_closed` (`Proofs/Alpha.lean`).
  * *Substitution laws* used by binding propagation and preservation (`Proofs/Substitution.lean`).
@@ -135,9 +135,9 @@ The executable runtime parses atoms, stores ordinary atoms in the knowledge base
 as evaluation requests, loads `(= L R)` rules, performs directional equality reduction by matching
 `L` and instantiating `R`, implements `match`, `add-atom`, `remove-atom`, `get-atoms`, the atom and
 math operations, and nondeterministic outputs, and returns result lists to model nondeterminism.
-`Space.transform` (query then instantiate) is an internal helper used by `match`, not a separate
-MeTTa operation; the `transform` step appears in the operational specification
-(`Operational/Semantics.lean`), not as an instruction of the executable interpreter.
+`Space.transform` (query then instantiate) is a helper in `Core/Space.lean` that the operational
+specification uses for its `transform` and `match` steps (`Operational/Semantics.lean`). It is not an
+instruction of the executable interpreter, whose `match` is implemented by `matchConj`.
 
 # Improvements over Hyperon
 

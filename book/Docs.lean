@@ -50,8 +50,8 @@ language at the heart of OpenCog Hyperon {citep goertzelMetagraph}[]. It covers:
  * the gradual type system;
  * a body of machine-checked *metatheory*: determinism, confluence of the deterministic fragment,
    type soundness, gradual-typing consistency, soundness *and* completeness of first-argument
-   indexing, and a bisimulation connecting the running interpreter to the published operational
-   semantics of MeTTa {citep mops}[].
+   indexing, and a bisimulation connecting the kernel's rule-firing core to the published
+   operational semantics of MeTTa at the level of which rules fire {citep mops}[].
 
 Every theorem in this book is checked by Lean's kernel. The development contains *no* `sorry`,
 `admit`, `native_decide`, `partial`, or `unsafe`; `#print axioms` reports only the three standard

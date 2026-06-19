@@ -10,8 +10,9 @@ which reads the head label of a term, is non-recursive (though `labelsInEquation
 a freshness guard).
 
 One representation difference: the lattice operators keep list order and use `List.contains` with
-`distinct`, where Scala uses unordered `Set`s. The results agree as sets, which is what the
-presentation comparison and the Rholang oracle rely on.
+`distinct`, where Scala uses unordered `Set`s. The results agree as sets with Scala; the elaborate
+oracle additionally relies on the deterministic list order these ops produce, which the `decide` proof
+confirms matches the tool's printed order.
 -/
 import MeTTaIL.Syntax
 
@@ -73,13 +74,14 @@ def RewriteDecl.labels (rd : RewriteDecl) : List Label :=
   l.topLabels ++ r.topLabels
 
 /-- Union of two presentations: concatenate each component and keep first occurrences. Mirrors
-    `handleDisj` (the `\/` operator). -/
+    `handleDisj` (the `\/` operator), which builds a fresh presentation with empty references (as the
+    intersection and difference operators do). -/
 def Presentation.union (pa pb : Presentation) : Presentation :=
   .mk (distinct (pa.exports ++ pb.exports))
       (distinct (pa.terms ++ pb.terms))
       (distinct (pa.equations ++ pb.equations))
       (distinct (pa.rewrites ++ pb.rewrites))
-      (distinct (pa.references ++ pb.references))
+      []
 
 /-- Intersection of two presentations, filtered to common sorts and surviving labels. Mirrors
     `handleConj` (the `/\` operator): keep sorts in both; keep defs in both whose mentioned

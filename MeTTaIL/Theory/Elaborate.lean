@@ -2,9 +2,13 @@
 The elaboration interpreter: evaluate a theory instance to a presentation, or fail with an error.
 
 Mirrors the combined effect of the Scala `check_interpret` and `interpret` passes (two separate passes
-there), integrating the checking and the interpretation into a single traversal. `ctor` and `free`
-expand another theory's body, so elaboration is not structural on the theory instance; it is bounded
-by fuel, matching the fuel-bounded interpreters elsewhere in this repository and keeping the
+there), integrating the checking and the interpretation into a single traversal. One deliberate
+difference: Scala's `check_interpret` is shallow. It checks only the current node and recurses solely
+through `ctor` and `free`, returning `None` at `letIn`/`disj`/`conj`/`subtract` without checking their
+sub-instances, so it misses malformed instances nested under those forms. Here every node is checked as
+it is elaborated, so this elaborator is stricter on deeply-nested malformed sub-instances. `ctor` and
+`free` expand another theory's body, so elaboration is not structural on the theory instance; it is
+bounded by fuel, matching the fuel-bounded interpreters elsewhere in this repository and keeping the
 development free of `partial`.
 -/
 import MeTTaIL.Theory.Instance
@@ -147,11 +151,14 @@ mutual
               match e with
               | .base c =>
                   .ok (.mk (pp.exports ++ [c]) pp.terms pp.equations pp.rewrites pp.references)
-              -- Scala `checkAddExports` validates each rename against the ORIGINAL exports `p.exports`,
-              -- not the running accumulator, so a batch like `[rename A B, rename B C]` over base `{A}`
-              -- is rejected even though the worker could apply it sequentially.
+              -- Validate every rename's target against the current exports (the running accumulator),
+              -- a deliberately more thorough and sensible check than Scala's `checkAddExports`, which
+              -- via `collectFirst` over a total partial function inspects only the FIRST export, errors
+              -- on a leading `BaseExport`, and is short-circuited for these nested nodes anyway because
+              -- `check_interpret` does not recurse through `letIn`. The worker `handleAddExports` then
+              -- applies the renames without re-checking. Flagged for F1R3FLY.
               | .rename old new =>
-                  if p.exports.contains old then .ok (Presentation.replaceCat old new pp)
+                  if pp.exports.contains old then .ok (Presentation.replaceCat old new pp)
                   else .error "addExports: cannot rename a sort that is not exported")
             p
     | fuel+1, ctx, .addReplacements base reps => do

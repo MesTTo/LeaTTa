@@ -22,5 +22,7 @@ import MeTTaIL.Theory.Rename
 import MeTTaIL.Theory.Elaborate
 -- Layer 2: the DesugarBinds transformation pass.
 import MeTTaIL.Transform.Desugar
+-- Layer 2: the Hypercube type-lift pass.
+import MeTTaIL.Transform.TypeLift
 -- Layer 2: the BNFCRenderer monomorphization pass.
 import MeTTaIL.Transform.Monomorphize

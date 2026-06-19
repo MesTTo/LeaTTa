@@ -10,6 +10,7 @@ rewrites `RPar1 RPar2 RNew RComm`. So our elaborator agrees with MeTTaIL on the 
 -/
 import MeTTaIL.Theory.Elaborate
 import MeTTaIL.Transform.Desugar
+import MeTTaIL.Transform.TypeLift
 import MeTTaIL.Transform.Monomorphize
 
 namespace MeTTaILTests.Rholang
@@ -213,5 +214,42 @@ private def expectedGenerated : Presentation :=
 /-- ORACLE: monomorphizing the desugared Rholang matches the tool's `[Generated BNFC]` grammar (the
     arrow `Name -> Proc` becomes `ArrowCCName_ProcDD`, with the `App`/`Ident`/`Lam` constructors). -/
 example : (monomorphize expectedDesugared == expectedGenerated) = true := by decide
+
+/-! ### Type-lift oracle: matches the tool's `[Hypercubed Presentation]` -/
+
+/-- `T(Name -> Proc) = Product{ Name ; (Name -> Proc) }`, the type-lift of the arrow argument. -/
+private def pNameArrow : Cat := .prod [idc "Name", .arrow (idc "Name") (idc "Proc")]
+
+private def tl (n c : String) (items : List Item) : Rule :=
+  { label := .id n, cat := idc c, items := tm n :: tm "(" :: items ++ [tm ")"] }
+
+private def cPZero : Rule := tl "TypeLiftCCPZeroDD" "Proc" []
+private def cPPar : Rule := tl "TypeLiftCCPParDD" "Proc" [nt "Proc", nt "Proc"]
+private def cPRepl : Rule := tl "TypeLiftCCPReplDD" "Proc" [nt "Proc"]
+private def cPNewToArrow : Rule := tl "TypeLiftCCPNewToArrowDD" "Proc" [.nterminal pNameArrow]
+private def cPDrop : Rule := tl "TypeLiftCCPDropDD" "Proc" [nt "Name"]
+private def cNQuote : Rule := tl "TypeLiftCCNQuoteDD" "Name" [nt "Proc"]
+private def cPSend : Rule := tl "TypeLiftCCPSendDD" "Proc" [nt "Name", nt "Proc", nt "Name"]
+private def cPRecvToArrow : Rule :=
+  tl "TypeLiftCCPRecvToArrowDD" "Proc" [nt "Name", .nterminal pNameArrow, nt "Name"]
+
+/-- The terms of the tool's `[Hypercubed Presentation]`: the ten desugared rules plus the eight
+    `TypeLiftCC..DD` companions. The companion order the tool prints is an artifact of Scala's
+    HashMap iteration, so the oracle compares the term *set*, not the order. -/
+private def expectedHCTerms : List Rule :=
+  [rPZero, rPPar, rPRepl, rPNew, rPNewToArrow, rPDrop, rNQuote, rPSend, rPRecv, rPRecvToArrow,
+   cPZero, cPPar, cPRepl, cPNewToArrow, cPDrop, cNQuote, cPSend, cPRecvToArrow]
+
+/-- Order-insensitive list equality for distinct elements (a permutation check). -/
+private def sameSet {α : Type} [BEq α] (a b : List α) : Bool :=
+  a.length == b.length && a.all (fun x => b.contains x) && b.all (fun x => a.contains x)
+
+/-- ORACLE: type-lifting the desugared Rholang produces the same set of terms as the tool's
+    `[Hypercubed Presentation]` (the eight `TypeLiftCC..DD` companions with the `T`-lifted arities,
+    plus the duplicated-channel extra `Name` on `PSend` and `PRecvToArrow`). Equations and rewrites
+    are carried through unchanged. -/
+example : sameSet (typeLift expectedDesugared).terms expectedHCTerms = true := by decide
+example : ((typeLift expectedDesugared).equations == expectedDesugared.equations) = true := by decide
+example : ((typeLift expectedDesugared).rewrites == expectedDesugared.rewrites) = true := by decide
 
 end MeTTaILTests.Rholang

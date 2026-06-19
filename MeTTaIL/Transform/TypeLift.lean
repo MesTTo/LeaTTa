@@ -1,0 +1,121 @@
+/-
+The Hypercube type-lift pass (`--hypercube`): the untyped-to-typed transformation of
+`transformation.md`, restricted to the part the Scala tool actually implements.
+
+For each function symbol it adds a `TypeLiftCC<L>DD` companion (the "type of L"), whose arity is the
+type-lift `T` of the original arity:
+
+  T(G) = G,  T(A -> B) = T(A) x (T(A) -> T(B)),  T(A x B) = T(A) x T(B),  T([A]) = [T(A)].
+
+Rules with raw binders are skipped (the desugared `...ToArrow` form is lifted instead). After the
+lift, the base-reduction duplication rule fires: if a variable is used as an argument of two
+different constructors in a rewrite's left-hand side, each of those constructors' companions gains an
+extra argument of that variable's category (the `!!`/`??` extra channel in the comm example).
+
+The modal possibility types of `transformation.md` are not generated here, exactly as in the Scala
+code (that step is commented out). This is faithful to the tool, not to the full design note.
+-/
+import MeTTaIL.Theory.Ops
+import MeTTaIL.Transform.Desugar
+
+namespace MeTTaIL
+
+mutual
+  /-- The arity type-lift `T`. The arrow case duplicates the domain: one copy for the value, one for
+      its type. -/
+  def Cat.typeLift : Cat → Cat
+    | .idCat n   => .idCat n
+    | .arrow s t => .prod [Cat.typeLift s, .arrow (Cat.typeLift s) (Cat.typeLift t)]
+    | .prod cs   => .prod (Cat.typeLiftList cs)
+    | .listOf a  => .listOf (Cat.typeLift a)
+  /-- The type-lift on a list of categories. -/
+  def Cat.typeLiftList : List Cat → List Cat
+    | []      => []
+    | c :: cs => Cat.typeLift c :: Cat.typeLiftList cs
+end
+
+/-- The category of the argument an item contributes in a term: a non-terminal's category, a
+    binder's category (the bound variable is an argument), or the body category of an abstraction. -/
+def Item.bodyCat : Item → Option Cat
+  | .terminal _        => none
+  | .nterminal c       => some c
+  | .bindNTerminal _ c => some c
+  | .absNTerminal _ it => Item.bodyCat it
+
+/-- The argument categories of a rule, in the order arguments appear in an applied term. -/
+def Rule.argCats (r : Rule) : List Cat := r.items.filterMap Item.bodyCat
+
+/-- The base `TypeLiftCC<L>DD` companion of a rule, or `none` if the rule has raw binders (those are
+    lifted only in their desugared `...ToArrow` form). Function-style syntax over the type-lifted
+    argument categories. -/
+def Rule.typeLiftDef (r : Rule) : Option Rule :=
+  if r.hasBind then none
+  else
+    let baseName := match r.label with | .id n => n | _ => ""
+    let lname := "TypeLiftCC" ++ baseName ++ "DD"
+    let liftedArgs := r.argCats.map fun c => Item.nterminal (Cat.typeLift c)
+    some { label := .id lname, cat := Cat.typeLift r.cat
+           items := .terminal lname :: .terminal "(" :: liftedArgs ++ [.terminal ")"] }
+
+/-- The direct variable arguments at one applied constructor: `(name, label, index)` for each
+    argument that is a bare variable. -/
+def levelVarArgs (l : Label) (args : List AST) : List (String × Label × Nat) :=
+  ((List.range args.length).zip args).filterMap fun p =>
+    match p.2 with | .var (.base v) => some (v, l, p.1) | _ => none
+
+mutual
+  /-- Every direct variable-argument occurrence in a term: which constructor it is an argument of,
+      and at which position. -/
+  def AST.directVarArgs : AST → List (String × Label × Nat)
+    | .var _        => []
+    | .sexp l args  => levelVarArgs l args ++ AST.directVarArgsList args
+    | .subst b r _  => AST.directVarArgs b ++ AST.directVarArgs r
+  /-- Direct variable-argument occurrences across a list of terms. -/
+  def AST.directVarArgsList : List AST → List (String × Label × Nat)
+    | []      => []
+    | a :: as => AST.directVarArgs a ++ AST.directVarArgsList as
+end
+
+/-- The companion label a host symbol's extra arguments attach to: the symbol's own companion, or its
+    `...ToArrow` companion when the symbol has binders (so its plain companion was skipped). -/
+def companionLabelOf (terms : List Rule) (host : Label) : String :=
+  let baseName := match host with | .id n => n | _ => ""
+  match terms.find? (fun r => r.label == host) with
+  | some r => if r.hasBind then "TypeLiftCC" ++ baseName ++ "ToArrowDD"
+              else "TypeLiftCC" ++ baseName ++ "DD"
+  | none => "TypeLiftCC" ++ baseName ++ "DD"
+
+/-- The extra companion arguments contributed by one rewrite's left-hand side: for each variable used
+    as an argument of two or more constructor applications, each such application's companion gains an
+    argument of that variable's category. -/
+def extrasForLHS (terms : List Rule) (lhs : AST) : List (String × Cat) :=
+  let occs := lhs.directVarArgs
+  occs.filterMap fun o =>
+    let v := o.1; let host := o.2.1; let idx := o.2.2
+    if (occs.filter (fun o2 => o2.1 == v)).length ≥ 2 then
+      match terms.find? (fun r => r.label == host) with
+      | some r => match r.argCats[idx]? with
+                  | some c => some (companionLabelOf terms host, c)
+                  | none => none
+      | none => none
+    else none
+
+/-- Append extra argument non-terminals to a companion rule, just before its closing parenthesis. -/
+def appendArgs (comp : Rule) (extraCats : List Cat) : Rule :=
+  let extraItems := extraCats.map Item.nterminal
+  match comp.items.reverse with
+  | close :: rest => { comp with items := rest.reverse ++ extraItems ++ [close] }
+  | []            => comp
+
+/-- The Hypercube type-lift pass: add the type-lifted companion of every symbol, then apply the
+    duplicated-variable extension from the rewrites. The original terms, equations, and rewrites are
+    carried through unchanged. -/
+def typeLift (p : Presentation) : Presentation :=
+  let companions := p.terms.filterMap Rule.typeLiftDef
+  let compExtras := p.rewrites.flatMap fun rd => extrasForLHS p.terms rd.rw.conclusion.fst
+  let companions' := companions.map fun comp =>
+    let myExtras := (compExtras.filter (fun ce => comp.label == .id ce.1)).map (·.2)
+    if myExtras.isEmpty then comp else appendArgs comp myExtras
+  .mk p.exports (p.terms ++ companions') p.equations p.rewrites p.references
+
+end MeTTaIL

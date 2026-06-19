@@ -232,6 +232,22 @@ private def expectedMonoid : Presentation :=
 example : ((elaborate oracleCtx (.free (.base "Monoid"))).toOption == some expectedMonoid) = true := by
   decide
 
+/-! ### The category checker rejects ill-formed input -/
+
+/-- A rewrite whose right-hand side has a variable `Bad` bound neither on the left nor by a premise.
+    The category checker rejects it, so elaboration fails. -/
+private def badRewrite : RewriteDecl :=
+  rdecl "RBad" (.base (sx "PPar" [v "Src", v "Q"]) (sx "PPar" [v "Bad", v "Q"]))
+
+example : (elaborate oracleCtx (.addRewrites .empty [badRewrite])).toOption = none := rfl
+
+/-- An equation whose two sides have incompatible categories (`Proc` vs `Name`) is rejected. -/
+private def badEquation : Equation := eq (sx "PZero" []) (sx "NQuote" [v "P"])
+
+example :
+    (elaborate oracleCtx
+      (.addEquations (.addTerms .empty [rPZero, rNQuote]) [badEquation])).toOption = none := rfl
+
 /-! ### Type-lift oracle: matches the tool's `[Hypercubed Presentation]` -/
 
 /-- `T(Name -> Proc) = Product{ Name ; (Name -> Proc) }`, the type-lift of the arrow argument. -/

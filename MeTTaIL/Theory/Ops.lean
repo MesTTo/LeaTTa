@@ -95,4 +95,15 @@ def Presentation.diff (pa pb : Presentation) : Presentation :=
                 (fun r => r.labels.all (fun l => labels.contains l))
   .mk cats defs eqs rws []
 
+/-- The base identifier of a dotted path: the variable name it heads. A premise `src ~> tgt` binds
+    `tgt`'s base identifier. -/
+def DottedPath.baseName : DottedPath → String
+  | .base n => n
+  | .qualified n _ => n
+
+/-- The premises (the `let h in ...` hypotheses) of a rewrite, outermost first. -/
+def Rewrite.premises : Rewrite → List Hyp
+  | .base _ _ => []
+  | .ctx h r => h :: Rewrite.premises r
+
 end MeTTaIL

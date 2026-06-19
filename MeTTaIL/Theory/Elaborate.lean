@@ -9,6 +9,7 @@ and keeping the development free of `partial`.
 import MeTTaIL.Theory.Instance
 import MeTTaIL.Theory.Ops
 import MeTTaIL.Theory.Rename
+import MeTTaIL.Theory.Check
 
 namespace MeTTaIL
 
@@ -60,9 +61,11 @@ mutual
       permutation), `addTerms` (with the duplicate-label check), `addEquations`, `addRewrites`, and
       the lattice ops `conj`/`disj`/`subtract`.
 
-      Pending: the full equation/rewrite category type checker (`AddEqRwHelpers`); the workers here
-      append after the structural checks (duplicate label, missing export, replacement target/shadow).
-      -/
+      The workers run the category checks (`Theory/Check`: the two sides of each equation and each
+      rewrite conclusion have compatible top-level categories, and every rewrite right-hand-side
+      variable is bound on the left or by a premise) plus the structural checks (duplicate label,
+      missing export, replacement target/shadow). Pending: the deeper per-variable category-consistency
+      check (`catOfIdentInAST`, that each variable resolves to a single category). -/
   def elaborateFuel : Nat → ElabCtx → TheoryInst → Except String Presentation
     | 0, _, _ => .error "elaborate: out of fuel"
     | _+1, _, .empty => .ok .empty
@@ -80,10 +83,14 @@ mutual
         | none => .ok (.mk p.exports (p.terms ++ grammar) p.equations p.rewrites p.references)
     | fuel+1, ctx, .addEquations base eqs => do
         let p ← elaborateFuel fuel ctx base
-        .ok (.mk p.exports p.terms (p.equations ++ eqs) p.rewrites p.references)
+        match eqs.findSome? (checkEquation p.terms) with
+        | some err => .error err
+        | none => .ok (.mk p.exports p.terms (p.equations ++ eqs) p.rewrites p.references)
     | fuel+1, ctx, .addRewrites base rws => do
         let p ← elaborateFuel fuel ctx base
-        .ok (.mk p.exports p.terms p.equations (p.rewrites ++ rws) p.references)
+        match rws.findSome? (checkRewrite p.terms) with
+        | some err => .error err
+        | none => .ok (.mk p.exports p.terms p.equations (p.rewrites ++ rws) p.references)
     | fuel+1, ctx, .addExports base exps => do
         let p ← elaborateFuel fuel ctx base
         if exps.isEmpty then .error "Error: missing distinguished export."

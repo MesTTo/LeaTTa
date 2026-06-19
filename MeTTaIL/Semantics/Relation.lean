@@ -16,15 +16,8 @@ import MeTTaIL.Semantics.Reduce
 
 namespace MeTTaIL
 
-/-- The base identifier of a dotted path: the variable name a premise binds. -/
-def DottedPath.baseName : DottedPath → String
-  | .base n => n
-  | .qualified n _ => n
-
-/-- The premises (the `let h in ...` hypotheses) of a rewrite, outermost first. -/
-def Rewrite.premises : Rewrite → List Hyp
-  | .base _ _ => []
-  | .ctx h r => h :: Rewrite.premises r
+-- `DottedPath.baseName` and `Rewrite.premises` live in `Theory/Ops.lean` (used by both the reduction
+-- relation here and the elaborator's category checker).
 
 mutual
   /-- One-step reduction induced by a presentation's rewrites. -/

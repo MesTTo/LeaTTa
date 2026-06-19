@@ -1,0 +1,51 @@
+name: CI
+
+# Gate for contributions. Every pull request and every push to a main branch must build the whole
+# development, keep the no-placeholder invariant, and pass the differential oracle and the regression
+# suite. A change that fails any of these does not merge.
+
+on:
+  pull_request:
+  push:
+    branches: [metatheory, future-work, main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install elan
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Fetch the prebuilt Mathlib cache (used by the metatheory layer)
+        run: lake exe cache get
+
+      - name: Build (kernel, interpreter binary, metatheory, operational)
+        run: lake build 2>&1 | tee build.log
+
+      - name: No sorry or admit (Lean's own warning)
+        run: |
+          if grep -q "declaration uses 'sorry'" build.log; then
+            echo "Build reported a use of sorry/admit."; exit 1
+          fi
+
+      - name: No forbidden placeholders (partial, unsafe, native_decide)
+        run: scripts/ci/check-no-forbidden.sh
+
+      - name: Differential oracle against Hyperon's corpus (270/270)
+        run: ./scripts/run-oracle.sh
+
+      - name: Regression suite
+        run: ./scripts/run-regression.sh

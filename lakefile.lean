@@ -2,7 +2,7 @@ import Lake
 open Lake DSL
 
 package «MettaHyperonFull» where
-  version := v!"0.3.0"
+  version := v!"0.3.1"
   keywords := #["MeTTa", "Hyperon", "formal semantics", "metatheory", "verified interpreter"]
   leanOptions := #[⟨`autoImplicit, false⟩, ⟨`relaxedAutoImplicit, false⟩]
 
@@ -20,7 +20,7 @@ lean_lib «MettaHyperonFull» where
 
 -- Proofs ABOUT the kernel (determinism / result well-definedness, confluence of the
 -- deterministic fragment, optimization-preservation, α-equivalence, type soundness).
--- A separate target so `metta_full` — the runnable binary, rooted at `Main` — never links
+-- A separate target so `LeaTTa` — the runnable binary, rooted at `Main` — never links
 -- Mathlib.
 @[default_target]
 lean_lib «Metatheory» where
@@ -35,5 +35,5 @@ lean_lib «Operational» where
   roots := #[`MettaHyperonFull.Operational]
 
 @[default_target]
-lean_exe «metta_full» where
+lean_exe «LeaTTa» where
   root := `Main

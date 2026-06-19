@@ -31,8 +31,9 @@ def intCmp (f : Int → Int → Bool) : List Atom → ReduceResult
   | _ => ReduceResult.incorrectArgument "expected exactly two arguments"
 
 /-- Polymorphic arithmetic on `Int`/`Float` atoms. Matching Hyperon's runtime, a mixed `Int`/`Float`
-    pair promotes the `Int` operand to `Float`; non-numeric arguments are an argument error (the type
-    layer reports those as `BadArgType`). -/
+    pair promotes the `Int` operand to `Float`. Non-numeric arguments return `incorrectArgument`,
+    which the evaluator surfaces as `NotReducible`; the `BadArgType` error is separate, coming from
+    the type layer's declared-signature check. -/
 def numBin (fi : Int → Int → Int) (ff : Float → Float → Float) : List Atom → ReduceResult
   | [Atom.gnd (Ground.int a), Atom.gnd (Ground.int b)] => ReduceResult.ok [Atom.gnd (Ground.int (fi a b))]
   | [Atom.gnd (Ground.float a), Atom.gnd (Ground.float b)] => ReduceResult.ok [Atom.gnd (Ground.float (ff a b))]
@@ -63,7 +64,7 @@ def boolBin (f : Bool → Bool → Bool) : List Atom → ReduceResult
 def eqAtom : List Atom → ReduceResult
   | [a,b] =>
       -- Error propagation: `==` lifts an argument that reduced to an `(Error …)` to be its own
-      -- result, instead of comparing against the error atom. This is Hyperon's behaviour, e.g.
+      -- result, instead of comparing against the error atom. Error promotion is Hyperon's behaviour, e.g.
       -- `(== 4 (+ ln 2))` with `(: ln LN)` declared yields `(Error (+ ln 2) (BadArgType 1 Number LN))`
       -- (the type error raised by `(+ ln 2)`), not `False`. Ops like `assert*` instead need to
       -- *compare* error results, so this lift is local to `==` rather than in the generic
@@ -167,8 +168,8 @@ def mathTable : GroundingTable := [
 ]
 
 /-- `min-atom`/`max-atom` (Hyperon `atom.rs`): the minimum/maximum of an expression of numbers,
-    compared as `f64` and returned as a `Float`. Errors faithfully on a non-expression argument, an
-    empty expression, or a non-number child. -/
+    compared as `f64` and returned as a `Float`. A non-expression argument returns `incorrectArgument`
+    (surfaced as `NotReducible`); an empty expression or a non-number child raises a runtime error. -/
 def minMaxAtom (isMin : Bool) (name : String) : List Atom → ReduceResult
   | [Atom.expr xs] =>
       match xs.mapM toFloat? with

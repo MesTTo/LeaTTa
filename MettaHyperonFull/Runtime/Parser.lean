@@ -3,7 +3,6 @@ import MettaHyperonFull.Core.Atom
 namespace Metta.Runtime
 open Metta
 
-/-- A whitespace character. -/
 def isSpace (c : Char) : Bool := c == ' ' || c == '\n' || c == '\t' || c == '\r'
 
 /-- Tokenizer state: accumulating a symbol (`sym`, chars reversed; `[]` means "between tokens"),
@@ -54,7 +53,9 @@ def tokenize (s : String) : List String := tokenizeAux (TokState.sym []) [] s.to
 
 /-- Parse a decimal float literal `[-]digits.digits` (e.g. `1.5`, `-0.25`, `.5`) via
     `Float.ofScientific`, the same primitive `Lean.Json`'s number parser uses. Integer tokens are
-    handled by `String.toInt?` in `parseAtomToken`, so this only matters when a `.` is present. -/
+    handled by `String.toInt?` in `parseAtomToken`, so this path runs only when a `.` is present.
+    Known issue: result is IEEE 64-bit double, so values like `0.1` are subject to the usual
+    binary float rounding. -/
 def parseFloat? (s : String) : Option Float :=
   let neg := s.startsWith "-"
   let body := if neg then (s.drop 1).toString else s
@@ -66,13 +67,14 @@ def parseFloat? (s : String) : Option Float :=
         | none => none
   | _ => none
 
-/-- Parse a single token into an `Atom`: `$x` → variable, `True`/`False` → Bool, `()` → unit,
-    `"…"` → string, an integer/float literal → the grounded number, otherwise a symbol. -/
+/-- Parse a single token into an `Atom`: `$x` → variable, `True`/`False` → Bool, `()` → the empty
+    expression, `"…"` → string, an integer/float literal → the grounded number, otherwise a symbol.
+    The tokenizer splits `(` and `)` into separate tokens, so the `()` case here is only a guard. -/
 def parseAtomToken (s : String) : Atom :=
   if s.startsWith "$" then Atom.var (s.drop 1).toString
   else if s == "True" then Atom.gnd (Ground.bool true)
   else if s == "False" then Atom.gnd (Ground.bool false)
-  else if s == "()" then Atom.unit
+  else if s == "()" then Atom.expr []
   else if s.startsWith "\"" then Atom.gnd (Ground.str ((s.drop 1).dropEnd 1).toString)
   else match s.toInt? with
     | some n => Atom.gnd (Ground.int n)

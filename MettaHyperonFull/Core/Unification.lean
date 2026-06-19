@@ -7,9 +7,9 @@ namespace Unify
 mutual
 
 /-- Structurally decompose a single equation `a =? b` into the variable constraints it forces,
-    or `none` on a head clash / arity mismatch. Trivial `$x =? $x` constraints are dropped, and a
-    variable on either side yields a `(var, term)` constraint. This is structural recursion over
-    the two atoms (mutually with `decomposeList`), hence total. -/
+    or `none` on a head clash or arity mismatch. Trivial `$x =? $x` constraints are dropped and a
+    variable on either side yields a `(var, term)` constraint. `decomposeEq` recurses mutually with
+    `decomposeList` on the two atoms, so termination is structural and the function is total. -/
 def decomposeEq : Atom → Atom → Option (List (VarName × Atom))
   | Atom.var x, Atom.var y => if x == y then some [] else some [(x, Atom.var y)]
   | Atom.var x, t => some [(x, t)]
@@ -44,8 +44,8 @@ def decomposeAll : List (Atom × Atom) → Option (List (VarName × Atom))
     worklist, then eliminates one variable: it substitutes `x ↦ t` into the remaining constraints
     and records the binding. Because every round removes one distinct variable from the problem,
     the number of rounds is bounded by the number of distinct variables, so `unifyTop` supplies a
-    `fuel` (the total term size) that is always sufficient; the `fuel = 0` clause with constraints
-    still pending is unreachable. -/
+    `fuel` (the total term size) that exceeds that bound; if the `fuel = 0` clause is reached with
+    constraints still pending, it returns `none`. -/
 def unifyRounds : Nat → List (Atom × Atom) → Subst → Option Subst
   | 0, eqs, s =>
       match decomposeAll eqs with

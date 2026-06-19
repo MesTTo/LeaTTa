@@ -11,8 +11,9 @@ resource bounds. Both are computable and share the `Core` object language (atoms
 
 Modules:
   * `State`          — the four-register state (+ a `history` register for reflection).
-  * `Semantics`      — the small-step relation `smallStep?` / `runFuel` (QUERY, CHAIN, TRANSFORM,
-                       add/remove-atom, OUTPUT) and the equality-rule reducer.
+  * `Semantics`      — the small-step function `smallStep?` / `runFuel`, with step kinds QUERY,
+                       CHAIN, add/remove-atom, and OUTPUT, and the equality-rule reducer. `transform`
+                       atoms reduce under QUERY; there is no separate TRANSFORM step kind.
   * `Minimal`        — the minimal-MeTTa instruction set (eval/chain/unify/cons/decons/…).
   * `Trace`          — execution traces (the observable history).
   * `Bisimulation`   — barbed bisimulation (MOPS §5) and the proof it is an **equivalence**.

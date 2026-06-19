@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation (the book and API reference)
+    url: https://mestto.github.io/LeaTTa/
+    about: Read the book and the generated API reference before filing, in case it is already covered.

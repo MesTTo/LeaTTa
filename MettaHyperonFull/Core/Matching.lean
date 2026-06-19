@@ -47,7 +47,8 @@ end Bindings
 mutual
 
 /-- Match atoms in the official left/right style. Variables on either side produce bindings;
-    expression matching is pointwise; grounded custom matching can be supplied by the runtime. -/
+    expression matching is pointwise; grounded custom matching can be supplied by the runtime. When
+    only the right-hand atom is grounded, the custom matcher is called as `f r l`, arguments swapped. -/
 def matchAtomsWith (custom : Option GroundMatcher) : Atom → Atom → List Bindings
   | Atom.sym a, Atom.sym b => if a == b then [[]] else []
   | Atom.var x, Atom.var y => if x == y then [[]] else [[BindingRel.val x (Atom.var y)]]

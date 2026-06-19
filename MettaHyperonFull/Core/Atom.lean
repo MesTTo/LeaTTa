@@ -3,8 +3,8 @@ namespace Metta
 /-- Names of MeTTa variables, without the leading `$`. -/
 abbrev VarName := String
 
-/-- Grounded payloads implemented directly by the Lean runtime. Host-language values
-    whose semantics is external can be represented by `external tag payload`. -/
+/-- Grounded payloads implemented directly by the Lean runtime. Use `external tag payload`
+    for host-language values whose semantics lies outside this interpreter. -/
 inductive Ground where
   | int : Int → Ground
   | float : Float → Ground
@@ -77,11 +77,8 @@ def undefined : Atom := Atom.sym "%Undefined%"
 def typeSym : Atom := Atom.sym "Type"
 /-- The `Atom` meta-type: accepts anything, so quoted/unevaluated arguments stay well-typed. -/
 def atomType : Atom := Atom.sym "Atom"
-/-- The `Symbol` meta-type. -/
 def symbolType : Atom := Atom.sym "Symbol"
-/-- The `Variable` meta-type. -/
 def variableType : Atom := Atom.sym "Variable"
-/-- The `Expression` meta-type. -/
 def expressionType : Atom := Atom.sym "Expression"
 /-- The `Grounded` meta-type (numbers, booleans, grounded operations). -/
 def groundedType : Atom := Atom.sym "Grounded"
@@ -130,7 +127,6 @@ def isBuiltinTypeSymbol : Atom → Bool
 /-- Function type constructor: `(-> A B C)`. -/
 def mkArrow (args : List Atom) (ret : Atom) : Atom := Atom.expr (Atom.sym "->" :: (args ++ [ret]))
 
-/-- True if `a` is a function type `(-> …)`. -/
 def isArrow : Atom → Bool
   | Atom.expr (Atom.sym "->" :: _) => true
   | _ => false
@@ -153,8 +149,8 @@ def size : Atom → Nat
   | Atom.gnd _ => 1
   | Atom.expr xs => 1 + (xs.map size).sum
 
-/-- All variable occurrences in `a`, left-to-right with duplicates (its free and bound variables;
-    atoms have no binders, so every occurrence is free). -/
+/-- All variable occurrences in `a`, left-to-right with duplicates. Atoms have no binders, so
+    every occurrence is free; see `FreeVars.lean` for the named notion used in the metatheory. -/
 def vars : Atom → List VarName
   | Atom.var x => [x]
   | Atom.expr xs => (xs.map vars).flatten

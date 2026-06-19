@@ -5,7 +5,7 @@ import MettaHyperonFull.Proofs.Indexing
 
 `MettaHyperonFull/Proofs/Indexing.lean` proves the *semantic* half of Hyperon improvement #9
 (`matchAtoms_headKey`: matching forces head agreement). This file proves the *syntactic* half and
-the resulting sound-and-complete characterisation, so the improvement is fully rigorous.
+the resulting sound-and-complete characterisation.
 
 `MinEnv.ofAtomsGT` indexes the `=`-rules by the head key of their left-hand side:
 
@@ -15,18 +15,18 @@ the resulting sound-and-complete characterisation, so the improvement is fully r
 `ruleIndex` maps each head symbol to its rules in knowledge-base order, and `varRules` holds the
 head-less rules. `candidates toEval` offers the bucket for `toEval`'s head together with `varRules`.
 
-* `ruleIndex_getD`:       the head-`k` bucket is *exactly* the `=`-rules with a head-`k` LHS (via the
-                          `alter`-foldl invariant `foldl_idx`).
-* `ofAtomsGT_varRules`:   `varRules` is *exactly* the head-less rules.
-* `candidates_sound`:     every candidate offered is a genuine `=`-rule (`candidates ⊆ extractRules`):
-                          indexing never fabricates a rule.
-* `candidates_complete`: **the payoff**: any rule whose LHS matches a query headed by `k` is a
-                          candidate (head-`k` rules from the bucket, head-less ones from `varRules`).
-                          Indexing never *drops* a rule that could fire.
+* `ruleIndex_getD`:      the head-`k` bucket is the `=`-rules with a head-`k` LHS (via the
+                         `alter`-foldl invariant `foldl_idx`).
+* `ofAtomsGT_varRules`:  `varRules` is the head-less rules.
+* `candidates_sound`:    every candidate offered is a genuine `=`-rule (`candidates ⊆ extractRules`):
+                         indexing never fabricates a rule.
+* `candidates_complete`: any rule whose LHS matches a query headed by `k` is a candidate (head-`k`
+                         rules from the bucket, head-less ones from `varRules`).
+                         Indexing never drops a rule that could fire.
 
-So first-argument indexing is **sound and complete**. This is precisely the same-head regime in which
-Hyperon's own `Space::visit` *under*-counts atoms (open issue #1079); here completeness is a
-machine-checked theorem, not a hoped-for invariant.
+So first-argument indexing is **sound and complete**. Note: Hyperon's own `Space::visit`
+under-counts atoms in this same-head regime (open issue #1079); here completeness is a
+machine-checked theorem.
 -/
 
 namespace Metta
@@ -34,7 +34,7 @@ open Metta.Minimal Std
 
 /-- Foldl invariant for the `alter`-based bucket build. The step `f` is a parameter described by
 `hf` (so the lemma applies to `ofAtomsGT`'s inline `match`-lambda, which compiles to its own match
-auxiliary, by first-order unification of `f`). The `k` bucket accumulates exactly the processed
+auxiliary, by first-order unification of `f`). The `k` bucket accumulates the processed
 head-`k` rules, in order, on top of the seed `m0`. -/
 theorem foldl_idx (k : String)
     (f : HashMap String (List (Atom × Atom)) → (Atom × Atom) → HashMap String (List (Atom × Atom)))
@@ -61,7 +61,7 @@ theorem foldl_idx (k : String)
           · rw [ih, Std.HashMap.getD_alter]
             simp [hkk]
 
-/-- The head-`k` bucket of `ofAtomsGT`'s index is exactly the `=`-rules whose LHS is headed by `k`,
+/-- The head-`k` bucket of `ofAtomsGT`'s index is the `=`-rules whose LHS is headed by `k`,
 in knowledge-base order. -/
 theorem ruleIndex_getD (atoms : List Atom) (gt : GroundingTable) (k : String) :
     (MinEnv.ofAtomsGT atoms gt).ruleIndex.getD k []
@@ -71,7 +71,7 @@ theorem ruleIndex_getD (atoms : List Atom) (gt : GroundingTable) (k : String) :
   · simp [extractRules, Std.HashMap.getD_emptyWithCapacity]
   · exact fun _ _ => rfl
 
-/-- The head-less rules of `ofAtomsGT` are exactly the extracted rules with no head key. -/
+/-- The head-less rules of `ofAtomsGT` are the extracted rules with no head key. -/
 theorem ofAtomsGT_varRules (atoms : List Atom) (gt : GroundingTable) :
     (MinEnv.ofAtomsGT atoms gt).varRules
       = (extractRules atoms).filter (fun r => (headKey r.1).isNone) := rfl

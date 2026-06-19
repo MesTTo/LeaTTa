@@ -1,7 +1,9 @@
 /.lake/
 *.olean
+/dist/
 /book/.lake/
 /book/_out/
+/docbuild/.lake/
 /.playwright-mcp/
 /leatta-*.png
 /leatta-*.jpeg

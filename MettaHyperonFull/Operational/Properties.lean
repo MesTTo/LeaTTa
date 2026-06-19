@@ -4,30 +4,29 @@ import MettaHyperonFull.Operational.ResourceBounded
 # Properties of the Meta-MeTTa operational semantics
 
 Verified properties of the four-register machine (`Operational/Semantics.lean`) and its
-resource-bounded extension (`Operational/ResourceBounded.lean`): the operational model published in
-*Meta-MeTTa* (arXiv 2305.17218). These complement the barbed-bisimulation equivalence already proved
-in `Operational/Bisimulation.lean`; together they make the small-step machine a *verified* spec, not
-just an executable sketch.
+resource-bounded extension (`Operational/ResourceBounded.lean`), as published in
+*Meta-MeTTa* (arXiv 2305.17218). These extend the barbed-bisimulation results in
+`Operational/Bisimulation.lean`.
 
-The two headline results are exactly the guarantees MeTTa needs for its intended **on-chain /
-smart-contract** use:
+Two results matter most for on-chain / smart-contract use:
 
-* **`smallStep?_kb_auditable`**: a single step changes the knowledge base *only* by an explicit
-  `add-atom`/`remove-atom`; pure reduction (`QUERY`/`CHAIN`/`OUTPUT`) never mutates it. So every change
-  to contract state is an attributable, authorised operation.
-* **`resourceStep?_energy_nonincreasing`**: a resource-bounded step never *creates* energy; total
-  gas is monotonically non-increasing. (With `transitionCost ≥ 0`, every transition is paid for.)
+* `smallStep?_kb_auditable`: a single step changes the knowledge base only by an explicit
+  `add-atom`/`remove-atom`. Pure reduction steps (`QUERY`/`CHAIN`/`OUTPUT`) never mutate it, so
+  every change to contract state is attributable to an explicit atom operation.
+* `resourceStep?_energy_nonincreasing`: a resource-bounded step never creates energy. Total gas is
+  monotonically non-increasing. (This follows from `transitionCost ≥ 0`, proved as
+  `transitionCost_nonneg`.)
 
-Plus `mem_equalityReductions`, the soundness-and-completeness characterisation of `QUERY`'s result
-set: a reduct is produced *iff* it is a genuine instantiated equation firing.
+A third result, `mem_equalityReductions`, is the soundness-and-completeness characterisation of the
+`QUERY` result set: a reduct appears iff it is a genuine instantiated equality-rule firing.
 -/
 
 namespace Metta
 
 /-! ## QUERY result set: sound and complete -/
 
-/-- The inner `match` in `equalityReductions` is just `List.map` (the `[]` arm agrees with
-`[].map`). -/
+/-- The `[]` arm of the inner `match` in `equalityReductions` agrees with `[].map`, so the whole
+    expression collapses to a `flatMap`. -/
 theorem equalityReductions_eq (s : Space) (a : Atom) :
     equalityReductions s a =
       s.equalityRules.flatMap fun p => (matchAtoms p.fst a).map fun b => instantiate b p.snd := by
@@ -36,15 +35,15 @@ theorem equalityReductions_eq (s : Space) (a : Atom) :
   funext p
   cases matchAtoms p.fst a <;> rfl
 
-/-- The reducts obtained by firing a list of equality rules `(l, r)` at the redex `a`: for each rule
-and each unifier `b` of its LHS `l` with `a`, the instantiated RHS `instantiate b r`. This is the
-shared kernel of both QUERY semantics. MOPS (here) fires it over the whole knowledge base; the
-kernel fires it over the first-argument-indexed candidates (`Proofs/Correspondence.lean`). -/
+/-- The reducts obtained by firing a list of equality rules at `a`: for each rule `(l, r)` and each
+    unifier `b` of `l` against `a`, the result is `instantiate b r`. This is the shared kernel of
+    both QUERY semantics. MOPS fires it over the whole knowledge base; the indexed kernel
+    (`Proofs/Correspondence.lean`) fires it over the first-argument-indexed candidates only. -/
 def firedReducts (rules : List (Atom × Atom)) (a : Atom) : List Atom :=
   rules.flatMap fun p => (matchAtoms p.fst a).map fun b => instantiate b p.snd
 
-/-- Membership in `firedReducts`: `x` is fired iff some rule's LHS unifies with `a` (binding `b`) and
-`x` is the instantiated RHS. The sound-and-complete characterisation reused by both QUERY semantics. -/
+/-- `x ∈ firedReducts rules a` iff some rule `(l, r) ∈ rules` has a unifier `b` of `l` against `a`
+    with `x = instantiate b r`. Used by both QUERY soundness-and-completeness proofs. -/
 theorem mem_firedReducts {x a : Atom} {rules : List (Atom × Atom)} :
     x ∈ firedReducts rules a ↔ ∃ p ∈ rules, ∃ b ∈ matchAtoms p.fst a, x = instantiate b p.snd := by
   unfold firedReducts
@@ -57,22 +56,20 @@ theorem mem_firedReducts {x a : Atom} {rules : List (Atom × Atom)} :
   · rintro ⟨p, hp, b, hb, hxb⟩
     exact ⟨p, hp, List.mem_map.2 ⟨b, hb, hxb.symm⟩⟩
 
-/-- The operational `equalityReductions` is exactly `firedReducts` over the space's equality rules. -/
 theorem equalityReductions_eq_fired (s : Space) (a : Atom) :
     equalityReductions s a = firedReducts s.equalityRules a :=
   equalityReductions_eq s a
 
-/-- **QUERY is sound and complete.** An atom `x` is an equality-rule reduct of `a` in space `s`
-*iff* it is `instantiate b r` for a genuine rule `(= l r) ∈ s` (`(l, r) ∈ s.equalityRules`) and a
-matcher binding `b` of the rule's LHS against `a`. The workspace receives exactly the genuine
-instantiated rule firings: nothing invented, nothing dropped. -/
+/-- QUERY soundness and completeness. `x ∈ equalityReductions s a` iff there is a rule
+    `(l, r) ∈ s.equalityRules` and a unifier `b` of `l` against `a` with `x = instantiate b r`.
+    Nothing is invented and nothing is dropped. -/
 theorem mem_equalityReductions {x a : Atom} {s : Space} :
     x ∈ equalityReductions s a ↔
       ∃ p ∈ s.equalityRules, ∃ b ∈ matchAtoms p.fst a, x = instantiate b p.snd := by
   rw [equalityReductions_eq_fired]; exact mem_firedReducts
 
-/-- **Irreducibility is decidable as "no rule fires".** `a` is a normal form (`equalityStep` yields
-`none`) iff no equation in `s` reduces it, which is MOPS's `insensitive` predicate, made executable. -/
+/-- `equalityStep s a = none` iff no equation in `s` reduces `a`. This is the executable form of
+    MOPS's `insensitive` predicate (arXiv:2305.17218 §3.3). -/
 theorem equalityStep_eq_none_iff {s : Space} {a : Atom} :
     equalityStep s a = none ↔ equalityReductions s a = [] := by
   unfold equalityStep
@@ -80,17 +77,16 @@ theorem equalityStep_eq_none_iff {s : Space} {a : Atom} :
 
 /-! ## Knowledge-base auditability (on-chain state integrity) -/
 
-/-- Draining results into the workspace never touches the knowledge base. -/
+/-- `foldl State.pushWork` only modifies the workspace, not the knowledge base. -/
 theorem foldl_pushWork_kb (reds : List Atom) (s : State) :
     (reds.foldl State.pushWork s).kb = s.kb := by
   induction reds generalizing s with
   | nil => rfl
   | cons r rs ih => rw [List.foldl_cons, ih]; rfl
 
-/-- **On-chain state integrity.** One small step changes the knowledge base `kb` only by an explicit
-`add-atom` (one atom inserted) or `remove-atom` (one atom removed); `QUERY`/`CHAIN`/`OUTPUT` leave it
-untouched. So in the four-register machine the contract's persistent state is mutated *only* by
-attributable atom operations, never as a silent side effect of reduction. -/
+/-- Knowledge-base auditability. One small step either leaves `kb` unchanged (`QUERY`/`CHAIN`/`OUTPUT`)
+    or inserts exactly one atom (`add-atom`) or removes exactly one atom (`remove-atom`). No reduction
+    step mutates the knowledge base as a side effect. -/
 theorem smallStep?_kb_auditable {cfg : RuntimeConfig} {s : State} {k : StepKind} {s' : State}
     (h : smallStep? cfg s = some (k, s')) :
     s'.kb = s.kb ∨ (∃ x, s'.kb = Space.insert s.kb x) ∨ (∃ x, s'.kb = Space.removeOne s.kb x) := by
@@ -122,23 +118,22 @@ theorem smallStep?_kb_auditable {cfg : RuntimeConfig} {s : State} {k : StepKind}
 
 /-! ## Gas: energy is never created (resource-bounded extension) -/
 
-/-- Total energy held across a token list. -/
 def totalEnergy (toks : List ResourceToken) : Int :=
   toks.foldr (fun t acc => t.energy + acc) 0
 
-/-- Every transition has non-negative syntactic cost. -/
+/-- `transitionCost` is always non-negative (it is `Atom.size` cast to `Int`). -/
 theorem transitionCost_nonneg (a : Atom) : 0 ≤ transitionCost a := by
   unfold transitionCost; exact Int.natCast_nonneg _
 
-/-- Debiting a token never increases its energy. -/
+/-- After debiting token `t` by the cost of `a`, the remaining energy is at most what `t` started
+    with. -/
 theorem debit_energy_le (t : ResourceToken) (a : Atom) : (debit t a).energy ≤ t.energy := by
   have hnn := transitionCost_nonneg a
   have he : (debit t a).energy = t.energy - transitionCost a := rfl
   rw [he]; omega
 
-/-- **Gas is never created.** A resource-bounded step debits exactly the head token by the (non-
-negative) transition cost and leaves the rest untouched, so the total energy is monotonically
-non-increasing: a contract can only ever *spend* gas, never mint it. -/
+/-- Gas is never created. A resource-bounded step debits the head token by the transition cost and
+    leaves the rest of the token list untouched, so total energy is monotonically non-increasing. -/
 theorem resourceStep?_energy_nonincreasing {cfg : RuntimeConfig} {rs rs' : ResourceState}
     (h : resourceStep? cfg rs = some rs') :
     totalEnergy rs'.tokens ≤ totalEnergy rs.tokens := by

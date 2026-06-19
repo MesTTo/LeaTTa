@@ -3,33 +3,36 @@ import MettaHyperonFull.Core.Builtins
 
 namespace Metta
 
-/-- Labels for the small-step semantics: the rule fired on each step. -/
+/-- Labels for the rules of the small-step semantics, one per transition. -/
 inductive StepKind where
   | query | chain | addAtom | remAtom | output
   deriving Repr, BEq, Inhabited
 
-/-- Find equality-rule reductions of an atom in a space. This captures `(= E $t)` style evaluation. -/
+/-- Find all equality-rule reductions of `a` in `space`. For each rule `(= lhs rhs)` in the space,
+    each unifier of `lhs` against `a` produces one reduct `instantiate b rhs`. -/
 def equalityReductions (space : Space) (a : Atom) : List Atom :=
   space.equalityRules.flatMap (fun p =>
     match matchAtoms p.fst a with
     | [] => []
     | bs => bs.map (fun b => instantiate b p.snd))
 
-/-- One-step `add-atom`/`addAtom`: insert the atom into the knowledge base and emit `()`. -/
+/-- Apply one `add-atom` (or its alias `addAtom`) step: insert `a` into the knowledge base and write
+    `()` to output. Both spellings are consumed from the input register. -/
 def stepAddAtom (s : State) (a : Atom) : State :=
   let call1 := Atom.expr [Atom.sym "add-atom", a]
   let call2 := Atom.expr [Atom.sym "addAtom", a]
   let st := { s with input := Space.removeOne (Space.removeOne s.input call1) call2 }
   State.pushOutput (State.addKb st a) Atom.unit
 
-/-- One-step `remove-atom`/`remAtom`: delete one matching atom from the knowledge base and emit `()`. -/
+/-- Apply one `remove-atom` (or its alias `remAtom`) step: delete one occurrence of `a` from the
+    knowledge base and write `()` to output. -/
 def stepRemAtom (s : State) (a : Atom) : State :=
   let call1 := Atom.expr [Atom.sym "remove-atom", a]
   let call2 := Atom.expr [Atom.sym "remAtom", a]
   let st := { s with input := Space.removeOne (Space.removeOne s.input call1) call2 }
   State.pushOutput (State.remKb st a) Atom.unit
 
-/-- `some` of the equality-rule reductions of `a`, or `none` when `a` matches no rule's LHS. -/
+/-- Return `some` of the equality-rule reductions of `a`, or `none` when no rule in `kb` matches. -/
 def equalityStep (kb : Space) (a : Atom) : Option (List Atom) :=
   match equalityReductions kb a with
   | [] => none
@@ -37,11 +40,16 @@ def equalityStep (kb : Space) (a : Atom) : Option (List Atom) :=
 
 mutual
 
-/-- Reduce an atom one step against the knowledge base `kb` and the grounded builtins, or `none`
-    when `a` is a normal form (`insensitive` to every rule, arXiv:2305.17218 §3.3). Space-aware
-    queries (`transform`, `match`, `get-type`) come first; a strict (`evalArgs`) grounded operator
-    reduces its arguments left-to-right before it fires, so nested calls such as `(+ (* 2 3) 4)`
-    evaluate; otherwise the user equality rules `(= lhs rhs)` apply. -/
+/-- Reduce `a` by one step against `kb` and the grounded builtins. Returns `none` when `a` is a
+    normal form (insensitive to every rule, arXiv:2305.17218 §3.3).
+
+    Priority order: space-aware queries (`transform`, `match`, `get-type`) fire first; `if` and
+    `let` reduce the condition/value sub-expression before the whole form; `superpose` unfolds
+    immediately; a grounded operator with `evalArgs` mode reduces arguments left-to-right before
+    firing, so `(+ (* 2 3) 4)` evaluates correctly; equality rules `(= lhs rhs)` apply last.
+
+    Limitation: `call-native` has no dispatch table here, so native-function atoms fall through to
+    the equality-rule case and are returned unchanged if no rule matches. -/
 def reduceAtom (cfg : RuntimeConfig) (kb : Space) : Atom → Option (List Atom)
   | Atom.expr [Atom.sym "transform", pattern, tmpl] => some (kb.transform pattern tmpl)
   | Atom.expr [Atom.sym "match", _, pattern, tmpl] => some (kb.transform pattern tmpl)
@@ -80,8 +88,8 @@ def reduceAtom (cfg : RuntimeConfig) (kb : Space) : Atom → Option (List Atom)
               | none => applyOp
   | a => equalityStep kb a
 
-/-- Reduce the left-most reducible atom of a list by one step, returning the updated argument
-    lists (one per nondeterministic result), or `none` when every element is already a normal form. -/
+/-- Reduce the left-most reducible element of `args` by one step. Returns one updated argument list
+    per nondeterministic result, or `none` when every element is already a normal form. -/
 def reduceArgs (cfg : RuntimeConfig) (kb : Space) : List Atom → Option (List (List Atom))
   | [] => none
   | x :: xs =>
@@ -94,10 +102,19 @@ def reduceArgs (cfg : RuntimeConfig) (kb : Space) : List Atom → Option (List (
 
 end
 
-/-- One small step of the four-register machine (arXiv:2305.17218 §3.3). The input register is
-    drained first: `add-atom`/`remove-atom` mutate the knowledge base, every other atom is reduced
-    and its results enter the workspace (`QUERY`). Once the input is empty the workspace is drained:
-    reducible atoms are rewritten in place (`CHAIN`) and normal forms move to output (`OUTPUT`). -/
+/-- One small step of the four-register machine (arXiv:2305.17218 §3.3). Returns `none` when both
+    input and workspace are empty (the machine has halted).
+
+    Input is drained first. `add-atom`/`remove-atom` mutate the knowledge base and emit `()` (rules
+    `ADD`/`REM`). Any other input atom is reduced: its results enter the workspace (`QUERY`), or it
+    moves directly to output if it is a normal form (`OUTPUT`).
+
+    Once input is empty, the workspace is drained. Reducible workspace atoms are rewritten in place
+    (`CHAIN`); normal forms move to output (`OUTPUT`).
+
+    Note: `runFuel` applies this in a loop bounded by `cfg.fuel`. If fuel runs out before the
+    workspace empties, the state is returned as-is with no signal that computation was cut short.
+    Callers that need to distinguish "halted" from "fuel exhausted" must check `fuel` themselves. -/
 def smallStep? (cfg : RuntimeConfig) (s : State) : Option (StepKind × State) :=
   match s.input.atoms with
   | a :: _ =>

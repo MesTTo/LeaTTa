@@ -2,9 +2,9 @@ import MettaHyperonFull.Core.Atom
 
 namespace Metta
 
-/-- Nondeterministic result list paired with variable bindings is modelled in later modules.
-    This type captures the three special result classes in the Hyperon spec: ordinary results,
-    Empty, NotReducible, and Error. -/
+/-- The four evaluation outcomes from the Hyperon spec: an ordinary value, `Empty` (prune branch),
+    `NotReducible` (no rule applied), or an `Error`. The nondeterministic result list and binding
+    pairing are handled in later modules. -/
 inductive EvalStatus where
   | value : Atom → EvalStatus
   | empty : EvalStatus

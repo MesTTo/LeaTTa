@@ -20,15 +20,16 @@ tag := "sec-operational"
 %%%
 
 Alongside the executable interpreter, LeaTTa formalizes the *published* operational semantics of
-MeTTa; the four-register abstract machine of {citet mops}[], which its authors intend as MeTTa's
-independent "JVM-specification". To our knowledge this is its first machine-checked rendering.
+MeTTa: the four-register abstract machine of {citet mops}[], which its authors describe as an
+independent specification of the language. To our knowledge this is its first machine-checked
+rendering.
 
 # The Four-Register Machine
 
-A MOPS state is a tuple of four multiset registers `⟨i, k, w, o⟩`: an *input* register where queries
-arrive, the *knowledge base* `k` (the atomspace), a *workspace* `w` for intermediate results, and an
-*output* register `o`. These are multisets rather than lists because results are delivered in no
-particular order, so the non-determinism is intrinsic to the state.
+A MOPS state is a four-register tuple `⟨i, k, w, o⟩`: an *input* register where queries arrive, the
+*knowledge base* `k` (the atomspace), a *workspace* `w` for intermediate results, and an *output*
+register `o`. All four are multisets, because results are delivered in no particular order and the
+non-determinism is intrinsic to the state.
 
 ```diagram (cssWidth := "26em")
 cd do
@@ -42,32 +43,30 @@ cd do
   CDM.arrow i k (some "ADD/REM") cdRed .left
 ```
 
-The named small-step rules are formalized as an inductive `Step : State → State → Prop`
-(`Operational/Semantics.lean`): *QUERY* reduces an input term against `k`'s equations, depositing all
-matching instantiated right-hand sides into the workspace; *CHAIN* does the same for a workspace term;
-*TRANSFORM* applies an explicit `transform`; *ADDATOM*/*REMATOM* mutate the knowledge base and emit
-unit; and *OUTPUT* moves an irreducible (`insensitive`) workspace term to the output. The matcher
-`unify` is the kernel's own `matchAtoms`, so the spec is wired to the same matcher the interpreter
-runs.
+The small-step semantics is a computable function `smallStep?` (`Operational/Semantics.lean`) that
+returns the next state tagged with a `StepKind`: *QUERY* reduces an input term against `k`'s
+equations, depositing all matching instantiated right-hand sides into the workspace; *CHAIN* does the
+same for a workspace term; *ADDATOM*/*REMATOM* mutate the knowledge base and emit unit; and *OUTPUT*
+moves an irreducible (`insensitive`) workspace term to the output. A `transform` atom reduces under
+*QUERY*, not as a separate step. The matcher `unify` is the kernel's own `matchAtoms`, so the spec is
+wired to the same matcher the interpreter runs.
 
 # Verified Properties
 
-LeaTTa proves three properties of this machine that matter directly for MeTTa's on-chain use:
+LeaTTa proves three properties of this machine:
 
  * *QUERY is sound and complete*: a workspace contractum is produced *iff* it is a genuine
    instantiated equation firing (`mem_equalityReductions`).
  * *The knowledge base is auditable*: a single step changes `k` only by an explicit
-   `add-atom`/`remove-atom`; pure reduction never mutates it (`smallStep?_kb_auditable`). Every
-   change to contract state is thus attributable.
+   `add-atom`/`remove-atom`; pure reduction never mutates it (`smallStep?_kb_auditable`).
  * *Gas is never created*: in the resource-bounded extension (effort tokens with a non-negative
    transition cost), total energy is monotonically non-increasing
-   (`resourceStep?_energy_nonincreasing`). A contract can only ever *spend* gas.
+   (`resourceStep?_energy_nonincreasing`). A contract can spend gas but never mint it.
 
 # Program Equivalence: Barbed Bisimulation
 
 Following {citet mops}[], program equality is *barbed bisimulation*: two states are equivalent when
 they agree on every observable barb (input/workspace/output atoms) and every step of one is matched
 by a step of the other back into the relation. LeaTTa defines this (`Operational/Bisimulation.lean`)
-and proves bisimilarity is an *equivalence relation*, that is, reflexive, symmetric, and transitive (the
-transitivity proof correctly composes the forward and backward simulations). The knowledge base is
-internal and not observed, matching MOPS's coarse-grained treatment of the workspace.
+and proves bisimilarity is an *equivalence relation* (reflexive, symmetric, and transitive). The
+knowledge base is not observed, matching MOPS's treatment of state.

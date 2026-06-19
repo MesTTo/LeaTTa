@@ -29,6 +29,7 @@ def siekTaha : InProceedings where
   authors := #[inlines!"Jeremy G. Siek", inlines!"Walid Taha"]
   year := 2006
   booktitle := inlines!"Scheme and Functional Programming Workshop"
+  url := "http://scheme2006.cs.uchicago.edu/13-siek.pdf"
 
 /-- de Moura & Ullrich; the Lean 4 theorem prover and programming language. -/
 def lean4 : InProceedings where
@@ -36,6 +37,7 @@ def lean4 : InProceedings where
   authors := #[inlines!"Leonardo de Moura", inlines!"Sebastian Ullrich"]
   year := 2021
   booktitle := inlines!"Automated Deduction – CADE 28"
+  url := "https://doi.org/10.1007/978-3-030-79876-5_37"
 
 /-- The Lean mathematical library (Mathlib). -/
 def mathlib : InProceedings where
@@ -43,5 +45,6 @@ def mathlib : InProceedings where
   authors := #[inlines!"The mathlib Community"]
   year := 2020
   booktitle := inlines!"Certified Programs and Proofs (CPP 2020)"
+  url := "https://doi.org/10.1145/3372885.3373824"
 
 end Docs

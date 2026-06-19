@@ -23,7 +23,6 @@ abbrev GroundingTable := List Grounding
 
 namespace GroundingTable
 
-/-- Find the grounding registered for `name`, if any. -/
 def lookup (g : GroundingTable) (name : String) : Option Grounding :=
   g.find? (fun f => f.name == name)
 

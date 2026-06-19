@@ -2,20 +2,20 @@
 MeTTa / OpenCog Hyperon in Lean 4.
 
 ARCHITECTURE. The minimal MeTTa interpreter (`Minimal/Interpreter`) is the assembly language of
-MeTTa, the faithful core. The standard library (`Minimal/Stdlib`) is written as MeTTa over those
-twelve instructions, exactly as in Hyperon. This is the active, validated artifact: it agrees with
-Hyperon's own oracle `lib/tests/test_stdlib.metta` (see `IMPROVEMENTS_OVER_HYPERON.md`).
+MeTTa. The standard library (`Minimal/Stdlib`) is written in MeTTa over those thirteen instructions,
+exactly as in Hyperon. This is the active, validated artifact: it agrees with Hyperon's own oracle
+`lib/tests/test_stdlib.metta` (see the Improvements over Hyperon appendix in the book).
 
 `Operational.*` is a separate, machine-checked library (its own `lean_lib «Operational»` target,
-rooted at `MettaHyperonFull.Operational`): the published Meta-MeTTa operational semantics
-(arXiv 2305.17218), namely the four-register abstract machine ⟨i,k,w,o⟩, its barbed bisimulation, the
-resource-bounded (gas) extension, and the verified on-chain guarantees (knowledge-base auditability
-and gas non-creation). It shares `Core` with the kernel but is a specification for reasoning about
-MeTTa, distinct from and not imported by the runnable faithful core here.
+rooted at `MettaHyperonFull.Operational`). It formalises the published Meta-MeTTa operational
+semantics (arXiv 2305.17218): the four-register abstract machine ⟨i,k,w,o⟩, barbed bisimulation,
+the resource-bounded (gas) extension, and the on-chain guarantees (knowledge-base auditability and
+gas non-creation). It shares `Core` with the interpreter but is a specification library for
+reasoning about MeTTa, not a runnable interpreter, and is not imported here.
 
-Earlier exploratory models live under `archive/` at the repository root. They are kept for reference,
-are not built, and are deliberately not part of the faithful core, because each is an approximation
-rather than the faithful minimal-MeTTa semantics. See `archive/README.md`.
+Earlier exploratory models live under `archive/` at the repository root. They are kept for
+reference, are not built, and are not part of the faithful core. Each is an approximation rather
+than the faithful minimal-MeTTa semantics. See `archive/README.md`.
 -/
 
 -- Faithful foundation: the object language the assembly is built on.

@@ -8,16 +8,13 @@ abbrev Subst := List (VarName × Atom)
 
 namespace Subst
 
-/-- The identity substitution. -/
 def empty : Subst := []
 
-/-- The atom `s` assigns to `$x`, if any. -/
 def lookup (s : Subst) (x : VarName) : Option Atom :=
   match s with
   | [] => none
   | (y,a) :: rest => if x == y then some a else lookup rest x
 
-/-- Drop any assignment for `$x` from `s`. -/
 def erase (s : Subst) (x : VarName) : Subst := s.filter (fun p => p.fst != x)
 
 /-- Extend `s` with `$x ↦ a`, replacing any previous assignment for `$x`. -/

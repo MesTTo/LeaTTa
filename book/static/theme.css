@@ -18,9 +18,10 @@ Palette (metta-lang.dev dark):
   --verso-code-font-family: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
   --verso-font-size: 17px;
 
-  /* Colours. The off-white is softened to lower the contrast against the dark background. */
+  /* Colours. The off-white is softened, but kept bright enough to read over the
+     background image. */
   --verso-background-color: #1b1b1f;
-  --verso-text-color: #c6c6be;
+  --verso-text-color: #d0d0c8;
   --verso-structure-color: #e6e6df;
   --verso-code-color: #c9c9c1;
   --verso-link-color: #a8b1ff;
@@ -40,9 +41,24 @@ Palette (metta-lang.dev dark):
   --verso-code-var-style: normal;
 }
 
-/* Page background: the deep blue-charcoal from metta-lang.dev. */
-html, body {
-  background-color: #1b1b1f;
+/* Page background: the banner image, fixed and covering the viewport. `cover` preserves the
+   image aspect ratio, so it is never stretched or squashed, and the dark overlay on top keeps
+   text readable. The image stays put while the page scrolls. */
+html {
+  background-color: #14141b;
+  background-image:
+    linear-gradient(rgba(16, 16, 23, 0.74), rgba(16, 16, 23, 0.85)),
+    url("banner_sunset.png");
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  color: var(--verso-text-color);
+  font-family: var(--verso-text-font-family);
+  scroll-behavior: smooth;
+}
+body {
+  background: transparent;
   color: var(--verso-text-color);
   font-family: var(--verso-text-font-family);
 }
@@ -113,6 +129,18 @@ a, a:link, a:visited { color: var(--verso-link-color); }
   padding: 0.08em 0.34em;
 }
 
+/* Plain inline code written with markdown backticks renders as a bare <code> with no
+   highlight tokens, so it inherited the prose colour and looked like plain white text.
+   Give it a code colour and a faint chip, matching the inline Lean chips. Highlighted
+   Lean spans (.hl) keep their own per-token colours and are excluded. */
+main :is(p, li, dd, dt, td, th) code:not(.hl):not(.hl code):not(.hl *) {
+  background-color: rgba(124, 135, 175, 0.15);
+  color: #c9d3ff;
+  border-radius: 4px;
+  padding: 0.06em 0.34em;
+  font-size: 0.92em;
+}
+
 /* Headings: Inter, a touch brighter than body for hierarchy, slightly tightened. */
 h1, h2, h3, h4 {
   font-family: var(--verso-structure-font-family);
@@ -157,9 +185,10 @@ main h4 { margin-top: 1.5rem; }
 /* The bottom prev/next bar in smaller text. */
 .prev-next-buttons { font-size: 0.9rem; }
 
-/* ---- Pull content next to the table of contents (it was centered, leaving a big gap) ---- */
+/* ---- Center the reading column in the space beside the table of contents, so a wide
+   screen does not leave a large empty band on the right. ---- */
 main > .content-wrapper, .content-wrapper {
-  margin-left: 2.5rem !important;
+  margin-left: auto !important;
   margin-right: auto !important;
 }
 
@@ -175,28 +204,40 @@ main > .content-wrapper, .content-wrapper {
 .tippy-content td, .tippy-content th, .tippy-content li {
   color: var(--verso-text-color) !important;
 }
+/* Docstring popups embed plain <code> that defaults to black, which is unreadable on the
+   dark popup. Force the dark-theme text colour for code and pre inside any popup. */
+.tippy-box code, .tippy-content code, .hover-info code,
+.tippy-box pre, .tippy-content pre, .hover-info pre,
+.tippy-content .hl.lean, .hover-info .hl.lean {
+  color: var(--verso-text-color) !important;
+}
 
-/* ---- Homepage hero: a sunset-banner band behind the title; the body sits below it ---- */
+/* ---- Homepage hero: the banner is the whole-page background (set on html above), so the
+   title sits directly on it. A text shadow keeps the heading legible over the image. ---- */
 main .titlepage {
   position: relative;
-  padding-top: 0;
-  margin: 0.5rem 0 2.5rem;
+  padding: 1rem 0 2.25rem;
+  margin: 0 0 1rem;
 }
-main .titlepage::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 19rem;
-  background-image:
-    linear-gradient(rgba(15, 15, 22, 0.28), rgba(15, 15, 22, 0.60)),
-    url("banner_sunset.png");
-  background-size: cover;
-  background-position: center 30%;
-  border-radius: 14px;
-  z-index: 0;
+main .titlepage > h1 {
+  color: #ffffff;
+  margin-top: 0;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.78);
 }
-main .titlepage > * { position: relative; z-index: 1; }
-main .titlepage > h1 { color: #ffffff; margin-top: 0; padding: 2.6rem 1.5rem 0.3rem; }
-main .titlepage > .authors,
-main .titlepage > .authors * { color: #ededeb !important; }
-main .titlepage > .authors { padding: 0 1.5rem 3.2rem; }
+main .titlepage > .authors {
+  color: #e8e8e2 !important;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.72);
+  margin-top: 1.25rem;
+  margin-bottom: 2.6rem;
+}
+main .titlepage > .authors * { color: #e8e8e2 !important; }
+
+/* ---- Reading enhancements (standard web-readability guidance) ---- */
+/* Anchored headings clear the sticky header instead of hiding beneath it. */
+main h1, main h2, main h3, main h4, main h5 { scroll-margin-top: 5rem; }
+/* Never let text touch the viewport edge on narrow screens. */
+@media (max-width: 60rem) {
+  main > .content-wrapper, .content-wrapper { margin-left: 1rem !important; margin-right: 1rem !important; }
+}
+/* Links underline on hover for a clear affordance. */
+main a:hover { text-decoration: underline; text-underline-offset: 0.15em; }

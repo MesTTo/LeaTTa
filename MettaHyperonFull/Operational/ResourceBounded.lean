@@ -2,10 +2,9 @@ import MettaHyperonFull.Operational.Semantics
 
 namespace Metta
 
-/-- A concrete syntactic cost model instantiating Meta-MeTTa's abstract cost function `#` (MOPS §6):
-the cost of consuming an atom is its size. Any non-negative cost makes the gas invariant
-(`Operational/Properties.lean : resourceStep?_energy_nonincreasing`) hold; atom size is the canonical
-syntactic measure. -/
+/-- A concrete syntactic cost model for Meta-MeTTa's abstract cost function `#` (MOPS §6). The cost
+    of consuming an atom is its size (`Atom.size`). Any non-negative cost preserves the gas invariant
+    `resourceStep?_energy_nonincreasing`; atom size is the natural syntactic measure here. -/
 def transitionCost (a : Atom) : Int := Int.ofNat (Atom.size a)
 
 def affordable (tok : ResourceToken) (a : Atom) : Bool := tok.energy - transitionCost a > 0
@@ -17,7 +16,9 @@ structure ResourceState where
   tokens : List ResourceToken
   deriving Repr, BEq, Inhabited
 
-/-- A resource guarded step: refuse to consume an input if no token can pay its syntactic cost. -/
+/-- One resource-guarded step. Consumes the head input atom and debits the head token, but only if
+    the token can afford the atom's syntactic cost. Returns `none` if input is empty, there are no
+    tokens, or the head token cannot afford the head atom. -/
 def resourceStep? (cfg : RuntimeConfig) (rs : ResourceState) : Option ResourceState :=
   match rs.state.input.atoms, rs.tokens with
   | [], _ => none

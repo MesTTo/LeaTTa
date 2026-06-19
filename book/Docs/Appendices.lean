@@ -201,3 +201,28 @@ build ships the prelude inside `&self`. The module machinery it would exercise, 
 spaces and diamond-dependency deduplication, is covered by `c2_spaces` (25/25) and `g1_docs` (10/10).
 The corpus is vendored under `tests/corpus/` (MIT, commit `3f76dc4`), so the oracle reproduces 270/270
 from a clean clone and fails the build on any divergence.
+
+# Sources and Alignment
+
+This development draws on the following sources.
+
+## Papers
+
+ * Ben Goertzel, *Reflective Metagraph Rewriting as a Foundation for an AGI Language of Thought*
+   (arXiv:2112.08272): MeTTa's vocabulary, types, pattern matching, equality, grounding, transform,
+   reflection, and execution traces.
+ * Ben Goertzel, *Hyperon for AGI to ASI: Whitepaper 2025*, section 3.4.1: the Graph-Structured
+   Lambda Theory (GSLT), deriving an interpreter and a type system from one formal semantics and
+   keeping them in correspondence. That intent is what the kernel-to-MOPS reduct-set correspondence
+   makes machine-checked at the QUERY step.
+ * Lucius Gregory Meredith, Ben Goertzel, Jonathan Warrell, and Adam Vandervorst, *Meta-MeTTa: an
+   Operational Semantics for MeTTa* (arXiv:2305.17218): the four-register machine and bisimulation.
+
+## Other sources checked
+
+ * The `trueagi-io/hyperon-experimental` repository, for the current implementation shape.
+ * `hyperon.opencog.org` and the `metta-lang.dev` tutorials, for surface concepts: equality and
+   reduction, type assignment, spaces, matching, and atomspace operations.
+ * The MeTTa standard library documentation, for runtime and stdlib coverage.
+ * Adam Vandervorst's Scala FormalMeTTa, for the four-space state shape and rewrite-rule naming.
+ * The Lean 4 and Lake documentation, for the project layout.

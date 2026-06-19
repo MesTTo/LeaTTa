@@ -2,9 +2,11 @@ import MettaHyperonFull.Core.Matching
 
 namespace Metta
 
-/-- A MeTTa space/Atomspace. We use a list as an executable multiset representation. -/
+/-- A MeTTa space/Atomspace, as an executable list of atoms (a bag, not a set). -/
 structure Space where
-  /-- The atoms held by the space, as a list (multiset: order and duplicates are not significant). -/
+  /-- The atoms held by the space. Duplicates are kept: adding the same atom twice makes it
+      match twice, as in Hyperon, which is why `removeOne` removes a single copy. The list is
+      stored in insertion order, but that order is not semantically significant. -/
   atoms : List Atom
   deriving BEq, Inhabited, Repr
 

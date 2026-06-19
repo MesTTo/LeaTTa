@@ -30,6 +30,8 @@ import MeTTaIL.Transform.Monomorphize
 import MeTTaIL.Semantics.Reduce
 -- Layer 3: the GSLT reduction relation (base + premised/congruence rules) + matcher soundness.
 import MeTTaIL.Semantics.Relation
+-- Bridge: embedding LeaTTa's MeTTa terms into GSLT terms (faithful on the grounded-free fragment).
+import MeTTaIL.Bridge.Operational
 -- Layer 4: SKI combinatory logic instance with subject reduction (type soundness).
 import MeTTaIL.Calculi.SKI
 -- Layer 4: simply-typed lambda calculus (de Bruijn) with preservation and progress.

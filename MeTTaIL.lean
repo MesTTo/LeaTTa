@@ -32,5 +32,7 @@ import MeTTaIL.Semantics.Reduce
 import MeTTaIL.Semantics.Relation
 -- Layer 4: SKI combinatory logic instance with subject reduction (type soundness).
 import MeTTaIL.Calculi.SKI
+-- Layer 4: simply-typed lambda calculus (de Bruijn) with preservation and progress.
+import MeTTaIL.Calculi.Lambda
 -- Layer 4 (extension): the present-moment "spice" rule, bounded lookahead and its grounding.
 import MeTTaIL.Extensions.Spice

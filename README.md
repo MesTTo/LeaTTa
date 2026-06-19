@@ -1,5 +1,11 @@
 # MeTTa minimal interpreter: a machine-checked reference semantics in Lean 4
 
+> **Alpha.** LeaTTa is an early, alpha-stage release and a starting foundation. It will be improved
+> substantially in upcoming iterations as MeTTa is more fully formalised. It currently formalizes
+> Hyperon Experimental's minimal interpreter and standard library. It does not yet cover the
+> semantics of MeTTa-IL, the MeTTa intermediate language, which is still in development. Future
+> iterations are planned to add MeTTa-IL and MeTTa on Rholang.
+
 This is a Lean 4 formalization of Hyperon's minimal MeTTa interpreter, the small "assembly language"
 that the rest of MeTTa is built on. The standard library is written in MeTTa on top of those
 instructions, the same way `hyperon-experimental` does it. The kernel is total and has no

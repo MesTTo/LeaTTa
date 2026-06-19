@@ -32,14 +32,25 @@ authors := ["The LeaTTa Project"]
 shortTitle := "LeaTTa"
 %%%
 
+:::paragraph
+*Alpha.* This is an early, alpha-stage release and a starting foundation. It will be improved
+substantially in upcoming iterations as MeTTa is more fully formalised. It currently formalises
+Hyperon Experimental's minimal interpreter and standard library. It does *not* yet cover the
+semantics of MeTTa-IL, the MeTTa intermediate language, which is still in development. Future
+iterations are planned to add MeTTa-IL and MeTTa on Rholang.
+:::
+
 {index}[LeaTTa]
-*LeaTTa* is a formalization, in the {citet lean4}[] interactive theorem prover, of the
-*MeTTa* language at the heart of OpenCog Hyperon {citep goertzelMetagraph}[]: its minimal
-interpreter, its standard library, its gradual type system, and a substantial body of
-machine-checked *metatheory*: determinism, confluence of the deterministic fragment, type soundness,
-gradual-typing consistency, soundness *and* completeness of first-argument indexing, and a
-bisimulation connecting the running interpreter to the published operational semantics of MeTTa
-{citep mops}[].
+*LeaTTa* is a formalization, in the {citet lean4}[] interactive theorem prover, of the *MeTTa*
+language at the heart of OpenCog Hyperon {citep goertzelMetagraph}[]. It covers:
+
+ * the minimal interpreter;
+ * the standard library;
+ * the gradual type system;
+ * a body of machine-checked *metatheory*: determinism, confluence of the deterministic fragment,
+   type soundness, gradual-typing consistency, soundness *and* completeness of first-argument
+   indexing, and a bisimulation connecting the running interpreter to the published operational
+   semantics of MeTTa {citep mops}[].
 
 Every theorem in this book is checked by Lean's kernel. The development contains *no* `sorry`,
 `admit`, `native_decide`, `partial`, or `unsafe`; `#print axioms` reports only the three standard

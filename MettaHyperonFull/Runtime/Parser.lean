@@ -67,13 +67,14 @@ def parseFloat? (s : String) : Option Float :=
         | none => none
   | _ => none
 
-/-- Parse a single token into an `Atom`: `$x` → variable, `True`/`False` → Bool, `()` → unit,
-    `"…"` → string, an integer/float literal → the grounded number, otherwise a symbol. -/
+/-- Parse a single token into an `Atom`: `$x` → variable, `True`/`False` → Bool, `()` → the empty
+    expression, `"…"` → string, an integer/float literal → the grounded number, otherwise a symbol.
+    The tokenizer splits `(` and `)` into separate tokens, so the `()` case here is only a guard. -/
 def parseAtomToken (s : String) : Atom :=
   if s.startsWith "$" then Atom.var (s.drop 1).toString
   else if s == "True" then Atom.gnd (Ground.bool true)
   else if s == "False" then Atom.gnd (Ground.bool false)
-  else if s == "()" then Atom.unit
+  else if s == "()" then Atom.expr []
   else if s.startsWith "\"" then Atom.gnd (Ground.str ((s.drop 1).dropEnd 1).toString)
   else match s.toInt? with
     | some n => Atom.gnd (Ground.int n)

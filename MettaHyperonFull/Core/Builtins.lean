@@ -168,8 +168,8 @@ def mathTable : GroundingTable := [
 ]
 
 /-- `min-atom`/`max-atom` (Hyperon `atom.rs`): the minimum/maximum of an expression of numbers,
-    compared as `f64` and returned as a `Float`. Errors faithfully on a non-expression argument, an
-    empty expression, or a non-number child. -/
+    compared as `f64` and returned as a `Float`. A non-expression argument returns `incorrectArgument`
+    (surfaced as `NotReducible`); an empty expression or a non-number child raises a runtime error. -/
 def minMaxAtom (isMin : Bool) (name : String) : List Atom → ReduceResult
   | [Atom.expr xs] =>
       match xs.mapM toFloat? with

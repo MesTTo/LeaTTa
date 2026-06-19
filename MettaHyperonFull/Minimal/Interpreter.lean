@@ -8,10 +8,11 @@ import Std.Data.HashMap
 
 A Lean port of Hyperon's minimal MeTTa interpreter
 (`hyperon-experimental/lib/src/metta/interpreter.rs`): a continuation-passing,
-nondeterministic stack machine over the thirteen-instruction set
+nondeterministic stack machine over the thirteen minimal instructions
 `eval`, `evalc`, `chain`, `unify`, `cons-atom`, `decons-atom`, `function`/`return`,
 `collapse-bind`, `superpose-bind`, `metta`, `metta-thread`, `capture`, `context-space`
-(the authoritative list is `isEmbeddedOp`; `return` is the terminator of `function`).
+(`return` is handled via the `function` frame, not as a standalone op). `isEmbeddedOp` recognizes
+these together with the embedded space/state/type operations (`match`, `get-type`, `add-atom`, ...).
 
 The Rust implementation uses `Rc<RefCell<Stack>>` shared mutability and `fn`-pointer
 return handlers. Here the stack is an immutable list of frames (head = top) and the
@@ -96,9 +97,9 @@ def atomToStack : Atom → Stack → Stack
     | Atom.expr [Atom.sym "unify", ua, up, ut, ue] =>
         { atom := Atom.expr [Atom.sym "unify", ua, up, ut, ue], ret := Ret.none_ } :: prev
     | Atom.expr (Atom.sym "chain" :: _) =>
-        { atom := errAtom a "chain: expected (chain <nested> (: <var> Variable) <templ>)", fin := true } :: prev
+        { atom := errAtom a "chain: expected (chain <nested> $var <templ>)", fin := true } :: prev
     | Atom.expr (Atom.sym "function" :: _) =>
-        { atom := errAtom a "function: expected (function (: <body> Expression))", fin := true } :: prev
+        { atom := errAtom a "function: expected (function <expression>)", fin := true } :: prev
     | Atom.expr (Atom.sym "unify" :: _) =>
         { atom := errAtom a "unify: expected (unify <atom> <pattern> <then> <else>)", fin := true } :: prev
     | _ => { atom := a, vars := varsCopy prev } :: prev
@@ -431,8 +432,9 @@ def restrictBnd (vars : List VarName) (b : Bindings) : Bindings :=
 def scopeVars (b : Bindings) (prev : Stack) : List VarName :=
   prev.flatMap fun f => Atom.vars (instantiate b f.atom)
 
-/-- Emit one alternative of `superpose-bind`: take the first element of a `(atom bindings)` pair.
-    The match accepts any non-empty expression; `collapse-bind` is what produces the two-element pairs. -/
+/-- Emit one alternative of `superpose-bind`: take the first element of a `(atom ())` pair.
+    The match accepts any non-empty expression; `collapse-bind` produces these pairs, whose second
+    element is the unit placeholder `()`. -/
 def superposeItem (prev : Stack) (b : Bindings) : Atom → Item
   | Atom.expr (a :: _) => finItem prev a b
   | other => finItem prev other b
@@ -667,10 +669,10 @@ def interpretStack1 (env : MinEnv) (fuel : Nat) (st : St) (it : Item) : List Ite
       | Atom.expr [Atom.sym "unify", a, p, t, e] => (unifyOp prev a p t e it.bnd, st)
       | Atom.expr [Atom.sym "cons-atom", h, Atom.expr t] => ([finItem prev (Atom.expr (h :: t)) it.bnd], st)
       | Atom.expr [Atom.sym "cons-atom", _, _] =>
-          ([finItem prev (errAtom top.atom "cons-atom: expected (cons-atom <head> (: <tail> Expression))") it.bnd], st)
+          ([finItem prev (errAtom top.atom "cons-atom: expected (cons-atom <head> <expression>)") it.bnd], st)
       | Atom.expr [Atom.sym "decons-atom", Atom.expr (h :: t)] => ([finItem prev (Atom.expr [h, Atom.expr t]) it.bnd], st)
       | Atom.expr [Atom.sym "decons-atom", _] =>
-          ([finItem prev (errAtom top.atom "decons-atom: expected (decons-atom (: <expr> Expression))") it.bnd], st)
+          ([finItem prev (errAtom top.atom "decons-atom: expected (decons-atom <non-empty-expression>)") it.bnd], st)
       | Atom.expr [Atom.sym "context-space"] => ([finItem prev (Atom.sym "&self") it.bnd], st)
       | Atom.expr [Atom.sym "get-type", x]
       | Atom.expr [Atom.sym "get-type", x, _space]

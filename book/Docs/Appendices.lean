@@ -19,20 +19,15 @@ set_option verso.code.warnLineLength 100
 tag := "sec-appendices"
 %%%
 
-This appendix collects the reference material that used to live in separate files at the repository
-root. It records exactly what is machine-checked, where each MeTTa and Hyperon topic is formalized,
-and how the development compares with Hyperon's current implementation.
+This appendix collects the reference material that used to live in separate files at the repository root. You will find exactly what is machine-checked, where each MeTTa and Hyperon topic is formalized, and how the development compares with Hyperon's current implementation.
 
 # Proof Status
 
-The development separates three things that are easy to conflate: results checked by Lean in the
-active build, earlier exploration kept under `archive/` but not compiled, and work that is planned
-but not yet formalized.
+The development separates three things that are easy to conflate: results checked by Lean in the active build, earlier exploration kept under `archive/` but not compiled, and work that is planned but not yet formalized.
 
 ## Machine-checked in the active build
 
-Every theorem named here is checked by Lean's kernel in `MettaHyperonFull/Proofs/` or
-`MettaHyperonFull/Operational/`, with no `sorry`, `admit`, `native_decide`, `partial`, or `unsafe`.
+Every theorem named here is checked by Lean's kernel in `MettaHyperonFull/Proofs/` or `MettaHyperonFull/Operational/`, with no `sorry`, `admit`, `native_decide`, `partial`, or `unsafe`.
 
  * *Determinism.* The abstract machine is a function; all nondeterminism is reified in the result
    list, not the transition relation: `interpretStack1_deterministic`, `interpretFuel_deterministic`,
@@ -58,9 +53,7 @@ Every theorem named here is checked by Lean's kernel in `MettaHyperonFull/Proofs
 
 ## Archived exploration, not part of the verified build
 
-The following were modelled in an earlier, approximate form. They live under `archive/`, are not
-compiled by the build, and must not be read as part of the verified development (see
-`archive/README.md`). They are listed so the proof status is not mistaken for covering them.
+The following were modelled in an earlier, approximate form. They live under `archive/`, are not compiled by the build, and must not be read as part of the verified development (see `archive/README.md`). They are listed so the proof status is not mistaken for covering them.
 
  * Single-pushout and double-pushout graph rewriting, metagraph homomorphism, and the
    expression-to-DAG encoding (`archive/Metagraph/`).
@@ -81,9 +74,7 @@ compiled by the build, and must not be read as part of the verified development 
 
 # Coverage
 
-This section maps MeTTa and Hyperon topics to the files that formalize them. The runtime is a formal
-reference: small enough to inspect and explicit about every host contract. It is not a drop-in
-replacement for the Rust Hyperon runtime and does not cover the full Hyperon feature surface.
+This section maps MeTTa and Hyperon topics to the files that formalize them. The runtime is a formal reference: small enough to inspect and explicit about every host contract. It is not a drop-in replacement for the Rust Hyperon runtime and does not cover the full Hyperon feature surface.
 
 ## Object language and matching
 
@@ -141,27 +132,15 @@ instruction of the executable interpreter, whose `match` is implemented by `matc
 
 # Improvements over Hyperon
 
-Hyperon's minimal MeTTa interpreter (`hyperon-experimental/lib/src/metta/interpreter.rs`) is, by its
-authors' description, in an alpha state. Its source carries a self-described "hack" and several
-`TODO` notes at the points that decide evaluation, and the written semantics is prose and pseudocode
-without proofs. This development is a companion to that work: a total, machine-checked semantics that
-agrees with Hyperon's own test oracle (270 of 270), replaces the mutable and ad-hoc machinery with
-declarative constructs, and proves the properties the implementation only asserts.
+Hyperon's minimal MeTTa interpreter (`hyperon-experimental/lib/src/metta/interpreter.rs`) is, by its authors' description, in an alpha state. Its source carries a self-described "hack" and several `TODO` notes at the points that decide evaluation, and the written semantics is prose and pseudocode without proofs. This development is a companion to that work: a total, machine-checked semantics that agrees with Hyperon's own test oracle (270 of 270), replaces the mutable and ad-hoc machinery with declarative constructs, and proves the properties the implementation only asserts.
 
 ## What is proved
 
-The metatheory proves what the implementation asserts in comments. The full list with theorem names
-is under Proof Status above; in short: determinism, confluence of the deterministic fragment, sound
-and complete first-argument indexing, gradual-type permissiveness and faithful errors,
-alpha-equivalence, and the kernel-to-specification bisimulation. A foundational choice is that
-`Atom`'s `BEq` is hand-written and structural rather than derived, so it is kernel-reducible and the
-indexing and type proofs go through; the derived instance compiles to opaque well-founded recursion
-that blocks equational reasoning.
+The metatheory proves what the implementation asserts in comments. The full list with theorem names is under Proof Status above; in short: determinism, confluence of the deterministic fragment, sound and complete first-argument indexing, gradual-type permissiveness and faithful errors, alpha-equivalence, and the kernel-to-specification bisimulation. One foundational choice worth noting: `Atom`'s `BEq` is hand-written and structural rather than derived, so it is kernel-reducible and the indexing and type proofs go through. The derived instance compiles to opaque well-founded recursion that blocks equational reasoning.
 
 ## Hyperon source markers and their treatment
 
-The Hyperon sources carry explicit markers (`TODO`, hotfix, and "hack" comments) at points that
-decide evaluation. Each is matched here by a declarative construct.
+The Hyperon sources carry explicit markers (`TODO`, hotfix, and "hack" comments) at points that decide evaluation. Each is matched here by a declarative construct.
 
  * *The `is_evaluated()` mutable bit* (`interpreter.rs:1142`, commented "a hack") becomes static
    return-type gating: a function's result is inert iff its declared return type is `Atom`. No
@@ -189,22 +168,13 @@ decide evaluation. Each is matched here by a declarative construct.
 
 ## Status against the oracle
 
-Hyperon's own unmodified tests run through this interpreter (`scripts/run-oracle.sh`) and pass 270 of
-270 across 22 files, on the minimal interpreter rather than a curated subset. The passing set
-includes the full dependent-type tier (`d1` through `d5`): GADTs, higher-order functions, dependent
-length arithmetic, types as propositions, and auto type-checking with `BadArgType`, along with the
-documentation operators `get-doc` and `help!`.
+Hyperon's own unmodified tests run through this interpreter (`scripts/run-oracle.sh`) and pass 270 of 270 across 22 files, on the minimal interpreter rather than a curated subset. The passing set includes the full dependent-type tier (`d1` through `d5`): GADTs, higher-order functions, dependent length arithmetic, types as propositions, and auto type-checking with `BadArgType`, along with the documentation operators `get-doc` and `help!`.
 
-One file is left out: `f1_imports.metta`. Its authors mark it Python-mode-only, because it assumes
-`&self` starts nearly empty with `corelib` and `stdlib` as separate importable modules, while this
-build ships the prelude inside `&self`. The module machinery it would exercise, `import!` into named
-spaces and diamond-dependency deduplication, is covered by `c2_spaces` (25/25) and `g1_docs` (10/10).
-The corpus is vendored under `tests/corpus/` (MIT, commit `3f76dc4`), so the oracle reproduces 270/270
-from a clean clone and fails the build on any divergence.
+One file is left out: `f1_imports.metta`. Its authors mark it Python-mode-only, because it assumes `&self` starts nearly empty with `corelib` and `stdlib` as separate importable modules, while this build ships the prelude inside `&self`. The module machinery it would exercise, `import!` into named spaces and diamond-dependency deduplication, is covered by `c2_spaces` (25/25) and `g1_docs` (10/10). The corpus is vendored under `tests/corpus/` (MIT, commit `3f76dc4`), so the oracle reproduces 270/270 from a clean clone and fails the build on any divergence.
 
 # Sources and Alignment
 
-This development draws on the following sources.
+Here are the sources this development draws on.
 
 ## Papers
 

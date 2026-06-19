@@ -28,6 +28,8 @@ import MeTTaIL.Transform.TypeLift
 import MeTTaIL.Transform.Monomorphize
 -- Layer 3: the GSLT reduction core (matching, substitution, rewrite application).
 import MeTTaIL.Semantics.Reduce
+-- Layer 3: the GSLT reduction relation (base + premised/congruence rules) + matcher soundness.
+import MeTTaIL.Semantics.Relation
 -- Layer 4: SKI combinatory logic instance with subject reduction (type soundness).
 import MeTTaIL.Calculi.SKI
 -- Layer 4 (extension): the present-moment "spice" rule, bounded lookahead and its grounding.

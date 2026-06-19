@@ -85,7 +85,8 @@ and that the implementation's optimisations don't change behaviour. Those drive 
                                preorder.
 
 * `Proofs/Correspondence.lean`: **interpreter ⇔ specification for QUERY**: the kernel's first-argument
-                               *indexed* rule firing (`MinEnv.candidates` + `queryOp`) produces exactly
+                               *indexed* rule firing (`MinEnv.candidates`, the rule-firing core
+                               abstracted from `queryOp`) produces exactly
                                the **whole-space `QUERY` reduct set of the published MOPS semantics**
                                (`Operational/Semantics.lean : equalityReductions`, MOPS arXiv 2305.17218
                                §3.3), via `kernel_query_eq_mops_query`. Indexing yields the same reduct set

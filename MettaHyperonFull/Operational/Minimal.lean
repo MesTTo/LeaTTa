@@ -9,12 +9,12 @@ namespace Metta
 
       shared:       eval, evalc, chain, unify, cons-atom, decons-atom, function (+ return),
                     collapse-bind, superpose-bind, metta, context-space
-      model-only:   call-native   -- a host-call placeholder; `evalMinimal` has no case for it and
-                                      leaves the atom unchanged (see its note)
+      model-only:   call-native   -- a host-call placeholder
       kernel-only:  metta-thread, capture   -- used by the standard library, not modelled here
 
-    The two layers are related by the correspondence proofs at the abstract level, not by an
-    identical instruction list. -/
+    `evalMinimal` implements ten of the enum's instructions; `chain`, `metta`, and `call-native`
+    have no case and fall through to the identity result. The two layers are related by the
+    correspondence proofs at the abstract level, not by an identical instruction list. -/
 inductive MinimalInstr where
   | eval | evalc | chain | unify | deconsAtom | consAtom | function | ret
   | collapseBind | superposeBind | metta | contextSpace | callNative
@@ -48,8 +48,8 @@ def chainResults (results : List Atom) (x : VarName) (tmpl : Atom) : List Atom :
   results.map (fun r => Subst.apply [(x,r)] tmpl)
 
 /-- Dispatch a minimal instruction and return its results. The function is total; unrecognized atoms
-    are returned unchanged. `call-native` is not implemented here and falls through to the identity
-    case. -/
+    are returned unchanged. Of the enum, `chain`, `metta`, and `call-native` have no case here and
+    fall through to the identity case. -/
 def evalMinimal (cfg : RuntimeConfig) (ctx : Space) : Atom → List Atom
   | Atom.expr [Atom.sym "unify", a, p, th, el] => evalUnifyInstr a p th el
   | Atom.expr [Atom.sym "cons-atom", h, Atom.expr t] => [Atom.expr (h::t)]

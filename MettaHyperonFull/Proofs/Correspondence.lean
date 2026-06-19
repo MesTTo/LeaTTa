@@ -39,6 +39,8 @@ The deterministic register-draining (`smallStep?`) and fuelled stack scheduling 
 bookkeeping on top of this shared relation. The kernel also α-renames rule variables
 (`freshenRule`), threads ambient bindings, and prunes cyclic substitutions; these do not change
 which reducts arise and are addressed in `Proofs/Alpha.lean` and `Proofs/Substitution.lean`. The
+correspondence is stated over a static knowledge base: rules added to `&self` at runtime
+(`world.selfExtra`, consulted by `candidatesW`) are outside the scope of `KernelStep`. The
 barbed bisimulation of the 4-register state machine is in `Operational/Bisimulation.lean`.
 -/
 

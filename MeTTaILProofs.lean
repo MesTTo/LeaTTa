@@ -10,5 +10,6 @@ import MeTTaILProofs.MQCalculus
 import MeTTaILProofs.Pipeline
 -- Church-Rosser / confluence for SKI combinatory logic.
 import MeTTaILProofs.SKIConfluence
--- DecEq / LambdaConfluence are added as their modules land.
+-- Church-Rosser / confluence of beta reduction for the lambda calculus.
+import MeTTaILProofs.LambdaConfluence
 

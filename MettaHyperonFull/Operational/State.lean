@@ -5,8 +5,9 @@ import MettaHyperonFull.Core.Builtins
 namespace Metta
 
 /-- The four-register MeTTa machine state from arXiv:2305.17218 §3: input `i`, knowledge base `k`,
-    workspace `w`, and output `o`. The `history` field records the sequence of step labels, used for
-    trace collection and bisimulation proofs. -/
+    workspace `w`, and output `o`. The `history` field records `(label payload)` events appended by
+    `State.trace`. It is available for introspection but is not consulted by the `Trace` module (which
+    builds its own trace) or by the bisimulation proofs (which observe only `input`/`work`/`output`). -/
 structure State where
   input : Space
   kb : Space

@@ -64,7 +64,8 @@ and that the implementation's optimisations don't change behaviour. Those drive 
 * `Proofs/Preservation.lean`: **subject reduction over user-defined `=`-rewriting** (the central
                                type-soundness theorem). A compositional typing judgement `WT`
                                (context for rule variables + `(: a T)` declarations + arrow-elimination
-                               application + subtyping/gradual top) on top of `Core.HasType`; the
+                               application + subtyping/gradual top), defined independently of
+                               `Core.HasType` but over the same `(: a T)` declarations; the
                                **substitution lemma** `WT.subst` (typing stable under a
                                context-grounding substitution, the standard core, à la PLFA / PTS /
                                Blanqui); hence `reduction_preserves_type`: for a **type-preserving**

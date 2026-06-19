@@ -105,8 +105,9 @@ end
     both `σ L` and `σ R` have type `T`.
 
     Combined with the grounded-core preservation in `TypeSoundness.lean` and the
-    permissiveness/totality/faithful-error results there, `reduction_preserves_type` completes the
-    preservation half of type soundness for the typed fragment. -/
+    permissiveness/totality/faithful-error results there, `reduction_preserves_type` gives the
+    preservation half of type soundness for the typed fragment, under its stated
+    type-preserving-rule hypothesis. -/
 theorem reduction_preserves_type {env : TypeEnv} {Γ : List (VarName × Atom)} {L R T : Atom}
     {σ : Subst} (hσ : Grounds env σ Γ) (hL : WT env Γ L T) (hR : WT env Γ R T) :
     WT env [] (Subst.apply σ L) T ∧ WT env [] (Subst.apply σ R) T :=

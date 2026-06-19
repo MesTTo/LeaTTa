@@ -19,8 +19,8 @@ set_option verso.code.warnLineLength 100
 tag := "sec-interpreter"
 %%%
 
-MeTTa is defined in two layers. At the bottom is *minimal MeTTa*: a small "assembly language" of a
-dozen instructions in which the whole evaluator is written. On top sits the standard library, itself
+MeTTa is defined in two layers. At the bottom is *minimal MeTTa*: a small "assembly language" of
+thirteen instructions in which the whole evaluator is written. On top sits the standard library, itself
 written in MeTTa over those instructions, exactly as in Hyperon. LeaTTa's interpreter
 (`Minimal/Interpreter.lean`) is the assembly evaluator; its standard library (`Minimal/Stdlib.lean`)
 is the MeTTa-level prelude.
@@ -37,8 +37,8 @@ The minimal instruction set is the base layer that everything else compiles to:
  * `cons-atom` / `decons-atom`: build and take apart expressions;
  * `function` / `return`: delimit an evaluation that runs to a `return`;
  * `collapse-bind` / `superpose-bind`: reify and re-inject the non-deterministic result set;
- * `metta`: full type-directed evaluation; `context-space`: the ambient atomspace; `capture`:
-   freeze the current non-deterministic context.
+ * `metta`: full type-directed evaluation; `metta-thread`: evaluate an atom against a given space;
+   `context-space`: the ambient atomspace; `capture`: freeze the current non-deterministic context.
 
 Each instruction is a *total* function: there is no `partial`, and recursion is fuel-bounded with a
 provably decreasing measure. When fuel is exhausted the evaluator does not silently truncate; it

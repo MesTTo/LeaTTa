@@ -2,7 +2,19 @@ import MettaHyperonFull.Operational.Semantics
 
 namespace Metta
 
-/-- The thirteen minimal MeTTa instructions that the interpreter recognizes. -/
+/-- The instruction set of the operational-semantics model (arXiv:2305.17218), as an enum.
+
+    This abstract model's set is close to, but not identical with, the executable kernel's embedded
+    operations (`Minimal.isEmbeddedOp`):
+
+      shared:       eval, evalc, chain, unify, cons-atom, decons-atom, function (+ return),
+                    collapse-bind, superpose-bind, metta, context-space
+      model-only:   call-native   -- a host-call placeholder; `evalMinimal` has no case for it and
+                                      leaves the atom unchanged (see its note)
+      kernel-only:  metta-thread, capture   -- used by the standard library, not modelled here
+
+    The two layers are related by the correspondence proofs at the abstract level, not by an
+    identical instruction list. -/
 inductive MinimalInstr where
   | eval | evalc | chain | unify | deconsAtom | consAtom | function | ret
   | collapseBind | superposeBind | metta | contextSpace | callNative

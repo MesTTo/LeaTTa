@@ -2,7 +2,7 @@
 MeTTa / OpenCog Hyperon in Lean 4.
 
 ARCHITECTURE. The minimal MeTTa interpreter (`Minimal/Interpreter`) is the assembly language of
-MeTTa. The standard library (`Minimal/Stdlib`) is written in MeTTa over those twelve instructions,
+MeTTa. The standard library (`Minimal/Stdlib`) is written in MeTTa over those thirteen instructions,
 exactly as in Hyperon. This is the active, validated artifact: it agrees with Hyperon's own oracle
 `lib/tests/test_stdlib.metta` (see `IMPROVEMENTS_OVER_HYPERON.md`).
 

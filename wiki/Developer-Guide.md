@@ -47,7 +47,7 @@ For the concepts themselves, read the [documentation](Home).
 - `MettaHyperonFull/Core` is the object language.
 - `MettaHyperonFull/Runtime/Parser` parses surface MeTTa.
 - `MettaHyperonFull/Minimal/Interpreter` and `Minimal/Stdlib` are the faithful kernel and
-  the standard library written over its twelve instructions. This is the computable heart.
+  the standard library written over its thirteen instructions. This is the computable heart.
 - `MettaHyperonFull/Proofs` is the Mathlib-backed metatheory: determinism, confluence of
   the deterministic fragment, sound and complete first-argument indexing, type soundness,
   and alpha-equivalence.

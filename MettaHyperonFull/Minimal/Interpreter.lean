@@ -8,9 +8,10 @@ import Std.Data.HashMap
 
 A Lean port of Hyperon's minimal MeTTa interpreter
 (`hyperon-experimental/lib/src/metta/interpreter.rs`): a continuation-passing,
-nondeterministic stack machine over the instruction set
-`eval`, `chain`, `unify`, `cons-atom`, `decons-atom`, `function`/`return`,
-`collapse-bind`, `superpose-bind`, `metta`, `context-space`.
+nondeterministic stack machine over the thirteen-instruction set
+`eval`, `evalc`, `chain`, `unify`, `cons-atom`, `decons-atom`, `function`/`return`,
+`collapse-bind`, `superpose-bind`, `metta`, `metta-thread`, `capture`, `context-space`
+(the authoritative list is `isEmbeddedOp`; `return` is the terminator of `function`).
 
 The Rust implementation uses `Rc<RefCell<Stack>>` shared mutability and `fn`-pointer
 return handlers. Here the stack is an immutable list of frames (head = top) and the
@@ -20,7 +21,7 @@ legitimately fail to terminate.
 
 This module covers the full minimal-MeTTa instruction set: `eval`/`evalc`, `chain`,
 `function`/`return`, `unify`, `cons-atom`/`decons-atom`, `collapse-bind`/`superpose-bind`, `metta`,
-`capture`, `context-space`, together with the embedded space/state/type operations (`new-space`,
+`metta-thread`, `capture`, `context-space`, together with the embedded space/state/type operations (`new-space`,
 `add-atom`, `match`, `get-type`, `bind!`, `import!`, ...) and the type-directed evaluator.
 -/
 

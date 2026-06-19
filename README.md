@@ -21,12 +21,12 @@ full comparison is in [IMPROVEMENTS_OVER_HYPERON.md](IMPROVEMENTS_OVER_HYPERON.m
 The kernel lives in `MettaHyperonFull/Minimal/`:
 
 - `Interpreter.lean` is a faithful port of `interpreter.rs`. It is the continuation-passing,
-  nondeterministic stack machine with all twelve minimal instructions (`eval`/`evalc`, `chain`,
+  nondeterministic stack machine with all thirteen minimal instructions (`eval`/`evalc`, `chain`,
   `unify`, `cons-atom`/`decons-atom`, `function`/`return`, `collapse-bind`/`superpose-bind`, `metta`,
-  `context-space`, and the `=`-rule query). One step is a total function, and the driver is
+  `metta-thread`, `capture`, `context-space`). One step is a total function, and the driver is
   fuel-bounded with a termination measure that Lean checks. MeTTa can legitimately loop forever, so
   the bound is explicit rather than hidden.
-- `Stdlib.lean` is the standard library, written as MeTTa over those twelve instructions: `if`,
+- `Stdlib.lean` is the standard library, written as MeTTa over those thirteen instructions: `if`,
   `let`, `let*`, `switch`, `case`, `map-atom`, `filter-atom`, `foldl-atom`, the set operations, the
   `assert*` family, `match`, and so on, together with the grounded operations.
 

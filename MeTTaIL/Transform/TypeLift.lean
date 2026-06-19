@@ -103,8 +103,10 @@ def companionLabelOf (terms : List Rule) (host : Label) : String :=
     as a direct argument two or more times across the constructor applications, each hosting
     constructor's companion gains an argument of that variable's category. We count direct-argument
     occurrences, so a variable repeated inside one constructor counts each occurrence; Scala counts
-    distinct constructor nodes (`freeVarsInAST` returns a set of nodes). The two agree when each
-    repeated variable spans distinct constructors, as in the comm example. -/
+    distinct constructor nodes (`freeVarsInAST` returns a set keyed by structural node equality, so two
+    structurally identical hosting constructors collapse to one). The two agree when each repeated
+    variable spans distinct, non-identical constructors, as in the comm example. Only base (unqualified)
+    variables participate, matching the matcher's variable model. -/
 def extrasForLHS (terms : List Rule) (lhs : AST) : List (String × Cat) :=
   let occs := lhs.directVarArgs
   occs.filterMap fun o =>

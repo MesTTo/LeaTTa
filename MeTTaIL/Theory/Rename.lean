@@ -3,11 +3,11 @@ Category renaming and constructor relabeling, the traversals behind `addExports`
 `addReplacements`.
 
 A `RenameExport old new` renames a sort in the exported sort list and in the function-symbol
-definitions, exactly as Scala `handleAddExports` does: its `RenameExport` branch updates `listcat_`
-and `listdef_` (via `replaceCats`/`updateDef`) and leaves equations and rewrites alone, since a term
-carries a sort only inside a list label. A `Replacement [perm] target . cat => newDef` swaps the rule
-labelled `target` for `newDef` and, in every equation and rewrite, relabels each applied `target` to
-`newDef`'s label while permuting its arguments by `perm` (Scala `updateAST`).
+definitions, mirroring Scala `handleAddExports`'s `RenameExport` branch (it updates `listcat_` and
+`listdef_` only, leaving equations and rewrites untouched). The section note below flags the two Scala
+quirks this reproduces. A `Replacement [perm] target . cat => newDef` swaps the rule labelled `target`
+for `newDef` and, in every equation and rewrite, relabels each applied `target` to `newDef`'s label
+while permuting its arguments by `perm` (Scala `updateAST`).
 
 The traversals over `Cat` and `AST` are hand-written by mutual recursion because both nest through
 `List` (`prod` and `sexp`), which structural recursion handles in definitions but `deriving` does
@@ -17,50 +17,46 @@ import MeTTaIL.Theory.Instance
 
 namespace MeTTaIL
 
-/-! ### Category replacement (sort renaming) -/
+/-! ### Category replacement (sort renaming)
 
-mutual
-  /-- Replace every occurrence of the category `old` by `new` inside a category. -/
-  def Cat.replace (old new : Cat) : Cat → Cat
-    | .idCat n   => if Cat.beq (.idCat n) old then new else .idCat n
-    | .listOf a  => if Cat.beq (.listOf a) old then new else .listOf (Cat.replace old new a)
-    | .arrow a b =>
-        if Cat.beq (.arrow a b) old then new
-        else .arrow (Cat.replace old new a) (Cat.replace old new b)
-    | .prod cs   => if Cat.beq (.prod cs) old then new else .prod (Cat.replaceList old new cs)
-  /-- Replace `old` by `new` in each category of a list. -/
-  def Cat.replaceList (old new : Cat) : List Cat → List Cat
-    | []      => []
-    | c :: cs => Cat.replace old new c :: Cat.replaceList old new cs
-end
+The `addExports` sort rename, mirroring Scala `handleAddExports`'s `RenameExport` branch, including its
+quirks. Two to flag.
 
-/-- Rename a sort inside a label's category (only list labels carry one). -/
-def Label.replaceCat (old new : Cat) : Label → Label
-  | .id n      => .id n
-  | .wild      => .wild
-  | .listE c   => .listE (Cat.replace old new c)
-  | .listCons c => .listCons (Cat.replace old new c)
-  | .listOne c => .listOne (Cat.replace old new c)
+The export list is renamed by a shallow conditional map: a sort equal to `old` becomes `new`, the rest
+are left alone (Scala `currentCats.map(c => if c == re.cat_1 then re.cat_2 else c)`). It does not
+descend into a compound sort, so `old` nested inside an `arrow`/`prod`/`listOf` export is not renamed.
 
-/-- Rename a sort inside an item. -/
+The function symbols are renamed by `updateDef`, which has a real bug we reproduce to stay faithful to
+the tool: it sets every rule's output sort to `new` UNCONDITIONALLY (Scala `new Rule(rule.label_,
+newCat, ...)` in `ASTHelpers.scala`), not only the rules whose output sort was `old`. On a presentation
+with mixed output sorts this corrupts the others. It is masked in the tested modules because the one
+rename acts on a presentation whose every rule already has output sort `old`. The rule's label is left
+unchanged, and its items get a shallow per-item replace (a non-terminal or binder sort equal to `old`
+becomes `new`, an abstraction is followed into its body, but a sort is compared as a whole). Flagged
+for F1R3FLY.
+-/
+
+/-- Shallow per-item sort replace, mirroring Scala `ASTHelpers.replaceCats`: a non-terminal or binder
+    whose sort equals `old` becomes `new`; an abstraction is followed into its body; a sort is compared
+    as a whole, so `old` nested inside a compound sort is not replaced. -/
 def Item.replaceCat (old new : Cat) : Item → Item
-  | .terminal s     => .terminal s
-  | .nterminal c    => .nterminal (Cat.replace old new c)
+  | .terminal s        => .terminal s
+  | .nterminal c       => if Cat.beq c old then .nterminal new else .nterminal c
   | .absNTerminal x it => .absNTerminal x (Item.replaceCat old new it)
-  | .bindNTerminal x c => .bindNTerminal x (Cat.replace old new c)
+  | .bindNTerminal x c => if Cat.beq c old then .bindNTerminal x new else .bindNTerminal x c
 
-/-- Rename a sort throughout a function symbol: its output sort, its label, and its items. -/
+/-- Rename a sort in one function symbol, mirroring Scala `updateDef`: the output sort is set to `new`
+    UNCONDITIONALLY (the Scala bug noted above), the label is left unchanged, and the items get the
+    shallow per-item replace. -/
 def Rule.replaceCat (old new : Cat) (r : Rule) : Rule :=
-  { label := r.label.replaceCat old new
-    cat := Cat.replace old new r.cat
-    items := r.items.map (Item.replaceCat old new) }
+  { r with cat := new, items := r.items.map (Item.replaceCat old new) }
 
 /-- Rename a sort in a presentation's exported sort list and its function-symbol definitions, leaving
-    equations, rewrites, and references untouched. Mirrors Scala `handleAddExports`, whose
-    `RenameExport` branch updates only `listcat_` and `listdef_`. A term carries a sort only inside a
-    list label, so the equations and rewrites of the tested modules are unaffected either way. -/
+    equations, rewrites, and references untouched. Mirrors Scala `handleAddExports`'s `RenameExport`
+    branch, which updates `listcat_` and `listdef_` only (see the section note for the shallow-map and
+    `updateDef` quirks it reproduces). -/
 def Presentation.replaceCat (old new : Cat) (p : Presentation) : Presentation :=
-  .mk (Cat.replaceList old new p.exports)
+  .mk (p.exports.map (fun c => if Cat.beq c old then new else c))
       (p.terms.map (Rule.replaceCat old new))
       p.equations
       p.rewrites

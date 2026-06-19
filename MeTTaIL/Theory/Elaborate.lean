@@ -147,8 +147,11 @@ mutual
               match e with
               | .base c =>
                   .ok (.mk (pp.exports ++ [c]) pp.terms pp.equations pp.rewrites pp.references)
+              -- Scala `checkAddExports` validates each rename against the ORIGINAL exports `p.exports`,
+              -- not the running accumulator, so a batch like `[rename A B, rename B C]` over base `{A}`
+              -- is rejected even though the worker could apply it sequentially.
               | .rename old new =>
-                  if pp.exports.contains old then .ok (Presentation.replaceCat old new pp)
+                  if p.exports.contains old then .ok (Presentation.replaceCat old new pp)
                   else .error "addExports: cannot rename a sort that is not exported")
             p
     | fuel+1, ctx, .addReplacements base reps => do

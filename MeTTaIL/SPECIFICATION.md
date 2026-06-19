@@ -212,13 +212,19 @@ Four layers, each a set of Lean modules with stated theorems. Layers 1 to 3 are 
 Mathlib-free, mirroring LeaTTa's kernel/proof split. Layer 4 (and the mq-calculus) use Mathlib and
 live in a proof-only library.
 
+This section is the original layered plan. Section 8 is the authoritative record of what was actually
+delivered, both modules and theorems. Where the two differ, Section 8 governs. Some module names and
+theorem bullets below describe intended work that was reshaped during the build or left as future
+work; the file paths here are illustrative, and the real layout is the tree in Section 5.
+
 ### Layer 1: data model, presentation algebra, elaboration
 
 Modules: `MeTTaIL/Syntax/*` (the data model), `MeTTaIL/Theory/Instance.lean`,
 `MeTTaIL/Theory/WellFormed.lean`, `MeTTaIL/Theory/Elaborate.lean`.
 
 Theorems:
-- `elaborate` is total (terminates) and deterministic.
+- `elaborate` is a deterministic, fuel-bounded function (no `partial`); a separate termination proof
+  is not delivered (see Section 8).
 - Coherence: the checker rejects exactly the inputs on which the worker would be ill-formed
   (`check = none` iff `elaborate = ok`).
 - Well-formedness preservation: each algebra operation maps well-formed presentations to well-formed
@@ -254,9 +260,10 @@ Modules: `MeTTaIL/Semantics/Reduce.lean`, `MeTTaIL/Semantics/Congruence.lean`,
 Theorems:
 - The reduction relation is well-defined; structural congruence is an equivalence and is a
   congruence for the constructors.
-- RHO: reflection iso laws hold; COMM produces well-formed contracta; a concrete reduction example
-  computes. SKI: the six combinator rules reduce closed terms; head reduction is deterministic.
-  Lambda: beta and head reduction, confluence of the deterministic fragment where tractable.
+- RHO: delivered as the elaboration oracle (`MeTTaILTests/Rholang.lean`), not as a reduction theory;
+  a standalone `Rho.lean` reduction development is future work. SKI: subject reduction and confluence
+  (Church-Rosser via parallel reduction). Lambda: preservation, progress, and full confluence of beta
+  (no fragment restriction).
 - Bridge: relate a GSLT reduction step to LeaTTa's `Operational` four-register machine where they
   align, or present MeTTa itself as a GSLT and connect to the kernel. Depth depends on the scope
   decision in section 7.

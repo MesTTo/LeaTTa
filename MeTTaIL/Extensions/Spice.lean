@@ -57,8 +57,8 @@ example :
     (reachUpTo (fun k => if k = 0 then [] else [k - 1]) 2 3 == [3, 2, 1]) = true := by decide
 
 /-- With fuel 0 the modified COMM rule sends the singleton `{Q}`, which grounds the recursion.
-    Extracting `Q` from `{Q}` then recovers the original COMM rule, the step the paper notes is needed
-    (page 3); `@{Q}` is the code of the set, not the name `@Q`. The example restates the grounding
+    Extracting `Q` from `{Q}` then recovers the original COMM rule, the grounding step the paper notes
+    is needed; `@{Q}` is the code of the set, not the name `@Q`. The example restates the grounding
     `Q --0--> {Q}`. -/
 example {α : Type} (step : α → List α) (q : α) :
     reachUpTo step 0 q = [q] := reachUpTo_zero step q

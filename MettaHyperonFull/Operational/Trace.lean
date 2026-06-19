@@ -26,6 +26,10 @@ def traceRunFuel (cfg : RuntimeConfig) : Nat → State → Trace
   | Nat.succ n, s =>
       match smallStep? cfg s with
       | none => Trace.empty s
-      | some (k, s') => Trace.extend (traceRunFuel cfg n s') k s'
+      | some (k, s') =>
+          -- Record `s` (the pre-step state) and the label `k`, then the trace from `s'`.
+          -- The recursive trace already starts at `s'`, so we prepend `s`/`k` to it.
+          let rest := traceRunFuel cfg n s'
+          { states := s :: rest.states, labels := k :: rest.labels }
 
 end Metta

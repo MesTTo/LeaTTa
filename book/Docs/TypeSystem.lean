@@ -21,17 +21,16 @@ tag := "sec-types"
 MeTTa is *gradually* typed {citep siekTaha}[]: a declared arrow signature `(: op (-> T₁ … Tₙ R))`
 triggers argument checking, an undeclared operator is left unchecked, and the special types
 `%Undefined%` (the dynamic type) and `Atom` (the top meta-type) are compatible with everything.
-LeaTTa formalizes this discipline operationally (`getTypes`, `matchType`, `typeCheckArgs`, and
-`typeMismatch` in `Minimal/Interpreter.lean`) and proves its key properties.
+LeaTTa formalizes this discipline operationally through `getTypes`, `matchType`, `typeCheckArgs`, and
+`typeMismatch` in `Minimal/Interpreter.lean`, and proves its key properties.
 
 # Type Compatibility Is *Consistency*, Not Equality
 
 The relation deciding whether an actual type may be supplied where a parameter type is expected is
-Siek and Taha's *consistency* `~`. Its defining feature, the property that makes gradual typing
-work, is that it is *reflexive and symmetric but _not_ transitive*: routing through the dynamic
-type would otherwise relate *all* types and make the discipline vacuous. The following is a
-self-contained, fully checked rendering of that result (the development proves it for the real
-`matchType` as well):
+Siek and Taha's *consistency* `~`. It is *reflexive and symmetric but _not_ transitive*: routing
+through the dynamic type would otherwise relate *all* types and make the discipline vacuous. The
+following is a self-contained, fully checked rendering of that result (the development also proves it
+for the real `matchType`):
 
 ```lean
 /-- A miniature type language: named types plus the two gradual wildcards. -/
@@ -62,15 +61,15 @@ theorem consistent_not_transitive :
     (h _ .undef _ (.undefR _) (.undefL _))
 ```
 
-So compatibility is a *tolerance* relation, not a preorder; and that is exactly what keeps the
-`%Undefined%`/`Atom` escape hatch sound rather than collapsing the type discipline. LeaTTa's
-`Gradual.lean` proves `Consistent.refl`, `Consistent.symm`, `Consistent.not_transitive` for the full
-`Atom` type, and `matchType_not_transitive` shows the *executable* matcher inherits the property.
+Compatibility is a *tolerance* relation, not a preorder. That is what keeps the `%Undefined%`/`Atom`
+escape hatch sound without collapsing the type discipline. `Gradual.lean` proves `Consistent.refl`,
+`Consistent.symm`, and `Consistent.not_transitive` for the full `Atom` type, and
+`matchType_not_transitive` shows the *executable* matcher inherits the property.
 
 # What the Type System Guarantees
 
-For MeTTa's intended on-chain use the operative guarantee is: a well-typed program is never rejected
-spuriously, and a reported type error is faithful. LeaTTa proves, against the real kernel functions:
+For MeTTa's intended on-chain use, a well-typed program must never be rejected spuriously, and a
+reported type error must be faithful. LeaTTa proves both against the real kernel functions:
 
  * *Permissiveness*: undeclared operators, arguments beyond the declared arity, and the
    `%Undefined%`/`Atom` wildcards are never rejected (`typeMismatch_undeclared`,
@@ -85,7 +84,7 @@ spuriously, and a reported type error is faithful. LeaTTa proves, against the re
    `Bool` or faithfully propagate an error (`numBin_isNumber`, `numCmp_isBool`,
    `eqAtom_isBoolOrError`).
 
-The `matchType` matcher treats `Atom` as a wildcard on *either* side, matching both Hyperon's Rust
-(`interpreter.rs`) and the prealpha specification, a faithfulness fix LeaTTa makes explicit. Casting
-between types is the standard-library `type-cast`, which checks an atom's actual types against a
-target and returns the atom or `(Error atom BadType)`.
+The `matchType` matcher treats `Atom` as a wildcard on *either* side. This matches both Hyperon's
+Rust implementation (`interpreter.rs`) and the prealpha specification; the point was not documented
+before LeaTTa. Casting between types is the standard-library `type-cast`, which checks an atom's
+actual types against a target and returns the atom or `(Error atom BadType)`.

@@ -3,20 +3,19 @@ import MettaHyperonFull.Proofs.Basic
 /-!
 # Metatheory: the abstract machine is deterministic
 
-A central requirement for MeTTa's intended use as an on-chain / smart-contract language is that
-execution be **predictable**: the same program in the same state must always produce the same
-outcome, independent of the runtime. Our model makes this structurally true.
+For use as an on-chain / smart-contract language, MeTTa execution must be **predictable**: the
+same program in the same state must always produce the same outcome.
 
 The minimal interpreter is a *deterministic* abstract machine. One step,
 `interpretStack1 : MinEnv → Nat → St → Item → List Item × St`, and the driver
 `interpretFuel : … → List (Atom × Bindings) × St` are **total functions** of their inputs, so
 every configuration has a unique successor and a unique result. MeTTa's nondeterminism (a query
 may yield several results) is *reified in the returned `List`*: it is data the function computes,
-not "don't-know" nondeterminism in the transition relation. This is exactly the discipline a
+not "don't-know" nondeterminism in the transition relation. That is the discipline a
 blockchain VM needs: replayable, with all branching observable in the output rather than hidden in
-the evaluation order.
+evaluation order.
 
-This module records that determinism explicitly, the definitional base cases of the driver, and
+The module records that determinism explicitly, the definitional base cases of the driver, and
 the law governing `cartesian`, the helper that forms the product of the (nondeterministic)
 argument-evaluation results in `mettaEval`.
 -/
@@ -102,7 +101,7 @@ theorem cartesian_cons {α : Type} (xs : List α) (rest : List (List α)) :
     cartesian (xs :: rest) = xs.flatMap (fun x => (cartesian rest).map (fun t => x :: t)) := rfl
 
 /-- **Size of the nondeterministic product.** The number of combined results is the product of the
-per-argument result counts, so the branching factor of an evaluation is exactly the product of
+per-argument result counts, so the branching factor of an evaluation is the product of
 the branching factors of its arguments. -/
 theorem cartesian_length {α : Type} (xss : List (List α)) :
     (cartesian xss).length = (xss.map List.length).prod := by

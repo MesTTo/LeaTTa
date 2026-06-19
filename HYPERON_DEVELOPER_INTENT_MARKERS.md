@@ -1,13 +1,13 @@
 # Appendix: Scope and Provenance
 
 This appendix documents why each area of the MeTTa language covered by this
-formalization is a high-value target for machine-checked treatment. The
-justification is grounded in Hyperon's own source commentary: the development
+formalization is a target for machine-checked treatment. The
+justification comes from Hyperon's own source commentary: the development
 comments in `hyperon-experimental` (Rust and MeTTa source at
 `/home/user/Dev/hyperon-build-src`) identify areas where the semantics is still
 settling, where a design decision has been deferred, or where the current
 implementation is acknowledged to differ from the intended behavior. A
-machine-checked reference is most useful precisely in those areas.
+machine-checked reference is most useful in those areas.
 
 All paths below are absolute paths into the `hyperon-experimental` source tree.
 Quoted text is verbatim from those sources. No markers have been added or
@@ -163,8 +163,8 @@ note the intended (rejecting) behavior.
 The `->` function-type constructor carries no type declaration; it passes
 type-checking only because it falls through to `%Undefined%`. The developers
 want proper types for `->` and other type constructors, but that requires
-variadic type support, which is not yet implemented. This is a central
-soundness gap in the gradual type system.
+variadic type support, which is not yet implemented. This is a known soundness
+gap in the gradual type system.
 
 `lib/src/metta/runner/stdlib/stdlib.metta:617-618`:
 
@@ -340,7 +340,7 @@ function's declared signature with no mutable state.
 ```
 
 This guards `is_variable_op` and returns `not-reducible` for expressions whose
-operator is a variable (`($f x)`). The principled fix, as the comment notes,
+operator is a variable (`($f x)`). The fix the comment asks for
 belongs in the `metta-call` layer. The Lean formalization provides a total,
 documented `isVariableHeaded` guard that implements the "better way" the
 comment describes.
@@ -630,7 +630,7 @@ cleanups.
 
 ## Summary: Where a Machine-Checked Reference Adds Value
 
-The five areas where the Hyperon source itself signals the most open design work
+The five areas where the Hyperon source itself shows the most open design work
 are the following, and they correspond directly to the formal properties this
 Lean development establishes:
 
@@ -641,7 +641,7 @@ Lean development establishes:
 
 2. **Assigning a type to `->` and other type constructors; supporting variadic
    types** (`stdlib.metta:367-370`, `:617-618`). The current `%Undefined%`
-   fall-through is the central soundness gap in the gradual type system. The
+   fall-through is the known soundness gap in the gradual type system. The
    type-checker faithfulness theorems (`TypeSoundness.lean`) characterize the
    actual permissive behavior precisely.
 
@@ -652,7 +652,7 @@ Lean development establishes:
    formalization addresses both by deriving dispatch statically from each
    function's declared type.
 
-4. **Principled handling of `Variable ~ Grounded` unification** rather than the
+4. **Handling of `Variable ~ Grounded` unification** rather than the
    current single-branch choice (`matcher.rs:1105-1108`), and multi-valued
    `Grounded::type_()` for type non-determinism (`hyperon-atom/src/lib.rs:419-421`).
    Both affect the matching and typing relations that a proof layer must state.

@@ -5,28 +5,26 @@ import MettaHyperonFull.Proofs.Basic
 
 Hyperon's interpreter does not scan the whole atomspace for every reduction: it indexes equality
 rules by the head symbol of their left-hand side and, to reduce `toEval`, only consults the rules
-whose head matches `toEval`'s (its `AtomIndex`). Our kernel does the same: `MinEnv.ruleIndex`
+whose head matches `toEval`'s (its `AtomIndex`). The kernel does the same: `MinEnv.ruleIndex`
 buckets `(= lhs rhs)` rules by `headKey lhs`, and `MinEnv.candidates` returns the bucket for the
-query's head together with the head-less (`varRules`) rules (`Minimal/Interpreter.lean`). This is
+query's head together with the head-less (`varRules`) rules (`Minimal/Interpreter.lean`). See
 "improvement #9" in `IMPROVEMENTS_OVER_HYPERON.md`.
 
-For that optimisation to be *sound* it must never drop a rule that could actually fire: the
-indexed candidate set must contain every rule whose LHS matches `toEval`. This file proves the
-semantic heart of that guarantee:
+For that optimisation to be *sound* it must never drop a rule that could actually fire. This
+file proves the semantic guarantee:
 
 > **`matchAtoms_headKey`**: if `toEval` is headed by symbol `k` and a rule LHS matches it, then
 > the LHS is headed by the *same* `k`, or it is head-less (`headKey = none`, i.e. variable- or
 > grounded-headed).
 
-Equivalently: a rule sitting in a *different* head bucket can never match, so restricting the
-candidate set to `k`'s bucket ∪ the head-less rules loses nothing. (Determinism of which rules
-fire is exactly the kind of guarantee that matters for MeTTa's intended on-chain use.)
+A rule sitting in a *different* head bucket can therefore never match, so restricting the
+candidate set to `k`'s bucket union the head-less rules loses nothing.
 
-The companion syntactic fact, that `MinEnv.candidates` returns precisely `k`'s bucket ∪ the
-head-less rules characterised against the flat rule list, is developed on top of this in the
-`MinEnv.ofAtomsGT` characterisation (next).
+The syntactic companion (that `MinEnv.candidates` returns `k`'s bucket union the
+head-less rules, characterised against the flat rule list) is proved on top of this in
+`IndexingComplete.lean`.
 
-A note on `matchAtomsWith`: its `gnd`-free reasoning needs `Atom`'s `==` to *reduce*, which is
+Note on `matchAtomsWith`: the `gnd`-free reasoning needs `Atom`'s `==` to *reduce*, which is
 why the kernel uses a hand-written structural `BEq Atom` (`Core/Atom.lean`) rather than the
 derived one (the derived instance is well-founded and opaque even to `decide`).
 -/
@@ -93,7 +91,7 @@ theorem matchAtoms_expr_sym (xs : List Atom) (a : String) :
 
 /-- **Matching forces head agreement.** If the query `toEval` is headed by symbol `k` and a rule
 left-hand side `lhs` matches it, then `lhs` is headed by the *same* `k`, or `lhs` is head-less
-(`headKey lhs = none`). Therefore first-argument indexing, which offers `toEval` only the rules
+(`headKey lhs = none`). So first-argument indexing, which offers `toEval` only the rules
 in head bucket `k` together with the head-less rules, never hides a rule that could fire: it is
 sound. -/
 theorem matchAtoms_headKey {lhs toEval : Atom} {k : String}

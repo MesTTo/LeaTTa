@@ -1,15 +1,15 @@
 # Installing and running LeaTTa
 
-LeaTTa ships the machine-checked minimal MeTTa interpreter as a single native binary
-named `LeaTTa`. It links only against the standard C library, so a prebuilt bundle runs
-without installing Lean or Mathlib.
+LeaTTa ships the minimal MeTTa interpreter as a single native binary named `LeaTTa`. It
+links only against the standard C library, so a prebuilt bundle runs without installing
+Lean or Mathlib.
 
 ## Platforms
 
 The prebuilt Linux x86_64 binary is the tested target. It runs on any glibc Linux of the
-same architecture. macOS and Windows are supported through the source build below, and
-the release workflow (`.github/workflows/release.yml`) produces binaries for Linux,
-macOS, and Windows on each tagged release.
+same architecture. macOS and Windows are supported through the source build below. The
+release workflow (`.github/workflows/release.yml`) produces binaries for Linux, macOS,
+and Windows on each tagged release.
 
 ## Option 1: prebuilt release (recommended, Linux x86_64)
 
@@ -39,7 +39,7 @@ LeaTTa --oracle examples/a1_symbols.metta
 
 ## Option 2: build from source (Linux, macOS, Windows)
 
-This needs the Lean toolchain, managed by [elan](https://github.com/leanprover/elan). The
+Building from source requires the Lean toolchain, managed by [elan](https://github.com/leanprover/elan). The
 exact toolchain version is pinned in `lean-toolchain`.
 
 ```bash
@@ -54,13 +54,13 @@ The binary lands at `.lake/build/bin/LeaTTa` (`LeaTTa.exe` on Windows). Install 
 make install                                   # copies it to ~/.local/bin
 ```
 
-Mathlib backs the metatheory proofs only. The interpreter binary itself does not link
-Mathlib, so once `LeaTTa` is built you can run it anywhere without the proof layer.
+Mathlib backs the metatheory proofs only. The interpreter binary does not link Mathlib,
+so once `LeaTTa` is built it runs anywhere without the proof layer.
 
 ## Usage
 
-`LeaTTa` runs programs on the minimal interpreter and prints, for each `!`-evaluation,
-the list of values it produces.
+`LeaTTa` runs programs on the minimal interpreter. For each `!`-evaluation, it prints the
+list of values it produces.
 
 | Command | What it does |
 | --- | --- |

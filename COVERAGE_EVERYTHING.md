@@ -2,7 +2,7 @@
 
 This document maps the MeTTa and Hyperon topics drawn from the source papers, the Meta-MeTTa
 operational semantics, the current Hyperon implementation, and the public standard-library
-documentation, to the files that formalize them. It is organized in two parts: the faithful,
+documentation, to the files that formalize them. It is organized in two parts: the
 machine-checked core that is built, and the earlier exploratory models that now live under
 `archive/` and are not built. See `archive/README.md`.
 

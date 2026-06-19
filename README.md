@@ -12,7 +12,7 @@ full comparison is in [IMPROVEMENTS_OVER_HYPERON.md](IMPROVEMENTS_OVER_HYPERON.m
 
 ## The faithful core
 
-Everything that matters lives in `MettaHyperonFull/Minimal/`:
+The kernel lives in `MettaHyperonFull/Minimal/`:
 
 - `Interpreter.lean` is a faithful port of `interpreter.rs`. It is the continuation-passing,
   nondeterministic stack machine with all twelve minimal instructions (`eval`/`evalc`, `chain`,
@@ -24,15 +24,15 @@ Everything that matters lives in `MettaHyperonFull/Minimal/`:
   `let`, `let*`, `switch`, `case`, `map-atom`, `filter-atom`, `foldl-atom`, the set operations, the
   `assert*` family, `match`, and so on, together with the grounded operations.
 
-The whole faithful library builds in 36 jobs, with 0 `sorry`, 0 `partial`, and 0 `unsafe`.
+The whole library builds in 36 jobs, with 0 `sorry`, 0 `partial`, and 0 `unsafe`.
 
 ## How it is validated
 
-The honest test is whether it agrees with Hyperon, so it runs as a differential oracle against
-Hyperon's own unmodified test corpus, vendored under [tests/corpus/](tests/corpus/) (MIT, commit
-`3f76dc4`). One command builds the interpreter, runs every `!`-assertion in all 22 files, and checks
-each result. An assertion passes when it evaluates to `()`, and the script exits non-zero on any
-mismatch, so it doubles as the regression gate.
+The test is whether it agrees with Hyperon. It runs as a differential oracle against Hyperon's own
+unmodified test corpus, vendored under [tests/corpus/](tests/corpus/) (MIT, commit `3f76dc4`). One
+command builds the interpreter, runs every `!`-assertion in all 22 files, and checks each result. An
+assertion passes when it evaluates to `()`. The script exits non-zero on any mismatch, so it doubles
+as the regression gate.
 
 ```bash
 ./scripts/run-oracle.sh                                       # 270 / 270, ORACLE OK
@@ -53,19 +53,19 @@ lake exe LeaTTa --oracle tests/corpus/test_stdlib.metta   # or a single file
 | `d3_deptypes`, `d4_type_prop` (types as propositions), `d5_auto_types` | 8 / 8, 18 / 18, 7 / 7 |
 | `g1_docs.metta` (`get-doc`, `help!`) | 10 / 10 |
 
-These are Hyperon's tests, run unmodified, not a subset I picked out. What passes includes the full
-dependent-type tier (`d1`–`d5`): GADTs, higher-order functions, dependent length arithmetic, types as
-propositions, and auto type-checking, along with the documentation operators `get-doc` and `help!`.
+These are Hyperon's tests, run unmodified. Passing tests include the full dependent-type tier
+(`d1`–`d5`): GADTs, higher-order functions, dependent length arithmetic, types as propositions, and
+auto type-checking, along with the documentation operators `get-doc` and `help!`.
 
-One file is left out: `f1_imports.metta`. Hyperon marks it Python-mode-only (its header says it
+One file is excluded: `f1_imports.metta`. Hyperon marks it Python-mode-only (its header says it
 "won't work under no python mode"), because it assumes `&self` starts nearly empty with `corelib` and
 `stdlib` as separate modules, while this build ships the prelude inside `&self`. The module machinery
-it would exercise, `import!` into named spaces and diamond-dependency deduplication, is covered anyway
-by `c2_spaces` (25/25) and `g1_docs` (10/10).
+it would exercise, `import!` into named spaces and diamond-dependency deduplication, is covered by
+`c2_spaces` (25/25) and `g1_docs` (10/10).
 
 ## What is implemented
 
-All of this is faithful to Hyperon and built on the minimal interpreter:
+All of this is built on the minimal interpreter and follows Hyperon:
 
 - Types: gradual `get-type`, function-application checking with `(BadArgType …)`, multi-type symbols,
   and type-variable unification for parametric and dependent signatures like `(-> $t $t …)` and
@@ -81,9 +81,8 @@ All of this is faithful to Hyperon and built on the minimal interpreter:
 
 ## The proofs
 
-On top of the running interpreter there is a machine-checked metatheory layer in
-`MettaHyperonFull/Proofs/`. This part uses Mathlib and keeps 0 `sorry`, 0 `admit`, and 0
-`native_decide`. It proves the things an on-chain MeTTa actually needs, rather than asserting them:
+The metatheory layer lives in `MettaHyperonFull/Proofs/`. It uses Mathlib and keeps 0 `sorry`, 0
+`admit`, and 0 `native_decide`. It proves what an on-chain MeTTa needs:
 
 - the abstract machine is deterministic, with all nondeterminism kept in the result list rather than
   the transition relation, which is what replayability needs;
@@ -94,18 +93,18 @@ On top of the running interpreter there is a machine-checked metatheory layer in
   type, so it never invents an error;
 - α-equivalence is an equivalence relation.
 
-There is also a separate `MettaHyperonFull.Operational.*` library that machine-checks the published
-Meta-MeTTa operational semantics (arXiv 2305.17218): the four-register machine ⟨i,k,w,o⟩, its barbed
+A separate `MettaHyperonFull.Operational.*` library machine-checks the published Meta-MeTTa
+operational semantics (arXiv 2305.17218): the four-register machine ⟨i,k,w,o⟩, its barbed
 bisimulation, and a resource-bounded (gas) extension. The bridge between the indexed kernel and that
 specification is in `Proofs/Correspondence.lean`. See
 [SEMANTICS_CORRESPONDENCE.md](SEMANTICS_CORRESPONDENCE.md).
 
 ## The book
 
-There is a longer, textbook-style treatment of all of this in [`book/`](book/), built with Verso. It
-walks through the object language, the interpreter, the type system, the metatheory, the operational
-semantics and its correspondence to the kernel, and the blockchain angle. It is its own small Lean
-project, so you build it on its own:
+A textbook-style treatment of the formalization is in [`book/`](book/), built with Verso. It covers
+the object language, the interpreter, the type system, the metatheory, the operational semantics and
+its correspondence to the kernel, and the blockchain angle. The book is its own Lean project, so build
+it separately:
 
 ```bash
 cd book
@@ -122,8 +121,8 @@ python3 -m http.server 8137 --directory book/_out/html-multi   # then open http:
 ## Install and run
 
 The interpreter ships as a single native binary, `LeaTTa`. It links only against the standard
-C library, so a prebuilt release runs on any glibc Linux of the same architecture with no Lean
-toolchain installed. Download an archive from the [releases page](https://github.com/MesTTo/LeaTTa/releases),
+C library, so a prebuilt release runs on any glibc Linux of the same architecture without installing
+the Lean toolchain. Download an archive from the [releases page](https://github.com/MesTTo/LeaTTa/releases),
 then:
 
 ```bash
@@ -148,9 +147,9 @@ make release                                         # package dist/leatta-<vers
 ## Where it improves on the current implementation
 
 The minimal interpreter in `hyperon-experimental` is openly provisional. Its source carries a
-self-described "hack" and several `TODO` notes right at the points that decide evaluation. This
-formalization swaps those for declarative, total constructs. The full table is in
-[IMPROVEMENTS_OVER_HYPERON.md](IMPROVEMENTS_OVER_HYPERON.md); in short:
+self-described "hack" and several `TODO` notes at the points that decide evaluation. This
+formalization replaces those with declarative, total constructs. The full table is in
+[IMPROVEMENTS_OVER_HYPERON.md](IMPROVEMENTS_OVER_HYPERON.md):
 
 - the mutable `is_evaluated()` bit, commented "a hack" at `interpreter.rs:1142`, becomes static
   return-type gating taken from each function's declared type;
@@ -162,13 +161,12 @@ formalization swaps those for declarative, total constructs. The full table is i
 
 ## Layout and scope
 
-- Active and faithful: `Core` (the object language), then `Runtime.Parser`, then
-  `Minimal.Interpreter`, then `Minimal.Stdlib`. `Proofs` and `Operational` are the metatheory and the
-  published semantics.
-- Archived and not built: earlier exploratory models, namely a four-register runtime, categorical
+- Active: `Core` (the object language), `Runtime.Parser`, `Minimal.Interpreter`, `Minimal.Stdlib`.
+  `Proofs` and `Operational` are the metatheory and the published semantics.
+- Archived and not built: earlier exploratory models, including a four-register runtime, categorical
   metagraph rewriting, a Ruliad sketch, and an earlier approximate standard library. They live under
-  [archive/](archive/) with their own README, kept for the record rather than as part of the verified
-  work.
+  [archive/](archive/) with their own README, kept for reference and not part of the verified work.
 - In scope: the minimal interpreter, the standard library (computation, control, lists, sets,
   asserts), the runtime type system, mixed arithmetic, mutable spaces and state, conjunctive match,
-  and the metatheory layer. Not yet covered: the full module system.
+  and the metatheory layer.
+- TODO: the full module system is not yet covered.

@@ -110,8 +110,8 @@ def subtractionAtomOp : List Atom → ReduceResult
 
 /-- Hyperon's `result_items` (`stdlib/debug.rs`): a *collapsed bag* is an explicit comma-tuple
     `(, x …)`, so a leading `,` is stripped to recover the bare item list `x …`; any other
-    expression is already its own item list. This is what lets `(collapse …)` (which yields `(, …)`)
-    compare and re-spread against the bare tuples that assertions and `superpose` work with. -/
+    expression is already its own item list. Stripping the `,` lets `(collapse …)` (which yields
+    `(, …)`) compare and re-spread against the bare tuples that assertions and `superpose` work with. -/
 def resultItems : List Atom → List Atom
   | Atom.sym "," :: rest => rest
   | xs => xs
@@ -258,14 +258,14 @@ interpreter.rs:1011). The propagation-vs-hygiene tension is resolved by `apply_a
 CONTINUATION's live scope, split across two evaluation operators:
   • `metta` (used by `map`/`filter`/`foldl` for the per-element operator): fully evaluates the operator
     but DROPS its internal bindings; a function operator's `let`-scoped locals must not leak across
-    elements/steps. This keeps `overlap-857` and `map-atom`+`let` hygienic.
+    elements/steps. Dropping internal bindings keeps `overlap-857` and `map-atom`+`let` hygienic.
   • `metta-thread` (used by `interpret-tuple` for tuple elements): RETAINS exactly the solutions for
     variables still live in the continuation (`scopeVars`/`restrictBnd`), so a genuine query solution
     (`$a = A` from `(isa911 $a B)`) reaches the sibling `$a` → `(True A)`, while a `let`-pattern
     variable, never live in the continuation, is dropped. `mettaEval` carries each result's own
     bindings forward (re-evaluating under `p.2`, not an empty context) so those solutions survive to
     the `metta-thread` boundary, where the scope filter applies.
-This is Hyperon's `apply_and_retain` specialised to the continuation scope: tuple-element evaluation
+The scheme above is Hyperon's `apply_and_retain` specialised to the continuation scope: tuple-element evaluation
 threads shared query variables; operator evaluation retains nothing locally. `((f3) (f3))` works via
 counter threading (each `(f3)` a distinct fresh variable). All 33 `test_stdlib.metta` assertions pass.
 -/
@@ -588,9 +588,9 @@ def splitProgram : List Atom → List Atom × List Atom
 
 /-- Evaluate a program **sequentially**, as Hyperon processes a `.metta` file top-to-bottom: each
     `!`-query is evaluated against the knowledge base built from the atoms that precede it, while
-    non-bang atoms extend the knowledge base. This is what makes order-dependent programs faithful:
-    e.g. the same expression evaluated before and after a `(: …)` type declaration. Returns each
-    query paired with its results, in file order. -/
+    non-bang atoms extend the knowledge base. Sequential ordering matters for order-dependent programs,
+    e.g. the same expression evaluated before and after a `(: …)` type declaration gives different
+    results. Returns each query paired with its results, in file order. -/
 def evalSequential (atoms : List Atom) (fuel : Nat)
     (imports : Std.HashMap String (List Atom) := Std.HashMap.emptyWithCapacity) : List (Atom × List Atom) :=
   -- `runQ` evaluates a query under the current `St` (gensym counter + mutable world) and returns its

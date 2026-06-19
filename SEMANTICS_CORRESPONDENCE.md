@@ -10,8 +10,8 @@ What this document is. Alongside the Lean work, the same author maintains an ind
 sketch, `metta-elegant.k`, a recreation of a CASL algebraic specification `MettaElegant.casl`. It is
 an in-progress, AST-level rewriting sketch rather than an authoritative reference, and it may simplify
 or diverge from Hyperon in places. It is included here only as a structural cross-check: two
-independently written encodings landing on the same shape of rewrite system is mild extra evidence
-that the shape is the conventional one. Where the K sketch and Hyperon would disagree, Hyperon and the
+independently written encodings landing on the same shape of rewrite system is some extra evidence
+that the shape is the standard one. Where the K sketch and Hyperon would disagree, Hyperon and the
 270-assertion corpus govern.
 
 None of the Lean proofs depend on the K sketch being correct; the table is only a reading aid.

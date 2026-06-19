@@ -5,28 +5,28 @@ import MettaHyperonFull.Proofs.TypeSoundness
 
 MeTTa is *gradually* typed: the dynamic type `%Undefined%` (and the top meta-type `Atom`) is
 compatible with every type, and type-checking accepts an argument whose type is *consistent* with
-the parameter's, not necessarily equal. Operationally this is Hyperon's `match_types`
-(`%Undefined%`/`Atom` are wildcards on either side; otherwise the two types are unified structurally,
-`Proofs/TypeSoundness.lean : matchType_undefined_left/right`, `matchType_atom_left`).
+the parameter's, not necessarily equal. Operationally, Hyperon's `match_types` implements exactly
+this: `%Undefined%`/`Atom` are wildcards on either side; otherwise the two types are unified
+structurally (`Proofs/TypeSoundness.lean : matchType_undefined_left/right`, `matchType_atom_left`).
 
 This file gives that compatibility its declarative form as the **consistency relation** `~` of Siek &
 Taha's gradual typing, and proves its characteristic algebra:
 
 * `Consistent.refl` / `Consistent.symm`: `~` is **reflexive and symmetric**;
-* `Consistent.not_transitive`: `~` is **not transitive**, *the* defining feature of gradual typing:
-  `Number ~ %Undefined%` and `%Undefined% ~ String`, yet `Number ≁ String`. (Were `~` transitive,
-  routing through `%Undefined%` would relate *all* types and the type system would be vacuous; gradual
-  typing keeps the dynamic type compatible-with-everything precisely by giving up transitivity.)
+* `Consistent.not_transitive`: `~` is **not transitive**.
+  Concretely: `Number ~ %Undefined%` and `%Undefined% ~ String`, yet `Number ≁ String`. Were `~`
+  transitive, routing through `%Undefined%` would relate all types and make the type system vacuous.
+  Gradual typing keeps the dynamic type compatible-with-everything by giving up transitivity.
 
-So MeTTa's type compatibility is a *tolerance* relation (reflexive + symmetric, intransitive), not a
-preorder, and that is exactly what makes the `%Undefined%`/`Atom` escape hatch sound rather than
-collapsing the whole type discipline.
+MeTTa's type compatibility is a *tolerance* relation (reflexive + symmetric, intransitive), not a
+preorder. That is what makes the `%Undefined%`/`Atom` escape hatch sound without collapsing the
+whole type discipline.
 -/
 
 namespace Metta
 
 mutual
-/-- Gradual type **consistency** `t₁ ~ t₂` (Siek–Taha): equal types are consistent; the dynamic type
+/-- Gradual type **consistency** `t₁ ~ t₂` (Siek-Taha): equal types are consistent; the dynamic type
 `%Undefined%` and the top meta-type `Atom` are consistent with anything on either side; and two
 expressions are consistent when they have equal length and pointwise-consistent components (so
 `(-> A B) ~ (-> A %Undefined%)`). Mirrors Hyperon's `match_types`. -/
@@ -68,8 +68,8 @@ theorem symmList {xs ys : List Atom} (h : ConsistentList xs ys) : ConsistentList
 end
 
 /-- Two **distinct** symbols, *neither* of which is a gradual wildcard (`%Undefined%`/`Atom`), are
-never consistent: no constructor of `~` applies (the `expr` case is a symbol/expression clash). This
-is the general statement behind the non-transitivity counterexample. -/
+never consistent: no constructor of `~` applies (the `expr` case is a symbol/expression clash). The
+non-transitivity counterexample is a corollary of this. -/
 theorem not_consistent_distinct_syms {a b : String}
     (hab : a ≠ b) (hua : a ≠ "%Undefined%") (htA : a ≠ "Atom")
     (hub : b ≠ "%Undefined%") (htB : b ≠ "Atom") :
@@ -102,11 +102,11 @@ end Consistent
 
 /-! ## The executable `matchType` inherits gradual consistency
 
-`Consistent` above is the *declarative* relation. Here we show the kernel's actual type matcher
-(`Minimal/Interpreter.lean : matchType`, the faithful image of Hyperon's `match_types`) exhibits the
-very same defining algebra: in particular it is **not transitive**, the operational counterpart of
-`Consistent.not_transitive`. So the gradual-typing hallmark is a property of the code that runs, not
-only of an idealised relation beside it. -/
+`Consistent` above is the *declarative* relation. We also show the kernel's actual type matcher
+(`Minimal/Interpreter.lean : matchType`, matching Hyperon's `match_types`) exhibits the same
+defining algebra: it is **not transitive**, the operational counterpart of
+`Consistent.not_transitive`. Non-transitivity is a property of the code that runs, not only of
+a declarative relation beside it. -/
 
 open Metta.Minimal
 

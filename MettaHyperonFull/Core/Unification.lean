@@ -7,9 +7,9 @@ namespace Unify
 mutual
 
 /-- Structurally decompose a single equation `a =? b` into the variable constraints it forces,
-    or `none` on a head clash / arity mismatch. Trivial `$x =? $x` constraints are dropped, and a
-    variable on either side yields a `(var, term)` constraint. This is structural recursion over
-    the two atoms (mutually with `decomposeList`), hence total. -/
+    or `none` on a head clash or arity mismatch. Trivial `$x =? $x` constraints are dropped and a
+    variable on either side yields a `(var, term)` constraint. `decomposeEq` recurses mutually with
+    `decomposeList` on the two atoms, so termination is structural and the function is total. -/
 def decomposeEq : Atom → Atom → Option (List (VarName × Atom))
   | Atom.var x, Atom.var y => if x == y then some [] else some [(x, Atom.var y)]
   | Atom.var x, t => some [(x, t)]

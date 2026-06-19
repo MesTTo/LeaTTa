@@ -20,13 +20,13 @@ tag := "sec-atoms"
 %%%
 
 Everything in MeTTa, whether programs, data, types, or the rewrite rules that drive evaluation, is an
-*atom*. LeaTTa's object language is a single inductive type with four constructors, mirroring
+*atom*. LeaTTa's object language is a single inductive type with four constructors, one for each of
 MeTTa's four *metatypes*. The definitions in this chapter are self-contained and are elaborated by
 Lean as you read them; the full development uses exactly these shapes.
 
 # Grounded Values and Atoms
 
-A *grounded* value is the primitive host-language data an atom may carry; numbers, strings,
+A *grounded* value is the primitive host-language data an atom may carry: numbers, strings,
 Booleans, the unit value, and error payloads:
 
 ```lean
@@ -67,21 +67,19 @@ generate, because the derived instance is compiled to opaque well-founded recurs
 reduces definitionally, so facts like "a symbol never equals an expression" hold by `rfl`.
 
 :::paragraph
-There is one subtlety, and LeaTTa is candid about it. `Atom` does _not_ admit a lawful `BEq`
-instance, because IEEE-754 floating point breaks the laws: the grounded atoms `0.0` and `-0.0`
-compare *equal* yet are distinct, and `NaN` is *not* equal to itself, so reflexivity fails.
-Consequently `LawfulBEq Atom` is _false_, and no theorem in LeaTTa may assume it. Equality up to a
-consistent renaming of variables, namely *α-equivalence*, is therefore given its own decided relation,
-and the proofs about it carefully avoid the float pitfall. This honesty about the foundations is the
-kind of detail a verified language definition must get right.
+`Atom` does _not_ admit a lawful `BEq` instance, because IEEE-754 floating point breaks the laws:
+the grounded atoms `0.0` and `-0.0` compare *equal* yet are distinct, and `NaN` is *not* equal to
+itself, so reflexivity fails. Consequently `LawfulBEq Atom` is _false_, and no theorem in LeaTTa
+may assume it. Equality up to a consistent renaming of variables, namely *α-equivalence*, is
+therefore given its own decided relation, and the proofs about it carefully avoid the float pitfall.
 :::
 
 # Metatypes at a Glance
 
-The metatype of an atom is read off its constructor, and the special type symbols `%Undefined%`
+The metatype of an atom is read off its constructor. The special type symbols `%Undefined%`
 (the dynamic/unknown type) and `Atom` (the top meta-type, which matches anything) sit above the
-ordinary types in the gradual hierarchy used by the type system ({ref "sec-types"}[the next
-chapters build on this]):
+ordinary types in the gradual hierarchy used by the type system ({ref "sec-types"}[covered in the
+type system chapter]):
 
 ```diagram (cssWidth := "36em")
 cd do

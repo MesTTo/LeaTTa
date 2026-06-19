@@ -25,9 +25,9 @@ def canonicalizeVars (a : Atom) : Atom :=
     Hyperon's `atoms_are_equivalent`. -/
 def alphaEq (a b : Atom) : Bool := canonicalizeVars a == canonicalizeVars b
 
-/-- Propositional α-equivalence, decided by `alphaEq`: `AlphaEquivalent a b` holds exactly when `a`
-    and `b` are equal up to a consistent renaming of their variables (equality of canonical forms).
-    This is the genuine α-equivalence relation, decided by the `alphaEq` Boolean. -/
+/-- Propositional α-equivalence: `AlphaEquivalent a b` holds exactly when `a` and `b` are equal
+    up to a consistent renaming of their variables, i.e. their canonical forms are equal.
+    Decided by `alphaEq`. -/
 def AlphaEquivalent (a b : Atom) : Prop := alphaEq a b = true
 
 instance (a b : Atom) : Decidable (AlphaEquivalent a b) :=

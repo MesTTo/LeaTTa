@@ -4,8 +4,7 @@ Hyperon's minimal MeTTa interpreter (`hyperon-experimental/lib/src/metta/interpr
 authors' description, in an alpha state. Its source carries a self-described "hack" and a series of
 `TODO` notes at the mechanisms that decide evaluation, and the project's written semantics
 (`docs/metta.md` and `docs/minimal-metta.md`, added in PR #1059) is prose and pseudocode without
-proofs. This formalization is intended as a principled companion to that work: a total,
-machine-checked semantics that
+proofs. This formalization is a companion to that work: a total, machine-checked semantics that
 
 1. agrees with Hyperon's own test oracle. The unmodified `lib/tests/test_stdlib.metta` and the
    tutorial `a*`/`b*`/`c*`/`d*`/`e*`/`g*` scripts, vendored under `tests/corpus/` and run by
@@ -18,8 +17,8 @@ machine-checked semantics that
    predictable, verifiable, and replayable execution.
 
 As of this writing there is no issue or pull request in `hyperon-experimental` mentioning formal
-verification, formal semantics, or blockchain use. This artifact is therefore novel, and it
-mechanizes and extends the prose specification.
+verification, formal semantics, or blockchain use. This artifact therefore mechanizes and extends the
+prose specification.
 
 Everything below builds with 0 `sorry`, 0 `partial`, and 0 `unsafe`, on Lean 4 v4.31.0 with Mathlib.
 The executable kernel (`Core`, `Minimal`, `Runtime`) is Mathlib-free and runnable. The proofs live in
@@ -115,7 +114,7 @@ the build on any divergence.
 
 ## What this is
 
-The point is not the pass count but the shape: a reference the implementation can be validated
-against. Where this development departs from the current implementation, it departs by being cleaner
-and proven, and the properties an on-chain MeTTa will need, namely determinism, confluence, sound and
-complete indexing, and type-error faithfulness, are machine-checked rather than asserted.
+This is a reference semantics the implementation can be validated against. Where this development
+departs from the current implementation, it departs by being cleaner and proven. The properties an
+on-chain MeTTa will require, namely determinism, confluence, sound and complete indexing, and
+type-error faithfulness, are machine-checked rather than asserted.

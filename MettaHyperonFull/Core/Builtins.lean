@@ -63,7 +63,7 @@ def boolBin (f : Bool → Bool → Bool) : List Atom → ReduceResult
 def eqAtom : List Atom → ReduceResult
   | [a,b] =>
       -- Error propagation: `==` lifts an argument that reduced to an `(Error …)` to be its own
-      -- result, instead of comparing against the error atom. This is Hyperon's behaviour, e.g.
+      -- result, instead of comparing against the error atom. Error promotion is Hyperon's behaviour, e.g.
       -- `(== 4 (+ ln 2))` with `(: ln LN)` declared yields `(Error (+ ln 2) (BadArgType 1 Number LN))`
       -- (the type error raised by `(+ ln 2)`), not `False`. Ops like `assert*` instead need to
       -- *compare* error results, so this lift is local to `==` rather than in the generic

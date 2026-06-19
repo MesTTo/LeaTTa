@@ -54,7 +54,9 @@ def tokenize (s : String) : List String := tokenizeAux (TokState.sym []) [] s.to
 
 /-- Parse a decimal float literal `[-]digits.digits` (e.g. `1.5`, `-0.25`, `.5`) via
     `Float.ofScientific`, the same primitive `Lean.Json`'s number parser uses. Integer tokens are
-    handled by `String.toInt?` in `parseAtomToken`, so this only matters when a `.` is present. -/
+    handled by `String.toInt?` in `parseAtomToken`, so this path runs only when a `.` is present.
+    Known issue: result is IEEE 64-bit double, so values like `0.1` are subject to the usual
+    binary float rounding. -/
 def parseFloat? (s : String) : Option Float :=
   let neg := s.startsWith "-"
   let body := if neg then (s.drop 1).toString else s

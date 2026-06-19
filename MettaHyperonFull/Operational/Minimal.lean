@@ -2,7 +2,7 @@ import MettaHyperonFull.Operational.Semantics
 
 namespace Metta
 
-/-- Minimal MeTTa instructions recognized by the interpreter. -/
+/-- The thirteen minimal MeTTa instructions that the interpreter recognizes. -/
 inductive MinimalInstr where
   | eval | evalc | chain | unify | deconsAtom | consAtom | function | ret
   | collapseBind | superposeBind | metta | contextSpace | callNative
@@ -24,17 +24,20 @@ def minimalInstrOf? : Atom → Option MinimalInstr
   | Atom.sym "call-native" => some MinimalInstr.callNative
   | _ => none
 
-/-- `unify a p then else` minimal instruction. -/
+/-- Execute `unify a p then else`: try to unify `a` against pattern `p`. On failure return `el`; on
+    success return one instantiated `th` per unifier. -/
 def evalUnifyInstr (a p th el : Atom) : List Atom :=
   match matchAtoms a p with
   | [] => [el]
   | bs => bs.map (fun b => instantiate b th)
 
-/-- `chain atom var template`: evaluate atom, bind var in template to each result. -/
+/-- Execute `chain atom var template`: substitute each result in `results` for `x` in `tmpl`. -/
 def chainResults (results : List Atom) (x : VarName) (tmpl : Atom) : List Atom :=
   results.map (fun r => Subst.apply [(x,r)] tmpl)
 
-/-- Complete minimal-instruction dispatcher. The semantics is total and returns a nondeterministic result list. -/
+/-- Dispatch a minimal instruction and return its results. The function is total; unrecognized atoms
+    are returned unchanged. `call-native` is not implemented here and falls through to the identity
+    case. -/
 def evalMinimal (cfg : RuntimeConfig) (ctx : Space) : Atom → List Atom
   | Atom.expr [Atom.sym "unify", a, p, th, el] => evalUnifyInstr a p th el
   | Atom.expr [Atom.sym "cons-atom", h, Atom.expr t] => [Atom.expr (h::t)]

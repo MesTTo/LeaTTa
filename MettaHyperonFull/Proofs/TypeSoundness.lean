@@ -9,34 +9,30 @@ type-checking, an undeclared operator is left unchecked, and the special types `
 `Atom` are compatible with anything. A genuine mismatch surfaces at runtime as
 `(Error (op …) (BadArgType pos expected actual))` (Hyperon's `BadArgType`).
 
-For MeTTa's intended on-chain use, the guarantee that matters is: **a well-typed program is never
-rejected with a spurious type error, and a `BadArgType` is reported faithfully and only for a
-genuinely ill-typed application.** This file proves the permissiveness half of that story and the
-faithful-reporting half:
+For on-chain use, two properties matter: a well-typed program is never rejected with a spurious
+type error, and a `BadArgType` is reported faithfully and only for a genuinely ill-typed
+application. This file proves both:
 
 * **Gradual permissiveness**: undeclared operators (`typeMismatch_undeclared`) and arguments
   beyond the declared arity (`typeCheckArgs_no_param`) are never rejected; an empty argument list
   is accepted (`typeCheckArgs_nil`); and `%Undefined%`/`Atom` unify with any type on the relevant
-  side (`matchType_undefined_left/right`, `matchType_atom_left`). So the checker only ever fires on
-  a declared signature with a concrete, incompatible argument.
+  side (`matchType_undefined_left/right`, `matchType_atom_left`). The checker fires only on a
+  declared signature with a concrete, incompatible argument.
 * **Faithful reporting**: when the checker reports a mismatch at position `pos`, the evaluator
-  returns *exactly* the corresponding `BadArgType` error and nothing else
-  (`mettaEval_badArgType`). Equivalently, a `BadArgType` in the output is in one-to-one
-  correspondence with a checker rejection; the runtime does not invent type errors.
-
+  returns the corresponding `BadArgType` error and nothing else (`mettaEval_badArgType`). A
+  `BadArgType` in the output corresponds to a checker rejection; the runtime does not invent type
+  errors.
 * **No false positives**: the *actual* type named in a `BadArgType` is a genuine type of the
   offending argument (`typeCheckArgs_act_real`), never invented.
-* **Preservation (grounded core)**: the grounded operations preserve types: arithmetic is closed on
-  `Number` (`numBin_isNumber`), comparison yields `Bool` (`numCmp_isBool`), and `==` yields `Bool` or
-  faithfully propagates an error (`eqAtom_isBoolOrError`). Since these ops carry exactly those declared
-  signatures, a well-typed grounded redex reduces to a value of its declared return type.
+* **Preservation (grounded core)**: arithmetic is closed on `Number` (`numBin_isNumber`),
+  comparison yields `Bool` (`numCmp_isBool`), and `==` yields `Bool` or faithfully propagates an
+  error (`eqAtom_isBoolOrError`). These ops carry exactly those declared signatures, so a
+  well-typed grounded redex reduces to a value of its declared return type.
 
-Together these are the progress (permissive and total) and preservation (grounded core, faithful and
-non-fabricated errors) halves of type soundness for the gradual and grounded fragment, the part an
-on-chain VM evaluates directly. Subject reduction over the user-defined `=`-rewriting relation, with a
-context-indexed typing judgement that carries a typing context for the rule variables, is proved in
-`Proofs/Preservation.lean` (`WT.subst`, `reduction_preserves_type`): a type-preserving rule preserves
-its type under any grounding.
+Together these cover progress (permissive and total) and preservation (grounded core, faithful and
+non-fabricated errors) for the gradual and grounded fragment. Subject reduction over user-defined
+`=`-rewriting, with a context-indexed typing judgment for rule variables, is proved in
+`Proofs/Preservation.lean` (`WT.subst`, `reduction_preserves_type`).
 -/
 
 namespace Metta
@@ -90,9 +86,9 @@ theorem typeCheckArgs_no_param (env : MinEnv) (w : World) (argTypes : List Atom)
   simp [typeCheckArgs, h]
 
 /-- **Faithful error reporting.** When the gradual checker flags a mismatch at position `pos`
-(expected `exp`, actual `act`), one evaluation step of `(op args)` returns exactly the
-corresponding `BadArgType` error and nothing else. So a `BadArgType` result corresponds precisely
-to a checker rejection; the runtime never invents a type error. -/
+(expected `exp`, actual `act`), one evaluation step of `(op args)` returns the corresponding
+`BadArgType` error and nothing else. A `BadArgType` in the output corresponds to a checker
+rejection; the runtime never invents a type error. -/
 theorem mettaEval_badArgType (env : MinEnv) (fuel : Nat) (st : St) (bnd : Bindings)
     (op : String) (args : List Atom) (pos : Nat) (exp act : Atom)
     (hinst : instantiate bnd (Atom.expr (Atom.sym op :: args)) = Atom.expr (Atom.sym op :: args))
@@ -140,11 +136,10 @@ theorem typeCheckArgs_act_real (env : MinEnv) (w : World) (argTypes : List Atom)
 
 /-! ## Preservation for the grounded numeric core
 
-Beyond *reporting* type errors faithfully, the grounded operations **preserve types**: arithmetic is
-closed on numbers, and comparison / equality yield Booleans (or propagate an error). Together with the
-gradual checker rejecting genuinely ill-typed applications (above), this is the *preservation* half of
-type soundness for the grounded core, the fragment an on-chain VM evaluates directly, where the
-result of a well-typed `(+ …)` is guaranteed to again be a `Number`, never a stuck or mistyped atom. -/
+The grounded operations **preserve types**: arithmetic is closed on numbers, and comparison /
+equality yield Booleans (or propagate an error). Together with the gradual checker above, these
+lemmas are the preservation half of type soundness for the grounded core. A well-typed `(+ …)`
+always reduces to a `Number`, never a stuck or mistyped atom. -/
 
 /-- **Arithmetic is closed on `Number`.** Any `numBin` (`+`, `-`, `*`) that returns a value returns a
 numeric grounded atom, either an `Int` or a `Float`, never a symbol, variable, or expression. So a

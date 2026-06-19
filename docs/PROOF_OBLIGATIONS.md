@@ -1,6 +1,7 @@
 # Proof obligations
 
-The project includes executable definitions where feasible and formal theorem targets where the full proof is large or implementation-dependent.
+Sections below list the theorems the project has machine-checked. The "Further proof directions"
+section at the end lists targets that are not yet formalized.
 
 ## Core metatheory
 
@@ -27,7 +28,7 @@ The project includes executable definitions where feasible and formal theorem ta
 4. `transform P T` equals pattern matching followed by substitution into `T`.
 5. `match` over the current space agrees with the matching relation.
 6. Grounded host calls are sound relative to their declared contracts.
-7. Distributed/DAS matching is sound relative to local-space matching when remote access is complete; otherwise it is an under-approximation.
+7. Distributed/DAS matching is sound relative to local-space matching when remote access is complete. Known limitation: when remote access is incomplete, it is an under-approximation with no bound on the gap.
 
 ## Metagraph rewriting
 
@@ -44,11 +45,11 @@ The project includes executable definitions where feasible and formal theorem ta
 2. Adding/removing atoms implements self-modification at the object-language level.
 3. Trace encoding preserves step order.
 4. Bisimulation between MeTTa operational traces and metagraph rewrite traces.
-5. Higher-order program manipulation forms an iterated trace/program transformation structure; the Ruliad/topos layer is represented as a target interface, not as a completed HoTT formalisation.
+5. Higher-order program manipulation forms an iterated trace/program transformation structure. TODO: the Ruliad/topos layer is represented as a target interface only; the HoTT formalisation is not done.
 
 ## Further proof directions
 
-These extend the proved metatheory and are not yet formalised.
+TODO: these extend the proved metatheory and are not yet formalized.
 
-1. Deeper preservation. Two generalisations of `Preservation.lean`, available now that the gradual consistency relation is in hand (`Gradual.lean`): thread consistency `~` through the typing judgement in place of the current subtyping-top supertype rule, and support polymorphic and dependent rules, where the substitution threads through type arguments as well, for example `(Cons $x $xs)`.
+1. Deeper preservation. Two generalisations of `Preservation.lean`, possible now that the gradual consistency relation is in hand (`Gradual.lean`): thread consistency `~` through the typing judgement in place of the current subtyping-top supertype rule, and support polymorphic and dependent rules, where the substitution threads through type arguments, for example `(Cons $x $xs)`.
 2. Reflection. Lift the fixed-signature assumption to a space-indexed judgement, for rules that rewrite `:` and `<:` facts themselves.

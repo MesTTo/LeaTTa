@@ -5,45 +5,41 @@ import Mathlib.Logic.Relation
 /-!
 # Interpreter ↔ specification correspondence for the QUERY step
 
-This module connects the two MeTTa semantics in this development:
+Two MeTTa semantics appear in this development:
 
-* the **published operational specification**: MOPS's `QUERY` rule (Meredith–Goertzel–Warrell–
+* the **published operational specification**: MOPS's `QUERY` rule (Meredith-Goertzel-Warrell-
   Vandervorst, arXiv 2305.17218, §3.3), formalised by `Operational/Semantics.lean : equalityReductions`,
   which scans the *whole* knowledge base and fires every equation `(= l r)` whose left-hand side
   unifies with the redex (MOPS: `σᵢ = unify(t', tᵢ)`, contractum `{K[u₁σ₁]} ++ … ++ {K[uₙσₙ]}`);
-* the **executable kernel**: `Minimal/Interpreter.lean : queryOp`, which does *not* scan the whole
-  space: it consults only the first-argument **index** (`MinEnv.candidates`, the head bucket plus the
-  head-less rules) for efficiency.
+* the **executable kernel**: `Minimal/Interpreter.lean : queryOp`, which consults only the
+  first-argument **index** (`MinEnv.candidates`, the head bucket plus the head-less rules).
 
-The headline (`kernel_query_eq_mops_query`): for a head-keyed query, the kernel's indexed candidate
-firing produces exactly MOPS's whole-space `QUERY` reduct set, so the optimisation drops no reduct
-and invents none. This is the interpreter-to-specification correspondence that Hyperon's
-Graph-Structured Lambda Theory aims at (2025 Hyperon Whitepaper, §3.4.1), where a fine-grained
-evaluator and a declarative semantics are derived from one foundation and kept in agreement, here at
-the level of which rules fire and what they produce. The full `queryOp` additionally freshens rule
-variables, merges ambient bindings, and prunes cyclic substitutions. Those are abstracted out of the
-`KernelStep` relation below, so this result is the reduct-set core of the correspondence rather than a
-statement about the whole evaluator. See the scope note.
+The main result (`kernel_query_eq_mops_query`): for a head-keyed query, the kernel's indexed
+candidate firing produces the same reduct set as MOPS's whole-space `QUERY`. The optimisation drops
+no reduct and invents none. Hyperon's Graph-Structured Lambda Theory (2025 Hyperon Whitepaper,
+§3.4.1) aims at agreement between a fine-grained evaluator and a declarative semantics; this
+establishes it at the level of which rules fire and what they produce. Note: the full `queryOp`
+additionally freshens rule variables, merges ambient bindings, and prunes cyclic substitutions.
+Those steps are abstracted out of the `KernelStep` relation below. The result covers the reduct-set
+core; it is not a claim about the whole evaluator. See the scope note.
 
-It is proved by reusing the indexing soundness and completeness already established in
-`Proofs/IndexingComplete.lean` (`candidates_sound`, `candidates_complete`), which themselves rest on
-the matcher's head-agreement law in `Proofs/Indexing.lean` (`matchAtoms_headKey`). So the present
-result is the reduct-level corollary of indexing correctness, stated against the MOPS spec.
+The proof reuses indexing soundness and completeness from `Proofs/IndexingComplete.lean`
+(`candidates_sound`, `candidates_complete`), which rest on the matcher's head-agreement law
+(`Proofs/Indexing.lean : matchAtoms_headKey`). The result is the reduct-level corollary of
+indexing correctness, stated against the MOPS spec.
 
-This is then lifted below from a single step to the whole reduction relation: the kernel's and MOPS's
-one-step rewriting coincide (`kernelStep_iff_mopsStep`), so the identity is a bisimulation between
-them (`kernel_mops_bisim`) and their reflexive-transitive closures agree
-(`reflTransGen_kernelStep_iff_mops`), so the two semantics match over entire evaluation sequences, not
-just per step.
+The single-step correspondence is then lifted to the whole reduction relation: the kernel's and
+MOPS's one-step relations coincide (`kernelStep_iff_mopsStep`), their reflexive-transitive closures
+agree (`reflTransGen_kernelStep_iff_mops`), and the identity witnesses a bisimulation
+(`kernel_mops_bisim`). The two semantics match over entire evaluation sequences, not just per step.
 
-Scope. The correspondence is of the reduct set and rewriting relation, that is, which equations fire
-and what each produces, on the symbol-headed fragment (`headKey = some _`), where the kernel reduces
-(`queryOp` refuses bare-variable redexes). The deterministic register-draining (`smallStep?`) and
-fuelled stack scheduling (`mettaEval`) are bookkeeping on top of this shared relation. The kernel
-also α-renames a rule's variables (`freshenRule`), threads ambient bindings, and prunes cyclic
-substitutions, none of which change which reducts arise; these are established in `Proofs/Alpha.lean`
-and `Proofs/Substitution.lean`. The barbed bisimulation of the 4-register state machine itself is in
-`Operational/Bisimulation.lean`.
+Scope. The correspondence covers the reduct set and rewriting relation on the symbol-headed
+fragment (`headKey = some _`), where the kernel reduces (`queryOp` refuses bare-variable redexes).
+The deterministic register-draining (`smallStep?`) and fuelled stack scheduling (`mettaEval`) are
+bookkeeping on top of this shared relation. The kernel also α-renames rule variables
+(`freshenRule`), threads ambient bindings, and prunes cyclic substitutions; these do not change
+which reducts arise and are addressed in `Proofs/Alpha.lean` and `Proofs/Substitution.lean`. The
+barbed bisimulation of the 4-register state machine is in `Operational/Bisimulation.lean`.
 -/
 
 namespace Metta
@@ -52,7 +48,7 @@ open Metta.Minimal
 -- `firedReducts` and its sound-and-complete membership lemma `mem_firedReducts` are shared with the
 -- MOPS layer, defined once in `Operational/Properties.lean` and reused here.
 
-/-- MOPS's whole-space `QUERY` reducts are exactly the firing of all of the space's equality rules
+/-- MOPS's whole-space `QUERY` reducts are the firing of all of the space's equality rules
 (`extractRules`): the operational `equalityReductions` over `⟨atoms⟩` is `firedReducts` over the
 extracted rules. -/
 theorem equalityReductions_eq_firedReducts (atoms : List Atom) (a : Atom) :
@@ -79,11 +75,11 @@ theorem kernel_query_eq_mops_query {atoms : List Atom} {gt : GroundingTable} {to
     exact ⟨(l, r), candidates_complete atoms gt toEval k l r hk hp hm, b, hb, hxb⟩
 
 /-- **Irreducibility agrees too.** For a head-keyed query, the kernel finds no candidate reduct
-(`queryOp` then returns `NotReducible`) *exactly* when MOPS finds the term `insensitive`: no equation
-fires, so MOPS emits it via `OUTPUT`. Together with `kernel_query_eq_mops_query` this is the full
-QUERY/OUTPUT dichotomy: the two semantics reduce to the same set, and agree precisely on when there is
-nothing to reduce. (Combine with `equalityStep_eq_none_iff` to read the right side as MOPS
-`insensitive`.) -/
+(`queryOp` then returns `NotReducible`) if and only if MOPS finds the term `insensitive`: no
+equation fires, so MOPS emits it via `OUTPUT`. Together with `kernel_query_eq_mops_query` this
+covers the full QUERY/OUTPUT dichotomy: the two semantics reduce to the same set, and agree on
+when there is nothing to reduce. (Combine with `equalityStep_eq_none_iff` to read the right side
+as MOPS `insensitive`.) -/
 theorem kernel_irreducible_iff_mops_insensitive {atoms : List Atom} {gt : GroundingTable}
     {toEval : Atom} {k : String} (hk : headKey toEval = some k) :
     firedReducts ((MinEnv.ofAtomsGT atoms gt).candidates toEval) toEval = [] ↔
@@ -93,14 +89,14 @@ theorem kernel_irreducible_iff_mops_insensitive {atoms : List Atom} {gt : Ground
 
 /-! ## Multi-step bisimulation of the reduction relations
 
-The two QUERY correspondences above are lifted here from a single step to the whole reduction
-*relation*. Both the MOPS small-step machine (`Operational/Semantics.lean : smallStep?`, whose QUERY
-and CHAIN cases reduce a redex by `equalityReductions`) and the kernel (`Minimal/Interpreter.lean :
-queryOp`, firing the indexed `candidates`) are, at heart, rewriting an atom against the knowledge
-base; the surrounding register-draining / fuel / stack bookkeeping is deterministic scheduling on top
-of that shared relation. We package the shared relation and prove the kernel's and MOPS's versions
-are bisimilar: the multi-step form of the interpreter-to-specification correspondence that Hyperon's
-GSLT aims at (2025 Hyperon Whitepaper, §3.4.1), on the symbol-headed fragment where the kernel reduces. -/
+The QUERY correspondences above are lifted from a single step to the whole reduction *relation*.
+Both the MOPS small-step machine (`Operational/Semantics.lean : smallStep?`) and the kernel
+(`Minimal/Interpreter.lean : queryOp`) reduce an atom against the knowledge base; the surrounding
+register-draining / fuel / stack bookkeeping is deterministic scheduling on top of that shared
+relation. We package the shared relation and prove the kernel's and MOPS's versions are
+bisimilar, the multi-step form of the interpreter-to-specification correspondence that
+Hyperon's GSLT aims at (2025 Hyperon Whitepaper, §3.4.1), on the symbol-headed fragment where the
+kernel reduces. -/
 
 /-- MOPS one-step rewriting (the QUERY/CHAIN content): a symbol-headed redex `a` rewrites to any of
 its whole-knowledge-base reducts. -/
@@ -128,13 +124,12 @@ def IsBisim (s₁ s₂ B : Atom → Atom → Prop) : Prop :=
     (∀ a', s₁ a a' → ∃ b', s₂ b b' ∧ B a' b') ∧
     (∀ b', s₂ b b' → ∃ a', s₁ a a' ∧ B a' b')
 
-/-- **Indexed-reduction ⇔ specification bisimulation.** `KernelStep`, the kernel's indexed
-rule-firing core that matches `candidates` against the redex, and the published MOPS whole-space
-reduction are bisimilar, witnessed by the identity on atoms: every step of one is matched by an equal
-step of the other (`kernelStep_iff_mopsStep`). This establishes that first-argument indexing is
-spec-faithful at the reduct-set level. It is not a claim about the full `queryOp`: rule-variable
-freshening, ambient-binding merge, and loop-pruning are abstracted out of `KernelStep`. See the scope
-note. -/
+/-- **Indexed-reduction ⇔ specification bisimulation.** `KernelStep` (the kernel's indexed
+rule-firing core) and the published MOPS whole-space reduction are bisimilar, witnessed by the
+identity on atoms: every step of one is matched by an equal step of the other
+(`kernelStep_iff_mopsStep`). First-argument indexing is spec-faithful at the reduct-set level.
+Note: rule-variable freshening, ambient-binding merge, and loop-pruning are abstracted out of
+`KernelStep`; see the scope note. -/
 theorem kernel_mops_bisim (atoms : List Atom) (gt : GroundingTable) :
     IsBisim (KernelStep atoms gt) (MopsStep atoms) (· = ·) := by
   rintro a b rfl
@@ -143,7 +138,7 @@ theorem kernel_mops_bisim (atoms : List Atom) (gt : GroundingTable) :
 
 /-- **Multi-step agreement.** Because the one-step relations coincide, so do their reflexive-
 transitive closures: an atom reaches `b` by any number of kernel reduction steps iff it does by MOPS
-reduction steps. The two semantics agree not just per step but over entire evaluation sequences. -/
+reduction steps. The two semantics agree over entire evaluation sequences. -/
 theorem reflTransGen_kernelStep_iff_mops (atoms : List Atom) (gt : GroundingTable) (a b : Atom) :
     Relation.ReflTransGen (KernelStep atoms gt) a b ↔ Relation.ReflTransGen (MopsStep atoms) a b := by
   have h : KernelStep atoms gt = MopsStep atoms := by

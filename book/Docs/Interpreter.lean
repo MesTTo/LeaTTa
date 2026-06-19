@@ -19,15 +19,15 @@ set_option verso.code.warnLineLength 100
 tag := "sec-interpreter"
 %%%
 
-MeTTa is defined in two layers, and LeaTTa follows that structure faithfully. At the bottom is
-*minimal MeTTa*: a small "assembly language" of a dozen instructions in which the whole evaluator is
-written. On top sits the standard library, itself written in MeTTa over those instructions, exactly
-as in Hyperon. LeaTTa's interpreter (`Minimal/Interpreter.lean`) is the assembly evaluator; its
-standard library (`Minimal/Stdlib.lean`) is the MeTTa-level prelude.
+MeTTa is defined in two layers. At the bottom is *minimal MeTTa*: a small "assembly language" of a
+dozen instructions in which the whole evaluator is written. On top sits the standard library, itself
+written in MeTTa over those instructions, exactly as in Hyperon. LeaTTa's interpreter
+(`Minimal/Interpreter.lean`) is the assembly evaluator; its standard library (`Minimal/Stdlib.lean`)
+is the MeTTa-level prelude.
 
 # The Instruction Set
 
-The minimal instruction set is the irreducible core that everything else compiles to:
+The minimal instruction set is the base layer that everything else compiles to:
 
  * `eval` / `evalc`: one step of evaluation (querying the knowledge base for a matching `(= lhs rhs)`
    rule, or executing a grounded operation);
@@ -74,10 +74,9 @@ MeTTa's branching faithfully; `superpose` injects alternatives, `collapse` gathe
 
 # Validation: the Hyperon Oracle
 
-A specification is only as trustworthy as its agreement with reality. LeaTTa's interpreter is run
-against Hyperon's *own* vendored test corpus on every build: *270 / 270* assertions pass across the
-standard-library and chaining test files. These tests exercise the standard library across the board:
-`if`, `let`/`let*`, `case`, `switch`, `collapse`/`superpose`, the `assertEqual*` family, the
-list-surgery and arithmetic operations, the `*-math` functions, the type-checking helpers
-(`type-cast`, `is-function`, `match-types`), and the space, state, and module operations. Agreement
-with the reference implementation is the empirical anchor beneath the proofs of the following chapters.
+LeaTTa's interpreter is run against Hyperon's *own* vendored test corpus on every build: *270 / 270*
+assertions pass across the standard-library and chaining test files. These tests exercise `if`,
+`let`/`let*`, `case`, `switch`, `collapse`/`superpose`, the `assertEqual*` family, the list-surgery
+and arithmetic operations, the `*-math` functions, the type-checking helpers (`type-cast`,
+`is-function`, `match-types`), and the space, state, and module operations. That agreement with the
+reference implementation supports the proofs in the following chapters.

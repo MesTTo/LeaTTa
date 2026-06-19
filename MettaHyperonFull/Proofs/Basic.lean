@@ -4,13 +4,13 @@ import MettaHyperonFull
 /-!
 # Metatheory infrastructure
 
-A structural induction principle for the nested inductive `Atom`, plus the structural lemmas
-about variable renaming reused throughout the metatheory layer.
+A structural induction principle for the nested inductive `Atom`, plus structural lemmas about
+variable renaming reused throughout the metatheory layer.
 
 `induction a` does not work out of the box on `Atom`, because `Atom.expr : List Atom → Atom`
 makes it a *nested* inductive. `Atom.recAux` supplies the missing principle: in the `expr`
-case one may assume the motive for every immediate sub-atom, and is tagged
-`@[induction_eliminator]` so that plain `induction a` uses it everywhere downstream.
+case one may assume the motive for every immediate sub-atom. It is tagged
+`@[induction_eliminator]` so plain `induction a` uses it everywhere downstream.
 -/
 
 namespace Metta
@@ -21,8 +21,8 @@ namespace Atom
 handle the four constructors, and in the `expr` case assume `motive` for each immediate
 sub-atom. Tagged `@[induction_eliminator]`, so `induction a` uses it. Terminates because every
 sub-atom is strictly smaller in `Atom.size` (`_ha : a ∈ xs` is used in `decreasing_by`). -/
--- `nolint defLemma`: although `motive`-valued, this is an *eliminator* (tagged
--- `induction_eliminator`), where being a `def`, not a `theorem`, is the intended form.
+-- `nolint defLemma`: although `motive`-valued, `recAux` is an *eliminator* (tagged
+-- `induction_eliminator`), so `def` rather than `theorem` is the correct form here.
 @[elab_as_elim, induction_eliminator, nolint defLemma]
 def recAux {motive : Atom → Prop}
     (sym : ∀ s, motive (Atom.sym s))

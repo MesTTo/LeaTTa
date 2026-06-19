@@ -92,9 +92,8 @@ theorem Subst.lookup_map_snd (f : Atom → Atom) (s : Subst) (x : VarName) :
       · rw [if_neg h, if_neg h]; exact ih
 
 /-- **Substitution composition law.** `compose s₁ s₂` denotes "apply `s₂`, then `s₁`":
-`Subst.apply (compose s₁ s₂)` is the composite `Subst.apply s₁ ∘ Subst.apply s₂`. This is the
-core algebraic property of substitution, and the basis for any later reduction-preservation
-argument. -/
+`Subst.apply (compose s₁ s₂)` is the composite `Subst.apply s₁ ∘ Subst.apply s₂`. The proof
+recurses on `a`; the variable case reduces to `lookup_append` and `lookup_map_snd`. -/
 theorem Subst.apply_compose (s₁ s₂ : Subst) (a : Atom) :
     Subst.apply (Subst.compose s₁ s₂) a = Subst.apply s₁ (Subst.apply s₂ a) := by
   induction a with

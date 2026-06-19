@@ -3,8 +3,8 @@ namespace Metta
 /-- Names of MeTTa variables, without the leading `$`. -/
 abbrev VarName := String
 
-/-- Grounded payloads implemented directly by the Lean runtime. Host-language values
-    whose semantics is external can be represented by `external tag payload`. -/
+/-- Grounded payloads implemented directly by the Lean runtime. Use `external tag payload`
+    for host-language values whose semantics lies outside this interpreter. -/
 inductive Ground where
   | int : Int → Ground
   | float : Float → Ground
@@ -153,8 +153,8 @@ def size : Atom → Nat
   | Atom.gnd _ => 1
   | Atom.expr xs => 1 + (xs.map size).sum
 
-/-- All variable occurrences in `a`, left-to-right with duplicates (its free and bound variables;
-    atoms have no binders, so every occurrence is free). -/
+/-- All variable occurrences in `a`, left-to-right with duplicates. Atoms have no binders, so
+    every occurrence is free; see `FreeVars.lean` for the named notion used in the metatheory. -/
 def vars : Atom → List VarName
   | Atom.var x => [x]
   | Atom.expr xs => (xs.map vars).flatten

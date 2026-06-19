@@ -27,7 +27,7 @@ Lean as you read them; the full development uses exactly these shapes.
 # Grounded Values and Atoms
 
 A *grounded* value is the primitive host-language data an atom may carry: numbers, strings,
-Booleans, the unit value, and error payloads:
+Booleans, the unit value, error payloads, and host-language values held behind an `external` tag:
 
 ```lean
 /-- A grounded value: the primitive data a MeTTa atom can carry. -/
@@ -38,6 +38,7 @@ inductive Ground where
   | bool  : Bool → Ground
   | unit  : Ground
   | error : String → Ground
+  | external : String → String → Ground
 deriving Repr, Inhabited
 ```
 

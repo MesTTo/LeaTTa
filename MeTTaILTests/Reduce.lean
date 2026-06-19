@@ -5,6 +5,7 @@ the built-in `Subst`. These confirm the matching, substitution, and rewrite-appl
 Results are compared with `BEq` (`==`) since `AST` carries `BEq`, not `DecidableEq`.
 -/
 import MeTTaIL.Semantics.Reduce
+import MeTTaIL.Semantics.Relation
 
 namespace MeTTaILTests.Reduce
 open MeTTaIL
@@ -47,5 +48,16 @@ example : (applyBaseRewrite rcomm commTerm == some (pdrop (nquote (s0 "D")))) = 
 private def commTermMismatch : AST :=
   ppar (precv (vv "w") (s0 "C") (pdrop (vv "w"))) (psend (s0 "E") (s0 "D"))
 example : (applyBaseRewrite rcomm commTermMismatch == none) = true := by decide
+
+/-! ### The reduction relation on concrete terms -/
+
+open MeTTaIL (Reduces reduces_of_applyBaseRewrite)
+
+/-- A presentation whose single rewrite is the SKI ι1 rule. -/
+private def presIota : Presentation := .mk [] [] [] [iota1] []
+
+/-- The reduction relation `Reduces` (not just the executable matcher) reduces `App(I, C)` to `C`. -/
+example : Reduces presIota (app (s0 "I") (s0 "C")) (s0 "C") :=
+  reduces_of_applyBaseRewrite presIota iota1 _ _ (List.mem_singleton.mpr rfl) rfl
 
 end MeTTaILTests.Reduce

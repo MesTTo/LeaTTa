@@ -51,6 +51,17 @@ inductive ReducesMany (p : Presentation) : AST → AST → Prop where
   | refl {t : AST} : ReducesMany p t t
   | tail {t u v : AST} : ReducesMany p t u → Reduces p u v → ReducesMany p t v
 
+/-- A single reduction is a one-step reduction sequence. -/
+theorem ReducesMany.single {p : Presentation} {t t' : AST} (h : Reduces p t t') :
+    ReducesMany p t t' := .tail .refl h
+
+/-- Many-step reduction is transitive. -/
+theorem ReducesMany.trans {p : Presentation} {t u v : AST}
+    (h₁ : ReducesMany p t u) (h₂ : ReducesMany p u v) : ReducesMany p t v := by
+  induction h₂ with
+  | refl => exact h₁
+  | tail _ s ih => exact .tail ih s
+
 /-- A base rewrite (no premises) whose left-hand side matches `t` reduces `t` to the instantiated
     right-hand side. -/
 theorem reduces_base (p : Presentation) (rd : RewriteDecl) (lhs rhs t : AST)

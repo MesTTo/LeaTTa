@@ -49,6 +49,12 @@ lean_lib «MeTTaIL» where
 lean_lib «MeTTaILTests» where
   roots := #[`MeTTaILTests]
 
+-- The Mathlib-backed metatheory of MeTTaIL: decidable equality of the data model, the presentation
+-- lattice laws, and the proofs about elaboration, transformations, and reduction.
+@[default_target]
+lean_lib «MeTTaILProofs» where
+  roots := #[`MeTTaILProofs]
+
 @[default_target]
 lean_exe «LeaTTa» where
   root := `Main

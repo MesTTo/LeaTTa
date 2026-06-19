@@ -8,6 +8,8 @@ import MeTTaILProofs.DecEq
 import MeTTaILProofs.MQCalculus
 -- Elaboration / transformation pipeline invariants.
 import MeTTaILProofs.Pipeline
+-- The presentation lattice laws (union / intersection / difference as set operations).
+import MeTTaILProofs.Lattice
 -- Church-Rosser / confluence for SKI combinatory logic.
 import MeTTaILProofs.SKIConfluence
 -- Church-Rosser / confluence of beta reduction for the lambda calculus.

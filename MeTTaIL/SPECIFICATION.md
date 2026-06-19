@@ -338,3 +338,50 @@ then type soundness (the hypercube typing and subject reduction), then the novel
 well-foundedness and the mq-calculus), and finally the bridge to LeaTTa's operational machine. The
 build order remains Layer 1, then 2, then 3, then 4, committed locally in atomic pieces, nothing
 pushed until you say so.
+
+
+## 8. Delivered
+
+Two libraries were added: `MeTTaIL` (computable, Mathlib-free) and `MeTTaILProofs` (Mathlib-backed
+metatheory), plus `MeTTaILTests`. The whole repository builds (`lake build`, all targets), the
+no-forbidden-tactics CI guard covers the new code, and every theorem is kernel-checked with only the
+standard axioms (`propext`, `Classical.choice`, `Quot.sound`); no `sorry`, `admit`, `native_decide`,
+`partial`, or `unsafe`.
+
+Layer 1 (the faithful tool model). `MeTTaIL/Syntax.lean` is the data model (`Cat`, `Item`, `Label`,
+`Rule`, `AST`, `Equation`, `Hyp`, `Rewrite`, `RewriteDecl`, `Presentation`), with hand-written
+structural `BEq` for the `List`-nested types. `Theory/Instance.lean` is the theory-instance algebra;
+`Theory/Ops.lean` the presentation lattice operations; `Theory/Rename.lean` the category-rename and
+constructor-relabel traversals; `Theory/Check.lean` the equation/rewrite category checks;
+`Theory/Elaborate.lean` the fuel-bounded elaboration interpreter covering every `TheoryInst` form
+(`empty`, `ref`, `letIn`, `ctor`, `free`, `addExports`, `addReplacements`, `addTerms`,
+`addEquations`, `addRewrites`, `conj`, `disj`, `subtract`).
+
+Layer 2 (transformations). `Transform/Desugar.lean`, `Transform/TypeLift.lean`,
+`Transform/Monomorphize.lean`.
+
+Oracles against the real tool. The Scala MeTTaIL tool was built and run; `MeTTaILTests/Rholang.lean`
+proves (kernel-checked `decide`, not `native_decide`) that `elaborate`, then `desugarBinds`, then the
+type-lift, then `monomorphize` of `FreeRholang()` produce exactly the tool's `[Interpreted]`,
+`[Desugared]`, `[Hypercubed]`, and `[Generated BNFC]` outputs; plus a `free` oracle and rejection
+tests for ill-formed input.
+
+Layer 3 (operational semantics). `Semantics/Reduce.lean` (matching, substitution, rewrite
+application); `Semantics/Relation.lean` (the `Reduces` relation with base and premised/congruence
+rules, its reflexive-transitive closure, and matcher soundness).
+
+Layer 4 (typing, calculi, extensions). `Calculi/SKI.lean` (combinatory logic, subject reduction);
+`Calculi/Lambda.lean` (STLC de Bruijn, preservation and progress); `MeTTaILProofs/SKIConfluence.lean`
+and `MeTTaILProofs/LambdaConfluence.lean` (Church-Rosser, via Takahashi parallel reduction);
+`Extensions/Spice.lean` (the present-moment bounded-lookahead rule: grounding and well-foundedness);
+`MeTTaILProofs/MQCalculus.lean` (the mq-calculus measurement semantics: Born-rule probability
+conservation and interference).
+
+Metatheory. `MeTTaILProofs/DecEq.lean` (`LawfulBEq` and `DecidableEq` for the whole data model);
+`MeTTaILProofs/Pipeline.lean` (elaboration/transformation invariants); `MeTTaILProofs/Lattice.lean`
+(the presentation algebra as set operations). `MeTTaIL/Bridge/Operational.lean` embeds LeaTTa's
+`Metta.Atom` into GSLT terms, injectively on the grounded-free fragment.
+
+The hypercube modal type system and the rho-calculus full-abstraction result are the source's own
+open problems; their determinate fragments are formalized and the open parts are flagged in place, as
+the honesty policy requires.

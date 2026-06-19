@@ -28,3 +28,5 @@ import MeTTaIL.Transform.TypeLift
 import MeTTaIL.Transform.Monomorphize
 -- Layer 3: the GSLT reduction core (matching, substitution, rewrite application).
 import MeTTaIL.Semantics.Reduce
+-- Layer 4: SKI combinatory logic instance with subject reduction (type soundness).
+import MeTTaIL.Calculi.SKI

@@ -75,7 +75,6 @@ branch is `false` (reduces structurally with the hand-written `BEq Atom`). -/
 theorem beq_sym_expr (a : String) (xs : List Atom) :
     (Atom.sym a == Atom.expr xs) = false := rfl
 
-/-- Symmetric companion of `beq_sym_expr`. -/
 theorem beq_expr_sym (xs : List Atom) (a : String) :
     (Atom.expr xs == Atom.sym a) = false := rfl
 

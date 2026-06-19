@@ -216,9 +216,7 @@ def World.empty : World :=
   { spaces := HashMap.emptyWithCapacity, store := HashMap.emptyWithCapacity,
     tokens := HashMap.emptyWithCapacity, selfExtra := [] }
 
-/-- Set state cell `id` to `v`. -/
 def World.setStore (w : World) (id : Nat) (v : Atom) : World := { w with store := w.store.insert id v }
-/-- Insert a fresh empty named space. -/
 def World.newSpace (w : World) (name : String) : World := { w with spaces := w.spaces.insert name [] }
 /-- Append `atoms` to named space `name`, creating it if absent. -/
 def World.appendSpace (w : World) (name : String) (atoms : List Atom) : World :=
@@ -230,7 +228,6 @@ def World.eraseFromSpace (w : World) (name : String) (a : Atom) : World :=
 def World.appendSelf (w : World) (atoms : List Atom) : World := { w with selfExtra := w.selfExtra ++ atoms }
 /-- Remove the first occurrence of `a` from the `&self` extension. -/
 def World.eraseSelf (w : World) (a : Atom) : World := { w with selfExtra := w.selfExtra.erase a }
-/-- Bind token `t` to value `v`. -/
 def World.bindTok (w : World) (t : String) (v : Atom) : World := { w with tokens := w.tokens.insert t v }
 
 /-- Threaded interpreter state: the gensym `counter` and the mutable `world`. Replaces the bare
@@ -242,13 +239,10 @@ structure St where
   /-- Mutable world (named spaces, state cells, tokens) threaded through evaluation. -/
   world : World
 
-/-- Initial interpreter state: gensym counter at zero, empty world. -/
 def St.init : St := { counter := 0, world := World.empty }
 
-/-- Advance the gensym counter. Returns the old value as a fresh id and the updated state. -/
 def St.fresh (st : St) : Nat × St := (st.counter, { st with counter := st.counter + 1 })
 
-/-- Apply `f` to the mutable world inside the threaded state. -/
 def St.mapWorld (st : St) (f : World → World) : St := { st with world := f st.world }
 
 /-- Resolve a `bind!`-bound token (e.g. `&kb`, `&state-token`) to its value. Other atoms pass through unchanged. -/

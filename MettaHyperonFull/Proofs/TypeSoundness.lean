@@ -73,7 +73,6 @@ theorem matchType_atom_right (tb : Bindings) (expected : Atom) :
   have hc : (Atom.sym "Atom" == Atom.sym "Atom") = true := by decide
   simp [matchType, hc]
 
-/-- An empty argument list always type-checks. -/
 theorem typeCheckArgs_nil (env : MinEnv) (w : World) (argTypes : List Atom) (i : Nat)
     (tb : Bindings) : typeCheckArgs env w argTypes i tb [] = none := by
   simp [typeCheckArgs]

@@ -77,11 +77,8 @@ def undefined : Atom := Atom.sym "%Undefined%"
 def typeSym : Atom := Atom.sym "Type"
 /-- The `Atom` meta-type: accepts anything, so quoted/unevaluated arguments stay well-typed. -/
 def atomType : Atom := Atom.sym "Atom"
-/-- The `Symbol` meta-type. -/
 def symbolType : Atom := Atom.sym "Symbol"
-/-- The `Variable` meta-type. -/
 def variableType : Atom := Atom.sym "Variable"
-/-- The `Expression` meta-type. -/
 def expressionType : Atom := Atom.sym "Expression"
 /-- The `Grounded` meta-type (numbers, booleans, grounded operations). -/
 def groundedType : Atom := Atom.sym "Grounded"
@@ -130,7 +127,6 @@ def isBuiltinTypeSymbol : Atom → Bool
 /-- Function type constructor: `(-> A B C)`. -/
 def mkArrow (args : List Atom) (ret : Atom) : Atom := Atom.expr (Atom.sym "->" :: (args ++ [ret]))
 
-/-- True if `a` is a function type `(-> …)`. -/
 def isArrow : Atom → Bool
   | Atom.expr (Atom.sym "->" :: _) => true
   | _ => false

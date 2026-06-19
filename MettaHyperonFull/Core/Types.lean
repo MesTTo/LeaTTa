@@ -12,7 +12,6 @@ structure TypeEnv where
 
 namespace TypeEnv
 
-/-- The empty type environment (no assignments, no subtyping). -/
 def empty : TypeEnv := ⟨[], []⟩
 
 /-- Extract a `TypeEnv` from a space: collect `(: a t)` assignments and `(<: a b)` subtypings. -/

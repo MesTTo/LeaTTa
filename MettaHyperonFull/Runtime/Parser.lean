@@ -3,7 +3,6 @@ import MettaHyperonFull.Core.Atom
 namespace Metta.Runtime
 open Metta
 
-/-- A whitespace character. -/
 def isSpace (c : Char) : Bool := c == ' ' || c == '\n' || c == '\t' || c == '\r'
 
 /-- Tokenizer state: accumulating a symbol (`sym`, chars reversed; `[]` means "between tokens"),

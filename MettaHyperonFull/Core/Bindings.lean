@@ -15,7 +15,6 @@ abbrev Bindings := List BindingRel
 
 namespace Bindings
 
-/-- The empty binding set (no constraints). -/
 def empty : Bindings := []
 
 /-- The atom bound to `$x` by a direct `val` relation, if any (`eq` aliases are not followed). -/

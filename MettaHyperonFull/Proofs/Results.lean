@@ -92,7 +92,6 @@ theorem interpretFuel_done (env : MinEnv) (fuel : Nat) :
               rw [ih st' W (F.reverse ++ done), ih st' W F.reverse]
               simp [List.reverse_append, List.append_assoc]
 
-/-- The empty product has one element, the empty tuple. -/
 theorem cartesian_nil {α : Type} : cartesian ([] : List (List α)) = [[]] := rfl
 
 /-- Unfolding law: `cartesian` prepends each element of the head list to each tuple of the product

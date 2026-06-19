@@ -56,7 +56,6 @@ theorem mem_firedReducts {x a : Atom} {rules : List (Atom × Atom)} :
   · rintro ⟨p, hp, b, hb, hxb⟩
     exact ⟨p, hp, List.mem_map.2 ⟨b, hb, hxb.symm⟩⟩
 
-/-- `equalityReductions` equals `firedReducts` applied to `s.equalityRules`. -/
 theorem equalityReductions_eq_fired (s : Space) (a : Atom) :
     equalityReductions s a = firedReducts s.equalityRules a :=
   equalityReductions_eq s a
@@ -119,7 +118,6 @@ theorem smallStep?_kb_auditable {cfg : RuntimeConfig} {s : State} {k : StepKind}
 
 /-! ## Gas: energy is never created (resource-bounded extension) -/
 
-/-- Sum of `energy` across a token list. -/
 def totalEnergy (toks : List ResourceToken) : Int :=
   toks.foldr (fun t acc => t.energy + acc) 0
 

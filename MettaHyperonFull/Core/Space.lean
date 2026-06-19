@@ -10,20 +10,15 @@ structure Space where
 
 namespace Space
 
-/-- The empty space. -/
 def empty : Space := ⟨[]⟩
-/-- The space containing exactly the atom `a`. -/
 def singleton (a : Atom) : Space := ⟨[a]⟩
 /-- Add `a` to the space (prepended; multiset semantics, so duplicates are kept). -/
 def insert (s : Space) (a : Atom) : Space := ⟨a :: s.atoms⟩
-/-- The multiset union of two spaces (their atom lists concatenated). -/
 def append (s t : Space) : Space := ⟨s.atoms ++ t.atoms⟩
-/-- Whether the space contains an atom equal to `a`. -/
 def contains (s : Space) (a : Atom) : Bool := s.atoms.any (fun x => x == a)
 /-- Remove the first occurrence of `a` from the space (multiset removal: one copy). -/
 def removeOne (s : Space) (a : Atom) : Space := ⟨removeFirst s.atoms a⟩
 where
-  /-- Drop the first list element equal to `a`, leaving the rest unchanged. -/
   removeFirst : List Atom → Atom → List Atom
     | [], _ => []
     | x :: xs, a => if x == a then xs else x :: removeFirst xs a

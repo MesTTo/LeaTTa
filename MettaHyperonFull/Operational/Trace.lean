@@ -11,13 +11,10 @@ structure Trace where
 
 namespace Trace
 
-/-- Start a trace at the initial state `s` (no steps taken yet). -/
 def empty (s : State) : Trace := ⟨[s], []⟩
-/-- Append one transition `k → s` to a trace. -/
 def extend (tr : Trace) (k : StepKind) (s : State) : Trace :=
   { states := tr.states ++ [s], labels := tr.labels ++ [k] }
 
-/-- The output register at each state in the trace, in order. -/
 def observations (tr : Trace) : List Space := tr.states.map (fun s => s.output)
 
 end Trace

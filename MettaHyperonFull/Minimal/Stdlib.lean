@@ -561,7 +561,6 @@ def preludeSrc : String :=
    (: add-atoms (-> SpaceType Expression (->)))
    (= (add-atoms $space $tuple) (foldl-atom $tuple () $a $b (add-atom $space $b)))"
 
-/-- The parsed prelude atoms. -/
 def preludeAtoms : List Atom :=
   match parseProgram preludeSrc with
   | Except.ok xs => xs

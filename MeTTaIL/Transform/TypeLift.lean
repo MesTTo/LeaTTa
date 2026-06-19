@@ -8,9 +8,10 @@ type-lift `T` of the original arity:
   T(G) = G,  T(A -> B) = T(A) x (T(A) -> T(B)),  T(A x B) = T(A) x T(B),  T([A]) = [T(A)].
 
 Rules with raw binders are skipped (the desugared `...ToArrow` form is lifted instead). After the
-lift, the base-reduction duplication rule fires: if a variable is used as an argument of two
-different constructors in a rewrite's left-hand side, each of those constructors' companions gains an
-extra argument of that variable's category (the `!!`/`??` extra channel in the comm example).
+lift, the base-reduction duplication rule fires: when a variable occurs as a direct argument two or
+more times across the constructor applications in a rewrite's left-hand side, each hosting
+constructor's companion gains an extra argument of that variable's category (the `!!`/`??` extra
+channel in the comm example).
 
 The modal possibility types of `transformation.md` are not generated here, exactly as in the Scala
 code (that step is commented out). This is faithful to the tool, not to the full design note.
@@ -34,8 +35,21 @@ mutual
     | c :: cs => Cat.typeLift c :: Cat.typeLiftList cs
 end
 
-/-- The category of the argument an item contributes in a term: a non-terminal's category, a
-    binder's category (the bound variable is an argument), or the body category of an abstraction. -/
+/-- Whether an item is a raw binder (a `BindNTerminal` or an `AbsNTerminal`). -/
+def Item.isRawBinder : Item → Bool
+  | .bindNTerminal _ _ => true
+  | .absNTerminal _ _  => true
+  | _                  => false
+
+/-- Whether a rule carries a raw binder of either kind. The Scala `--hypercube` pass
+    (`Hypercube.scala`) skips such a rule for both `BindNTerminal` and `AbsNTerminal` items, unlike the
+    desugar pass, which keys on `BindNTerminal` alone (`Rule.hasBind`). -/
+def Rule.hasRawBinder (r : Rule) : Bool := r.items.any Item.isRawBinder
+
+/-- The category of the argument an item contributes in a term: a non-terminal's category, a binder's
+    category, or, for an abstraction, the innermost non-abstraction category. The abstraction case is
+    only meaningful after desugaring (which removes raw binders); `Rule.typeLiftDef` skips any rule
+    that still has one, so `argCats` is read only on binder-free rules. -/
 def Item.bodyCat : Item → Option Cat
   | .terminal _        => none
   | .nterminal c       => some c
@@ -49,7 +63,7 @@ def Rule.argCats (r : Rule) : List Cat := r.items.filterMap Item.bodyCat
     lifted only in their desugared `...ToArrow` form). Function-style syntax over the type-lifted
     argument categories. -/
 def Rule.typeLiftDef (r : Rule) : Option Rule :=
-  if r.hasBind then none
+  if r.hasRawBinder then none
   else
     let baseName := match r.label with | .id n => n | _ => ""
     let lname := "TypeLiftCC" ++ baseName ++ "DD"
@@ -81,13 +95,16 @@ end
 def companionLabelOf (terms : List Rule) (host : Label) : String :=
   let baseName := match host with | .id n => n | _ => ""
   match terms.find? (fun r => r.label == host) with
-  | some r => if r.hasBind then "TypeLiftCC" ++ baseName ++ "ToArrowDD"
+  | some r => if r.hasRawBinder then "TypeLiftCC" ++ baseName ++ "ToArrowDD"
               else "TypeLiftCC" ++ baseName ++ "DD"
   | none => "TypeLiftCC" ++ baseName ++ "DD"
 
-/-- The extra companion arguments contributed by one rewrite's left-hand side: for each variable used
-    as an argument of two or more constructor applications, each such application's companion gains an
-    argument of that variable's category. -/
+/-- The extra companion arguments contributed by one rewrite's left-hand side: when a variable occurs
+    as a direct argument two or more times across the constructor applications, each hosting
+    constructor's companion gains an argument of that variable's category. We count direct-argument
+    occurrences, so a variable repeated inside one constructor counts each occurrence; Scala counts
+    distinct constructor nodes (`freeVarsInAST` returns a set of nodes). The two agree when each
+    repeated variable spans distinct constructors, as in the comm example. -/
 def extrasForLHS (terms : List Rule) (lhs : AST) : List (String × Cat) :=
   let occs := lhs.directVarArgs
   occs.filterMap fun o =>

@@ -3,9 +3,15 @@ Pure operations on presentations: the helpers the elaborator uses, and the three
 lattice operators (union, intersection, difference).
 
 These mirror the Scala `handleDisj`/`handleConj`/`handleSubtract` and the small accessors in
-`ASTHelpers`/`LabelHelpers`. They are deliberately faithful to the Scala behavior, including its
-quirks (for example, `LabelHelpers.labelsInEquation` is non-recursive, so the label extraction here
-takes only the head label of each term).
+`ASTHelpers`/`LabelHelpers`. They follow the Scala behavior, including its quirks. Two to keep in
+mind. Category collection for the intersection and difference filters counts only plain non-terminal
+sorts (Scala's `collect { case nt: NTerminal => nt.cat_ }`), not binder items. And `labelsInAST`,
+which reads the head label of a term, is non-recursive (though `labelsInEquation` does recurse through
+a freshness guard).
+
+One representation difference: the lattice operators keep list order and use `List.contains` with
+`distinct`, where Scala uses unordered `Set`s. The results agree as sets, which is what the
+presentation comparison and the Rholang oracle rely on.
 -/
 import MeTTaIL.Syntax
 
@@ -16,22 +22,30 @@ namespace MeTTaIL
 def distinct {α : Type} [BEq α] (xs : List α) : List α :=
   xs.foldl (fun acc x => if acc.contains x then acc else acc ++ [x]) []
 
-/-- The categories an item mentions. -/
+/-- Whether an item is a terminal (a literal token). -/
+def Item.isTerminal : Item → Bool
+  | .terminal _ => true
+  | _           => false
+
+/-- The non-terminal items of a rule: everything that is not a literal token, so plain non-terminals
+    and the two binder forms. Mirrors Scala `AddEqRwHelpers.nonTerminals`, used for the arity and
+    category-alignment checks on replacements. -/
+def Rule.nonTerminalItems (r : Rule) : List Item :=
+  r.items.filter (fun i => !i.isTerminal)
+
+/-- The sort of a plain non-terminal item, and nothing for a terminal or a binder. This is the
+    category Scala collects with `collect { case nt: NTerminal => nt.cat_ }` in `handleConj`,
+    `handleSubtract`, and `checkAddTerms`; binder items are deliberately not counted, matching Scala. -/
 def Item.cats : Item → List Cat
-  | .terminal _ => []
   | .nterminal c => [c]
-  | .absNTerminal _ it => Item.cats it
-  | .bindNTerminal _ c => [c]
+  | _            => []
 
-/-- The categories a label mentions: the element category of a list label, nothing otherwise. -/
-def Label.cats : Label → List Cat
-  | .id _ | .wild => []
-  | .listE c | .listCons c | .listOne c => [c]
-
-/-- Every category a function symbol mentions: its output sort, its label's category, and the
-    categories of its items. -/
+/-- The categories a function symbol mentions for the intersection and difference filters and the
+    unknown-category check: its output sort and the sorts of its plain non-terminal items. Mirrors the
+    set `Set(rule.cat_) ++ {nterminal item cats}` Scala builds in `handleConj`, `handleSubtract`, and
+    `checkAddTerms`. -/
 def Rule.mentionedCats (r : Rule) : List Cat :=
-  r.cat :: (r.label.cats ++ r.items.flatMap Item.cats)
+  r.cat :: r.items.flatMap Item.cats
 
 /-- The head label of a term, if it is an applied constructor; nothing for a variable or a
     substitution. -/
@@ -40,8 +54,9 @@ def AST.topLabels : AST → List Label
   | .sexp l _ => [l]
   | .subst _ _ _ => []
 
-/-- The (top-level) labels appearing in an equation. Mirrors Scala `labelsInEquation`, which is
-    deliberately non-recursive: only the head label of each side is taken. -/
+/-- The (top-level) labels appearing in an equation. Mirrors Scala `labelsInEquation`: it recurses
+    through a freshness guard, and on each side takes only the head label (Scala's per-term
+    `labelsInAST` is non-recursive). -/
 def Equation.labels : Equation → List Label
   | .impl l r => l.topLabels ++ r.topLabels
   | .fresh _ _ e => Equation.labels e

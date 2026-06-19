@@ -47,9 +47,12 @@ def Item.isRawBinder : Item → Bool
 def Rule.hasRawBinder (r : Rule) : Bool := r.items.any Item.isRawBinder
 
 /-- The category of the argument an item contributes in a term: a non-terminal's category, a binder's
-    category, or, for an abstraction, the innermost non-abstraction category. The abstraction case is
-    only meaningful after desugaring (which removes raw binders); `Rule.typeLiftDef` skips any rule
-    that still has one, so `argCats` is read only on binder-free rules. -/
+    category, or, for an abstraction, the innermost non-abstraction category. `Rule.typeLiftDef` skips
+    any rule with a raw binder, so its use of `argCats` sees only binder-free rules. `extrasForLHS` may
+    also read `argCats` on a bindered host rule (see `companionLabelOf`), where the `bindNTerminal` arm
+    applies. Known divergence there: Scala `optCatFromItem` maps a `BindNTerminal` to `IdCat(name)`, not
+    to its category; the tested calculi never index a `BindNTerminal` position with a repeated
+    left-hand-side variable, so this arm is unreached here. -/
 def Item.bodyCat : Item → Option Cat
   | .terminal _        => none
   | .nterminal c       => some c

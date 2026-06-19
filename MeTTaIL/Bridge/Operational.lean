@@ -9,9 +9,11 @@ constructor over the embedded children, and a grounded atom becomes a nullary co
 its payload. So MeTTa's four metatypes map to distinguishable GSLT term shapes, which is the precise
 sense in which MeTTa is a GSLT object language.
 
-The embedding is injective on the grounded-free fragment. Grounded atoms inherit the IEEE-754 float
-caveat that LeaTTa already documents for `Atom`'s own equality (`0.0` vs `-0.0`, `NaN`), so the
-embedding is faithful exactly where `Atom` equality is.
+The embedding is injective on the grounded-free fragment, which is why `embed_inj` is stated there.
+Grounded atoms are not embedded injectively: floats inherit the IEEE-754 caveat LeaTTa documents for
+`Atom`'s own equality (`0.0` vs `-0.0`, `NaN`), and an `external`'s two string fields are joined by a
+colon in `groundKey`, so `external "a:b" "c"` and `external "a" "b:c"` collide. The injectivity
+theorems are therefore stated only on the grounded-free fragment.
 
 Mathlib-free.
 -/
@@ -22,8 +24,10 @@ namespace MeTTaIL.Bridge
 
 open MeTTaIL
 
-/-- A string key for a grounded payload. Not injective on floats (`0.0`/`-0.0` collide, `NaN ≠ NaN`),
-    the IEEE-754 caveat LeaTTa documents for `Atom` equality. -/
+/-- A string key for a grounded payload. Not injective on every grounded atom: floats collide
+    (`0.0`/`-0.0`, `NaN ≠ NaN`), the IEEE-754 caveat LeaTTa documents for `Atom` equality; and an
+    `external t p` joins its two free strings with a colon, so e.g. `external "a:b" "c"` and
+    `external "a" "b:c"` both key to `"ext:a:b:c"`. -/
 def groundKey : Metta.Ground → String
   | .int n => "int:" ++ toString n
   | .float f => "float:" ++ toString f

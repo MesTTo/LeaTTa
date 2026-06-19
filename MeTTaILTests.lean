@@ -8,6 +8,7 @@ This is its own library target so the core `MeTTaIL` library ships without test 
 -/
 import MeTTaIL.Theory.Elaborate
 import MeTTaILTests.Rholang
+import MeTTaILTests.Reduce
 
 namespace MeTTaILTests
 open MeTTaIL

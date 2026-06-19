@@ -26,3 +26,5 @@ import MeTTaIL.Transform.Desugar
 import MeTTaIL.Transform.TypeLift
 -- Layer 2: the BNFCRenderer monomorphization pass.
 import MeTTaIL.Transform.Monomorphize
+-- Layer 3: the GSLT reduction core (matching, substitution, rewrite application).
+import MeTTaIL.Semantics.Reduce

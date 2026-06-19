@@ -55,13 +55,14 @@ mutual
   /-- Elaborate a theory instance to a presentation under a fuel bound. Mirrors the checked
       `InstInterpreter.interpret`.
 
-      Implemented: `empty`, `ref`, `letIn`, `ctor`, `addExports` (base and rename), `addReplacements`
-      (relabel with argument permutation), `addTerms` (with the duplicate-label check),
-      `addEquations`, `addRewrites`, and the lattice ops `conj`/`disj`/`subtract`.
+      Implemented: `empty`, `ref`, `letIn`, `ctor`, `free` (recursive free-instantiation of a
+      theory's parameters), `addExports` (base and rename), `addReplacements` (relabel with argument
+      permutation), `addTerms` (with the duplicate-label check), `addEquations`, `addRewrites`, and
+      the lattice ops `conj`/`disj`/`subtract`.
 
-      Pending: `free` (recursive free-instantiation, not needed for the entry points used so far) and
-      the full equation/rewrite category type checker (`AddEqRwHelpers`); the workers here append
-      after the structural checks (duplicate label, missing export, replacement target/shadow). -/
+      Pending: the full equation/rewrite category type checker (`AddEqRwHelpers`); the workers here
+      append after the structural checks (duplicate label, missing export, replacement target/shadow).
+      -/
   def elaborateFuel : Nat → ElabCtx → TheoryInst → Except String Presentation
     | 0, _, _ => .error "elaborate: out of fuel"
     | _+1, _, .empty => .ok .empty
@@ -126,7 +127,11 @@ mutual
           let argPres ← elaborateArgs fuel ctx args
           let bindings := (td.params.map (·.ident)).zip argPres
           elaborateFuel fuel { ctx with env := ctx.env ++ bindings } td.body
-    | _+1, _, .free _ => .error "free: not yet implemented"
+    | fuel+1, ctx, .free path => do
+        let td ← resolveTheory ctx.modules path
+        let argPres ← freeArgs fuel ctx (td.params.map (·.theoryType))
+        let bindings := (td.params.map (·.ident)).zip argPres
+        elaborateFuel fuel { ctx with env := ctx.env ++ bindings } td.body
   /-- Elaborate each theory instance in a list (the actual arguments of a `ctor`). -/
   def elaborateArgs : Nat → ElabCtx → List TheoryInst → Except String (List Presentation)
     | 0, _, _ => .error "elaborate: out of fuel"
@@ -134,6 +139,15 @@ mutual
     | fuel+1, ctx, a :: rest => do
         let p ← elaborateFuel fuel ctx a
         let ps ← elaborateArgs fuel ctx rest
+        .ok (p :: ps)
+  /-- Free-instantiate each parameter's theory type in turn (the recursive instantiation `free`
+      performs: every parameter is itself filled by free-instantiating its declared theory). -/
+  def freeArgs : Nat → ElabCtx → List DottedPath → Except String (List Presentation)
+    | 0, _, _ => .error "elaborate: out of fuel"
+    | _+1, _, [] => .ok []
+    | fuel+1, ctx, path :: rest => do
+        let p ← elaborateFuel fuel ctx (.free path)
+        let ps ← freeArgs fuel ctx rest
         .ok (p :: ps)
 end
 

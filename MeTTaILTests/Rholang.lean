@@ -215,6 +215,23 @@ private def expectedGenerated : Presentation :=
     arrow `Name -> Proc` becomes `ArrowCCName_ProcDD`, with the `App`/`Ident`/`Lam` constructors). -/
 example : (monomorphize expectedDesugared == expectedGenerated) = true := by decide
 
+/-! ### `free` instantiation -/
+
+private def eMAssoc : Equation :=
+  eq (sx "Mult" [sx "Mult" [v "x", v "y"], v "z"]) (sx "Mult" [v "x", sx "Mult" [v "y", v "z"]])
+private def eMRUnit : Equation := eq (sx "Mult" [v "x", sx "One" []]) (v "x")
+private def eMLUnit : Equation := eq (sx "Mult" [sx "One" [], v "x"]) (v "x")
+
+/-- The presentation `free(Monoid)` should produce: free-instantiate the `EmptySet` parameter (no
+    parameters of its own, so just the sort `Elem`), then add the monoid symbols and laws. -/
+private def expectedMonoid : Presentation :=
+  .mk [idc "Elem"] [rOne, rMult] [eMAssoc, eMRUnit, eMLUnit] [] []
+
+/-- `free` recursively instantiates a theory's parameters: `free(Monoid)` fills `Monoid`'s `EmptySet`
+    parameter by free-instantiating `EmptySet`, then elaborates the body. -/
+example : ((elaborate oracleCtx (.free (.base "Monoid"))).toOption == some expectedMonoid) = true := by
+  decide
+
 /-! ### Type-lift oracle: matches the tool's `[Hypercubed Presentation]` -/
 
 /-- `T(Name -> Proc) = Product{ Name ; (Name -> Proc) }`, the type-lift of the arrow argument. -/

@@ -9,6 +9,7 @@ running `java -jar mettail_assembly.jar GSLT/src/test/module/Rholang.module`): t
 rewrites `RPar1 RPar2 RNew RComm`. So our elaborator agrees with MeTTaIL on the flagship example.
 -/
 import MeTTaIL.Theory.Elaborate
+import MeTTaIL.Transform.Desugar
 
 namespace MeTTaILTests.Rholang
 open MeTTaIL
@@ -165,5 +166,25 @@ private def entry : TheoryInst := .ctor (.base "FreeRholang") []
 /-- THE ORACLE: our elaborator produces exactly the presentation the real MeTTaIL tool prints for
     `FreeRholang()`. -/
 example : ((elaborate oracleCtx entry).toOption == some expectedRholang) = true := by decide
+
+/-! ### Desugar oracle: matches the tool's `[Desugared Presentation]` -/
+
+private def rPNewToArrow : Rule :=
+  { label := .id "PNewToArrow", cat := idc "Proc"
+    items := [tm "PNewToArrow", tm "(", .nterminal (.arrow (idc "Name") (idc "Proc")), tm ")"] }
+private def rPRecvToArrow : Rule :=
+  { label := .id "PRecvToArrow", cat := idc "Proc"
+    items := [tm "PRecvToArrow", tm "(", nt "Name", .nterminal (.arrow (idc "Name") (idc "Proc")), tm ")"] }
+
+private def expectedDesugared : Presentation :=
+  .mk [idc "Proc", idc "Name"]
+      [rPZero, rPPar, rPRepl, rPNew, rPNewToArrow, rPDrop, rNQuote, rPSend, rPRecv, rPRecvToArrow]
+      [eAssoc, eRUnit, eLUnit, eComm, eFresh, eNewIdem, eNewSwap, eRepl, eQD1, eQD2]
+      [wRPar1, wRPar2, wRNew, wRComm]
+      []
+
+/-- ORACLE: desugaring the elaborated Rholang matches the tool's `[Desugared Presentation]` (the
+    `PNewToArrow` and `PRecvToArrow` companions inserted after `PNew` and `PRecv`). -/
+example : (desugarBinds expectedRholang == expectedDesugared) = true := by decide
 
 end MeTTaILTests.Rholang

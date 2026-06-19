@@ -20,3 +20,5 @@ import MeTTaIL.Theory.Ops
 import MeTTaIL.Theory.Rename
 -- Layer 1: the elaboration interpreter.
 import MeTTaIL.Theory.Elaborate
+-- Layer 2: the DesugarBinds transformation pass.
+import MeTTaIL.Transform.Desugar

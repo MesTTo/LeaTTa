@@ -23,6 +23,14 @@ def goertzelMetagraph : ArXiv where
   year := 2021
   id := "2112.08272"
 
+/-- Keidar, Naor, Poupko & Shapiro; the Cordial Miners leaderless DAG consensus protocol. -/
+def cordialMiners : ArXiv where
+  title := inlines!"Cordial Miners: Fast and Efficient Consensus for Every Eventuality"
+  authors := #[inlines!"Idit Keidar", inlines!"Oded Naor", inlines!"Ouri Poupko",
+               inlines!"Ehud Shapiro"]
+  year := 2022
+  id := "2205.09174"
+
 /-- Siek & Taha; gradual typing; the source of the consistency relation `~`. -/
 def siekTaha : InProceedings where
   title := inlines!"Gradual Typing for Functional Languages"

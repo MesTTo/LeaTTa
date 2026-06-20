@@ -18,3 +18,5 @@ import CordialMiners.Spec.Snapshot
 import CordialMiners.Spec.WeightedCertificate
 import CordialMiners.Spec.ThresholdFinality
 import CordialMiners.Ref.WeightedCollector
+import CordialMiners.Spec.Blocklace
+import CordialMiners.Spec.Equivocation

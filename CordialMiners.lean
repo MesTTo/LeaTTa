@@ -30,5 +30,6 @@ import CordialMiners.Trec.Safety
 import CordialMiners.Tfine.Abstraction
 import CordialMiners.CMIR.Atom
 import CordialMiners.Extract.MettaIL
+import CordialMiners.Sim.Run
 import CordialMiners.Proofs.EndToEndSafety
 import CordialMiners.Tests.Examples

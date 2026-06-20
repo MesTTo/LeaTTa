@@ -5,8 +5,9 @@ Mirrors the combined effect of the Scala `check_interpret` and `interpret` passe
 there), integrating the checking and the interpretation into a single traversal. One deliberate
 difference: Scala's `check_interpret` is shallow. It checks only the current node and recurses solely
 through `ctor` and `free`, returning `None` at `letIn`/`disj`/`conj`/`subtract` without checking their
-sub-instances, so it misses malformed instances nested under those forms. Here every node is checked as
-it is elaborated, so this elaborator is stricter on deeply-nested malformed sub-instances. `ctor` and
+sub-instances, so it misses malformed instances nested under those forms (recorded in
+`HYPERON_IMPROVEMENTS.md`). Here every node is checked as it is elaborated, so this elaborator is
+stricter on deeply-nested malformed sub-instances. `ctor` and
 `free` expand another theory's body, so elaboration is not structural on the theory instance; it is
 bounded by fuel, matching the fuel-bounded interpreters elsewhere in this repository and keeping the
 development free of `partial`.
@@ -152,11 +153,10 @@ mutual
               | .base c =>
                   .ok (.mk (pp.exports ++ [c]) pp.terms pp.equations pp.rewrites pp.references)
               -- Validate every rename's target against the current exports (the running accumulator),
-              -- a deliberately more thorough and sensible check than Scala's `checkAddExports`, which
-              -- via `collectFirst` over a total partial function inspects only the FIRST export, errors
-              -- on a leading `BaseExport`, and is short-circuited for these nested nodes anyway because
-              -- `check_interpret` does not recurse through `letIn`. The worker `handleAddExports` then
-              -- applies the renames without re-checking. Flagged for F1R3FLY.
+              -- the correct check. Scala's `checkAddExports` is buggy here (see HYPERON_IMPROVEMENTS.md):
+              -- via `collectFirst` over a total partial function it inspects only the FIRST export and
+              -- errors on a leading `BaseExport`, and `check_interpret` never reaches these nested nodes
+              -- (it does not recurse through `letIn`); the worker applies the renames without checking.
               | .rename old new =>
                   if pp.exports.contains old then .ok (Presentation.replaceCat old new pp)
                   else .error "addExports: cannot rename a sort that is not exported")

@@ -2,12 +2,11 @@
 Category renaming and constructor relabeling, the traversals behind `addExports` rename and
 `addReplacements`.
 
-A `RenameExport old new` renames a sort in the exported sort list and in the function-symbol
-definitions, mirroring Scala `handleAddExports`'s `RenameExport` branch (it updates `listcat_` and
-`listdef_` only, leaving equations and rewrites untouched). The section note below flags the two Scala
-quirks this reproduces. A `Replacement [perm] target . cat => newDef` swaps the rule labelled `target`
-for `newDef` and, in every equation and rewrite, relabels each applied `target` to `newDef`'s label
-while permuting its arguments by `perm` (Scala `updateAST`).
+A `RenameExport old new` renames a sort `old` to `new` everywhere it occurs in the presentation (the
+correct rename; the section note records where Scala's buggy `RenameExport` differs, and
+`MeTTaIL/HYPERON_IMPROVEMENTS.md` lists those bugs for upstream). A `Replacement [perm] target . cat =>
+newDef` swaps the rule labelled `target` for `newDef` and, in every equation and rewrite, relabels each
+applied `target` to `newDef`'s label while permuting its arguments by `perm` (Scala `updateAST`).
 
 The traversals over `Cat` and `AST` are hand-written by mutual recursion because both nest through
 `List` (`prod` and `sexp`), which structural recursion handles in definitions but `deriving` does
@@ -19,47 +18,95 @@ namespace MeTTaIL
 
 /-! ### Category replacement (sort renaming)
 
-The `addExports` sort rename, mirroring Scala `handleAddExports`'s `RenameExport` branch, including its
-quirks. Two to flag.
+This is the CORRECT sort rename: replace the generating sort `old` by `new` everywhere it occurs, the
+exports, every rule's output sort (only where it mentions `old`), the item sorts (recursing into the
+compound sorts `arrow`/`prod`/`listOf` and into abstraction bodies), the sorts carried by list labels,
+and the list-label sorts inside equations and rewrites.
 
-The export list is renamed by a shallow conditional map: a sort equal to `old` becomes `new`, the rest
-are left alone (Scala `currentCats.map(c => if c == re.cat_1 then re.cat_2 else c)`). It does not
-descend into a compound sort, so `old` nested inside an `arrow`/`prod`/`listOf` export is not renamed.
-
-The function symbols are renamed by `updateDef`, which has a real bug we reproduce to stay faithful to
-the tool: it sets every rule's output sort to `new` UNCONDITIONALLY (Scala `new Rule(rule.label_,
-newCat, ...)` in `ASTHelpers.scala`), not only the rules whose output sort was `old`. On a presentation
-with mixed output sorts this corrupts the others. It is masked in the tested modules because the one
-rename acts on a presentation whose every rule already has output sort `old`. The rule's label is left
-unchanged, and its items get a shallow per-item replace (a non-terminal or binder sort equal to `old`
-becomes `new`, an abstraction is followed into its body, but a sort is compared as a whole). Flagged
-for F1R3FLY.
+Scala `handleAddExports`'s `RenameExport` branch is buggy in ways we deliberately do NOT reproduce; the
+formalization does the correct thing and the bugs are recorded for upstream in
+`MeTTaIL/HYPERON_IMPROVEMENTS.md`. In short: `updateDef` sets every rule's output sort to `new`
+unconditionally, `replaceCats` and the export map are shallow (they miss a sort nested in a compound
+sort), and the rename touches only `listcat_`/`listdef_`, leaving stale list-label sorts in rule
+labels, equations, and rewrites. The Rholang oracle is unaffected because its one rename is flat
+(`Elem -> Proc`, on a presentation whose every rule already has output sort `Elem`, no compound sorts
+or list labels), so the correct and buggy renames coincide there.
 -/
 
-/-- Shallow per-item sort replace, mirroring Scala `ASTHelpers.replaceCats`: a non-terminal or binder
-    whose sort equals `old` becomes `new`; an abstraction is followed into its body; a sort is compared
-    as a whole, so `old` nested inside a compound sort is not replaced. -/
+mutual
+  /-- Replace every occurrence of the category `old` by `new` inside a category, recursing into the
+      compound sorts. -/
+  def Cat.replace (old new : Cat) : Cat → Cat
+    | .idCat n   => if Cat.beq (.idCat n) old then new else .idCat n
+    | .listOf a  => if Cat.beq (.listOf a) old then new else .listOf (Cat.replace old new a)
+    | .arrow a b =>
+        if Cat.beq (.arrow a b) old then new
+        else .arrow (Cat.replace old new a) (Cat.replace old new b)
+    | .prod cs   => if Cat.beq (.prod cs) old then new else .prod (Cat.replaceList old new cs)
+  /-- Replace `old` by `new` in each category of a list. -/
+  def Cat.replaceList (old new : Cat) : List Cat → List Cat
+    | []      => []
+    | c :: cs => Cat.replace old new c :: Cat.replaceList old new cs
+end
+
+/-- Rename a sort inside a label's category (only list labels carry one). -/
+def Label.replaceCat (old new : Cat) : Label → Label
+  | .id n       => .id n
+  | .wild       => .wild
+  | .listE c    => .listE (Cat.replace old new c)
+  | .listCons c => .listCons (Cat.replace old new c)
+  | .listOne c  => .listOne (Cat.replace old new c)
+
+/-- Rename a sort inside an item, recursing into abstraction bodies. -/
 def Item.replaceCat (old new : Cat) : Item → Item
   | .terminal s        => .terminal s
-  | .nterminal c       => if Cat.beq c old then .nterminal new else .nterminal c
+  | .nterminal c       => .nterminal (Cat.replace old new c)
   | .absNTerminal x it => .absNTerminal x (Item.replaceCat old new it)
-  | .bindNTerminal x c => if Cat.beq c old then .bindNTerminal x new else .bindNTerminal x c
+  | .bindNTerminal x c => .bindNTerminal x (Cat.replace old new c)
 
-/-- Rename a sort in one function symbol, mirroring Scala `updateDef`: the output sort is set to `new`
-    UNCONDITIONALLY (the Scala bug noted above), the label is left unchanged, and the items get the
-    shallow per-item replace. -/
+/-- Rename a sort throughout a function symbol: its output sort (only when it mentions `old`), its
+    label, and its items. Scala `updateDef` instead sets the output sort to `new` unconditionally and
+    leaves the label untouched; see `HYPERON_IMPROVEMENTS.md`. -/
 def Rule.replaceCat (old new : Cat) (r : Rule) : Rule :=
-  { r with cat := new, items := r.items.map (Item.replaceCat old new) }
+  { label := r.label.replaceCat old new
+    cat := Cat.replace old new r.cat
+    items := r.items.map (Item.replaceCat old new) }
 
-/-- Rename a sort in a presentation's exported sort list and its function-symbol definitions, leaving
-    equations, rewrites, and references untouched. Mirrors Scala `handleAddExports`'s `RenameExport`
-    branch, which updates `listcat_` and `listdef_` only (see the section note for the shallow-map and
-    `updateDef` quirks it reproduces). -/
+mutual
+  /-- Rename a sort inside a term (it can appear inside a list label). -/
+  def AST.replaceCat (old new : Cat) : AST → AST
+    | .var p       => .var p
+    | .sexp l args => .sexp (l.replaceCat old new) (AST.replaceCatList old new args)
+    | .subst b r v => .subst (AST.replaceCat old new b) (AST.replaceCat old new r) v
+  /-- Rename a sort in each term of a list. -/
+  def AST.replaceCatList (old new : Cat) : List AST → List AST
+    | []      => []
+    | a :: as => AST.replaceCat old new a :: AST.replaceCatList old new as
+end
+
+/-- Rename a sort inside an equation (reaching the list-label sorts in its terms). -/
+def Equation.replaceCat (old new : Cat) : Equation → Equation
+  | .impl l r    => .impl (l.replaceCat old new) (r.replaceCat old new)
+  | .fresh x y e => .fresh x y (Equation.replaceCat old new e)
+
+/-- Rename a sort inside a rewrite. -/
+def Rewrite.replaceCat (old new : Cat) : Rewrite → Rewrite
+  | .base l r => .base (l.replaceCat old new) (r.replaceCat old new)
+  | .ctx h r  => .ctx h (Rewrite.replaceCat old new r)
+
+/-- Rename a sort inside a named rewrite. -/
+def RewriteDecl.replaceCat (old new : Cat) (rd : RewriteDecl) : RewriteDecl :=
+  { rd with rw := rd.rw.replaceCat old new }
+
+/-- Rename a sort everywhere in a presentation: exports, function-symbol definitions, and the
+    list-label sorts in equations and rewrites. References are left untouched (elaborated presentations
+    have none). This is the correct rename; Scala `RenameExport` updates only `listcat_`/`listdef_`, and
+    buggily, see `HYPERON_IMPROVEMENTS.md`. -/
 def Presentation.replaceCat (old new : Cat) (p : Presentation) : Presentation :=
-  .mk (p.exports.map (fun c => if Cat.beq c old then new else c))
+  .mk (Cat.replaceList old new p.exports)
       (p.terms.map (Rule.replaceCat old new))
-      p.equations
-      p.rewrites
+      (p.equations.map (Equation.replaceCat old new))
+      (p.rewrites.map (RewriteDecl.replaceCat old new))
       p.references
 
 /-! ### Constructor relabeling with argument permutation -/

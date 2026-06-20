@@ -29,3 +29,4 @@ import CordialMiners.Trec.Syntax
 import CordialMiners.Trec.Safety
 import CordialMiners.Tfine.Abstraction
 import CordialMiners.Proofs.EndToEndSafety
+import CordialMiners.Tests.Examples

@@ -20,3 +20,4 @@ import CordialMiners.Spec.ThresholdFinality
 import CordialMiners.Ref.WeightedCollector
 import CordialMiners.Spec.Blocklace
 import CordialMiners.Spec.Equivocation
+import CordialMiners.Spec.FinalLeader

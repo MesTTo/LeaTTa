@@ -17,3 +17,4 @@ import CordialMiners.Foundation.Prefix
 import CordialMiners.Spec.Snapshot
 import CordialMiners.Spec.WeightedCertificate
 import CordialMiners.Spec.ThresholdFinality
+import CordialMiners.Ref.WeightedCollector

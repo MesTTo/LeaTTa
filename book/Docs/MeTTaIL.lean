@@ -146,3 +146,9 @@ them. The Scala tool's own `--hypercube` pass omits the modal types too, and our
 tool, not the unfinished note. The per-variable category-consistency check of the elaborator's type
 checker is the one piece of the tool we have left as future work; the category-match and
 bound-variable checks are in place.
+
+Building a faithful model is also a good way to find bugs in the thing you are modeling, and we found a
+few in the tool's rename and checking code. Where the Scala does something wrong, an export rename that
+overwrites every rule's output sort, a static check that only inspects the first export, a checker that
+does not descend through `let`, the Lean does the correct thing and leaves a note at the divergence.
+The five we found are written up for the F1R3FLY team in `MeTTaIL/HYPERON_IMPROVEMENTS.md`.

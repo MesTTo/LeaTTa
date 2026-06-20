@@ -14,3 +14,6 @@ that underpins threshold-finality safety.
 import CordialMiners.Foundation.Basic
 import CordialMiners.Foundation.FinsetWeight
 import CordialMiners.Foundation.Prefix
+import CordialMiners.Spec.Snapshot
+import CordialMiners.Spec.WeightedCertificate
+import CordialMiners.Spec.ThresholdFinality

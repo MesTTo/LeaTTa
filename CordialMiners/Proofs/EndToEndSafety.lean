@@ -11,15 +11,19 @@ Purpose: The top-level safety statement (the blueprint's Theorem 4.54 core). It 
   algorithm.
 Imports: CordialMiners.Spec.FinalLeader, CordialMiners.Spec.TauOrderSpec, CordialMiners.Ref.TauOrder
 Trusted boundary: none (fully proved; rests only on the human-reviewed specs it composes)
-Main exports: cm_threshold_agreement, cm_end_to_end_safety, cm_concrete_ordering_valid
-Open obligations: prefix-monotonicity under leader safety (OutputMonotone, the TAU-08 leader-safety
-  package) enters cm_end_to_end_safety as an explicit hypothesis, matching the blueprint's trusted
-  boundary; liveness (dissemination completeness, scheduler non-starvation) is conditional on the
-  network and scheduler fairness assumptions stated in the dissemination and scheduler specs.
+Main exports: cm_threshold_agreement, cm_end_to_end_safety, cm_end_to_end_safety_anchored,
+  cm_concrete_ordering_valid
+Open obligations: cm_end_to_end_safety takes abstract OutputMonotone as a hypothesis;
+  cm_end_to_end_safety_anchored discharges it, deriving TAU-08 from the primitive leader-safety fact
+  AnchorPrefixMonotone (the anchor sequence grows as a prefix). Deriving AnchorPrefixMonotone itself
+  from finality permanence and wave-ordered finalization is the deeper leader-safety package. Liveness
+  (dissemination completeness, scheduler non-starvation) is conditional on the network and scheduler
+  fairness assumptions stated in the dissemination and scheduler specs.
 -/
 import CordialMiners.Spec.FinalLeader
 import CordialMiners.Spec.TauOrderSpec
 import CordialMiners.Ref.TauOrder
+import CordialMiners.Ref.AnchoredOrder
 
 namespace CordialMiners
 
@@ -72,5 +76,28 @@ theorem cm_concrete_ordering_valid {H : Type*} [LinearOrder H] (V : Finset H) (d
     ∧ (∀ y, y ∈ topoSort V deps ↔ y ∈ V) :=
   ⟨topoSort_nodup V deps, topoSort_topoSorted V deps,
    fun _ => ⟨fun hy => topoSort_subset V deps hy, fun hy => topoSort_complete V deps hrank hy⟩⟩
+
+/-- End-to-end safety with the ordering hypothesis discharged. Same guarantee as cm_end_to_end_safety,
+    but for the concrete anchored ordering and assuming only the primitive leader-safety fact: the
+    finalized-anchor sequence is prefix-monotone in the blocklace. Output-prefix monotonicity (TAU-08)
+    is now derived (tau_08_anchored_output_monotone), not assumed, so the only ordering input is
+    AnchorPrefixMonotone, which is much closer to the protocol than abstract OutputMonotone. -/
+theorem cm_end_to_end_safety_anchored {P Wave Slot Hash : Type*}
+    [DecidableEq P] [DecidableEq Wave] [DecidableEq Slot] [DecidableEq Hash]
+    (S : CommitteeSnapshot P) (hWF : S.WF) (L : Blocklace P Wave Slot Hash) (honest : Finset P)
+    (hByz : S.ByzBound honest)
+    (hNoEquiv : ∀ p ∈ honest, ∀ b b' : Block P Wave Slot Hash,
+      BlockApproves L p b → BlockApproves L p b' → b = b')
+    (anchors : Blocklace P Wave Slot Hash → List Hash) (hist : Hash → List Hash)
+    (hLead : AnchorPrefixMonotone anchors) :
+    (∀ {rc rc' : ThresholdCert P (Block P Wave Slot Hash)},
+        ValidRatCert S L rc → ValidRatCert S L rc' → ¬ ConflictBlock rc.value rc'.value)
+    ∧ (∀ {L₁ L₂ Limit : Blocklace P Wave Slot Hash}, L₁ ⊆ Limit → L₂ ⊆ Limit →
+        anchoredOrder anchors hist L₁ <+: anchoredOrder anchors hist L₂
+        ∨ anchoredOrder anchors hist L₂ <+: anchoredOrder anchors hist L₁)
+    ∧ (∀ {L' : Blocklace P Wave Slot Hash} {b : Block P Wave Slot Hash},
+        ParentClosed L' → b.parents ⊆ hashesOf L' → ParentClosed (insert b L')) :=
+  cm_end_to_end_safety S hWF L honest hByz hNoEquiv (anchoredOrder anchors hist)
+    (tau_08_anchored_output_monotone anchors hist hLead)
 
 end CordialMiners

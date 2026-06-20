@@ -21,3 +21,4 @@ import CordialMiners.Ref.WeightedCollector
 import CordialMiners.Spec.Blocklace
 import CordialMiners.Spec.Equivocation
 import CordialMiners.Spec.FinalLeader
+import CordialMiners.Spec.TauOrderSpec

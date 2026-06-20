@@ -55,6 +55,12 @@ lean_lib «MeTTaILTests» where
 lean_lib «MeTTaILProofs» where
   roots := #[`MeTTaILProofs]
 
+-- PoR-weighted Cordial Miners: a Mathlib-backed formalization of the leaderless DAG-based BFT
+-- consensus protocol (the next LeaTTa iteration, built milestone by milestone).
+@[default_target]
+lean_lib «CordialMiners» where
+  roots := #[`CordialMiners]
+
 @[default_target]
 lean_exe «LeaTTa» where
   root := `Main

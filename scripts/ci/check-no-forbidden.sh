@@ -13,7 +13,7 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
-TARGETS="MettaHyperonFull MeTTaIL MeTTaILProofs MeTTaILTests MeTTaIL.lean MeTTaILProofs.lean MeTTaILTests.lean"
+TARGETS="MettaHyperonFull MeTTaIL MeTTaILProofs MeTTaILTests MeTTaIL.lean MeTTaILProofs.lean MeTTaILTests.lean CordialMiners CordialMiners.lean"
 
 hits=$(grep -rnE '\b(sorry|admit|native_decide)\b|\b(partial|unsafe)[[:space:]]+(def|instance|abbrev|theorem|lemma|structure|inductive)\b' \
         $TARGETS --include='*.lean' 2>/dev/null \

@@ -1,16 +1,21 @@
 /-
-The elaboration interpreter: evaluate a theory instance to a presentation, or fail with an error.
-
-Mirrors the combined effect of the Scala `check_interpret` and `interpret` passes (two separate passes
-there), integrating the checking and the interpretation into a single traversal. One deliberate
-difference: Scala's `check_interpret` is shallow. It checks only the current node and recurses solely
-through `ctor` and `free`, returning `None` at `letIn`/`disj`/`conj`/`subtract` without checking their
-sub-instances, so it misses malformed instances nested under those forms (recorded in
-`HYPERON_IMPROVEMENTS.md`). Here every node is checked as it is elaborated, so this elaborator is
-stricter on deeply-nested malformed sub-instances. `ctor` and
-`free` expand another theory's body, so elaboration is not structural on the theory instance; it is
-bounded by fuel, matching the fuel-bounded interpreters elsewhere in this repository and keeping the
-development free of `partial`.
+Module: MeTTaIL.Theory.Elaborate
+Layer: Theory
+Purpose: The elaboration interpreter. It evaluates a theory instance to a presentation, or fails with
+  an error. Mirrors the combined effect of the Scala `check_interpret` and `interpret` passes (two
+  separate passes there), folding the checking and the interpretation into a single traversal. One
+  deliberate difference: Scala's `check_interpret` is shallow and recurses only through `ctor` and
+  `free`, so it misses malformed instances nested under `letIn`/`disj`/`conj`/`subtract` (recorded in
+  `HYPERON_IMPROVEMENTS.md`); here every node is checked as it is elaborated, so this elaborator is
+  stricter on deeply nested malformed sub-instances. Because `ctor` and `free` expand another theory's
+  body, elaboration is not structural on the theory instance, so it is bounded by fuel, matching the
+  fuel-bounded interpreters elsewhere in this repository and keeping the development free of `partial`.
+Imports: MeTTaIL.Theory.Instance, MeTTaIL.Theory.Ops, MeTTaIL.Theory.Rename, MeTTaIL.Theory.Check
+Trusted boundary: none
+Main exports: ElabCtx, firstDupLabel, resolveTheory, checkNewTerm, checkReplacement, elaborateFuel,
+  elaborate
+Open obligations: the deeper per-variable category-consistency check (`catOfIdentInAST`) and
+  module-alias resolution in `resolveTheory` (the dotted-path prefix is ignored) are not yet modelled.
 -/
 import MeTTaIL.Theory.Instance
 import MeTTaIL.Theory.Ops

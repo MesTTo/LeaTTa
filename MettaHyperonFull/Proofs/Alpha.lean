@@ -1,3 +1,15 @@
+/-
+Module: MettaHyperonFull.Proofs.Alpha
+Layer: Proofs
+Purpose: α-equivalence of atoms, defined as equality of canonical forms. Proves it is an equivalence
+  relation, that it preserves atom size, and that it collapses to syntactic equality on variable-free
+  atoms. Documents why the kernel's Boolean decider is faithful only on the float-free fragment,
+  because host IEEE floats make BEq Atom unlawful.
+Imports: MettaHyperonFull.Proofs.Basic
+Trusted boundary: none (fully proved)
+Main exports: AlphaEq, alphaEq_equivalence, alphaSetoid, AlphaEq.size_eq, alphaEq_iff_eq_of_closed
+Open obligations: none
+-/
 import MettaHyperonFull.Proofs.Basic
 
 /-!

@@ -1,20 +1,21 @@
 /-
-The Hypercube type-lift pass (`--hypercube`): the untyped-to-typed transformation of
-`transformation.md`, restricted to the part the Scala tool actually implements.
-
-For each function symbol it adds a `TypeLiftCC<L>DD` companion (the "type of L"), whose arity is the
-type-lift `T` of the original arity:
-
-  T(G) = G,  T(A -> B) = T(A) x (T(A) -> T(B)),  T(A x B) = T(A) x T(B),  T([A]) = [T(A)].
-
-Rules with raw binders are skipped (the desugared `...ToArrow` form is lifted instead). After the
-lift, the base-reduction duplication rule fires: when a variable occurs as a direct argument two or
-more times across the constructor applications in a rewrite's left-hand side, each hosting
-constructor's companion gains an extra argument of that variable's category (the `!!`/`??` extra
-channel in the comm example).
-
-The modal possibility types of `transformation.md` are not generated here, exactly as in the Scala
-code (that step is commented out). This is faithful to the tool, not to the full design note.
+Module: MeTTaIL.Transform.TypeLift
+Layer: Transform
+Purpose: The Hypercube type-lift pass (`--hypercube`), the untyped-to-typed transformation of
+  `transformation.md`, restricted to the part the Scala tool actually implements. For each function
+  symbol it adds a `TypeLiftCC<L>DD` companion (the "type of L") whose arity is the type-lift `T` of the
+  original arity: T(G) = G, T(A -> B) = T(A) x (T(A) -> T(B)), T(A x B) = T(A) x T(B), T([A]) = [T(A)].
+  Rules with raw binders are skipped (the desugared `...ToArrow` form is lifted instead). After the
+  lift, the duplication rule fires: when a variable occurs as a direct argument two or more times across
+  the constructor applications in a rewrite's left-hand side, each hosting constructor's companion gains
+  an extra argument of that variable's category. The modal possibility types of `transformation.md` are
+  not generated here, exactly as in the Scala code (that step is commented out), so the pass is faithful
+  to the tool, not to the full design note.
+Imports: MeTTaIL.Theory.Ops, MeTTaIL.Transform.Desugar
+Trusted boundary: none
+Main exports: Cat.typeLift, Rule.hasRawBinder, Rule.argCats, Rule.typeLiftDef, AST.directVarArgs,
+  companionLabelOf, extrasForLHS, typeLift
+Open obligations: none
 -/
 import MeTTaIL.Theory.Ops
 import MeTTaIL.Transform.Desugar

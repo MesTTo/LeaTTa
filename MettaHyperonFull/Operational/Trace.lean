@@ -1,3 +1,15 @@
+/-
+Module: MettaHyperonFull.Operational.Trace
+Layer: Operational
+Purpose: Execution traces of the four-register machine, the observable history of a run. A `Trace`
+  records the sequence of states visited and the step label that caused each transition.
+  `traceRunFuel` runs the machine for up to `n` steps while recording every transition, and
+  `observations` projects out the output register at each state.
+Imports: MettaHyperonFull.Operational.Semantics
+Trusted boundary: none
+Main exports: Trace, Trace.empty, Trace.extend, Trace.observations, traceRunFuel
+Open obligations: none
+-/
 import MettaHyperonFull.Operational.Semantics
 
 namespace Metta

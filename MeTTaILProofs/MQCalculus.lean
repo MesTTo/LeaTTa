@@ -1,17 +1,18 @@
 /-
-The mq-calculus of Stay and Meredith ("The MQ-Calculus: A Calculus for Quantum Processes Involving
-Intermittent Measurement"), whose driving idea is "communication = measurement": when a quantum state
-is sent on a channel and received, it is measured in the computational basis, and the receiver's
-continuations are weighted by the Born rule.
-
-We formalize the semantic core that makes that COMM rule well-defined: a finite quantum state is a
-normalized vector of complex amplitudes, the Born probability of an outcome is the squared modulus of
-its amplitude, and these probabilities form a genuine probability distribution (they are in [0,1] and
-sum to one). So measurement-by-communication neither creates nor destroys probability. We also record
-interference: Born probabilities of a superposition are not the classical sum, which is exactly why a
-received superposition differs from a received mixture.
-
-Mathlib-backed (`Complex`, `Finset.sum`).
+Module: MeTTaILProofs.MQCalculus
+Layer: Proofs
+Purpose: The semantic core of the mq-calculus of Stay and Meredith, whose driving idea is
+  "communication = measurement": when a quantum state is sent on a channel and received, it is
+  measured in the computational basis and the receiver's continuations are weighted by the Born rule.
+  We formalize what makes the COMM rule well-defined. A finite quantum state is a normalized vector
+  of complex amplitudes, the Born probability of an outcome is the squared modulus of its amplitude,
+  and these probabilities form a genuine distribution (in [0,1] and summing to one), so
+  measurement-by-communication neither creates nor destroys probability. We also record interference:
+  Born probabilities of a superposition are not the classical sum.
+Imports: Mathlib
+Trusted boundary: none (fully proved)
+Main exports: QState; bornProb, bornProb_nonneg, bornProb_sum, bornProb_le_one, interference.
+Open obligations: none
 -/
 import Mathlib.Analysis.SpecialFunctions.Complex.Circle
 import Mathlib.Data.Complex.Basic

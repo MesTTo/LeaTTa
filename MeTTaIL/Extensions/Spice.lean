@@ -1,24 +1,21 @@
 /-
-The spice rule (the "present moment") of Meredith's paper "How the Agents Got Their Present Moment".
-
-The paper modifies the rho-calculus COMM rule with bounded n-step lookahead:
-
-  Q --n--> {Q1, ..., Qm}  ⟹  for(y <- x)P | x!(Q)  →  P{ @{Q1, ..., Qm} / y }
-
-where `Q --n--> S` is the set of terms reachable from Q in at most n reduction steps. The rule looks
-self-referential, because the reduction used in `--n-->` includes COMM itself. The paper asserts,
-without proof, that this is well-founded, grounding out via `Q --0--> {Q}`.
-
-Decomposed to its essence, the construction is bounded reachability over any one-step relation,
-defined by recursion on the fuel n. This file formalizes that core: `reachUpTo`, its grounding at
-n = 0, and the fact that it is a total, computable function (so the apparent circularity is resolved
-by construction). For the rho-calculus instance, one would take `step` to be the one-step spice
-reduction, its COMM case consulting `reachUpTo` at strictly smaller fuel. That instantiation is not
-formalized here, but the fuel argument is exactly the one that would make the mutual definition
-well-founded by the same structural-recursion principle.
-
-`reachUpTo` is structurally recursive on the fuel, so it computes (the example below is by `decide`).
-This layer is Mathlib-free.
+Module: MeTTaIL.Extensions.Spice
+Layer: Extensions
+Purpose: The spice rule (the "present moment") of Meredith's paper "How the Agents Got Their Present
+  Moment". The paper modifies the rho-calculus COMM rule with bounded n-step lookahead, `Q --n--> {Q1,
+  ..., Qm} ⟹ for(y <- x)P | x!(Q) → P{ @{Q1, ..., Qm} / y }`, where `Q --n--> S` is the set of terms
+  reachable from Q in at most n reduction steps. The rule looks self-referential because the reduction
+  used in `--n-->` includes COMM itself, and the paper asserts without proof that it is well-founded,
+  grounding out via `Q --0--> {Q}`. Decomposed to its essence, the construction is bounded reachability
+  over any one-step relation, defined by recursion on the fuel n. The file formalizes that core:
+  `reachUpTo`, its grounding at n = 0, and the fact that it is a total, computable function, so the
+  apparent circularity is resolved by construction. `reachUpTo` is structurally recursive on the fuel,
+  so it computes. Mathlib-free.
+Imports: none (Mathlib-free)
+Trusted boundary: none
+Main exports: stepN, reachUpTo, reachUpTo_zero, mem_frontier_stepN, self_mem_reachUpTo
+Open obligations: the rho-calculus instance (taking `step` to be the one-step spice reduction, its COMM
+  case consulting `reachUpTo` at strictly smaller fuel) is not formalized here.
 -/
 
 namespace MeTTaIL.Spice

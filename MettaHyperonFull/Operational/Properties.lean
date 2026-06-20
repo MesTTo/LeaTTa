@@ -1,25 +1,21 @@
-import MettaHyperonFull.Operational.ResourceBounded
-
-/-!
-# Properties of the Meta-MeTTa operational semantics
-
-Verified properties of the four-register machine (`Operational/Semantics.lean`) and its
-resource-bounded extension (`Operational/ResourceBounded.lean`), as published in
-*Meta-MeTTa* (arXiv 2305.17218). These extend the barbed-bisimulation results in
-`Operational/Bisimulation.lean`.
-
-Two results matter most for on-chain / smart-contract use:
-
-* `smallStep?_kb_auditable`: a single step changes the knowledge base only by an explicit
-  `add-atom`/`remove-atom`. Pure reduction steps (`QUERY`/`CHAIN`/`OUTPUT`) never mutate it, so
-  every change to contract state is attributable to an explicit atom operation.
-* `resourceStep?_energy_nonincreasing`: a resource-bounded step never creates energy. Total gas is
-  monotonically non-increasing. (This follows from `transitionCost ≥ 0`, proved as
-  `transitionCost_nonneg`.)
-
-A third result, `mem_equalityReductions`, is the soundness-and-completeness characterisation of the
-`QUERY` result set: a reduct appears iff it is a genuine instantiated equality-rule firing.
+/-
+Module: MettaHyperonFull.Operational.Properties
+Layer: Operational
+Purpose: Verified properties of the four-register machine and its resource-bounded extension, as
+  published in Meta-MeTTa (arXiv 2305.17218). Three results carry the weight. `mem_equalityReductions`
+  characterises the QUERY result set as sound and complete: a reduct appears iff it is a genuine
+  instantiated equality-rule firing. `smallStep?_kb_auditable` shows a single step changes the
+  knowledge base only by an explicit `add-atom`/`remove-atom`, so every change to contract state is
+  attributable. `resourceStep?_energy_nonincreasing` shows a resource-bounded step never creates
+  energy, so total gas is monotonically non-increasing. These extend the bisimulation results.
+Imports: MettaHyperonFull.Operational.ResourceBounded
+Trusted boundary: none (fully proved)
+Main exports: mem_equalityReductions, equalityStep_eq_none_iff, firedReducts, mem_firedReducts,
+  smallStep?_kb_auditable, transitionCost_nonneg, debit_energy_le,
+  resourceStep?_energy_nonincreasing
+Open obligations: none
 -/
+import MettaHyperonFull.Operational.ResourceBounded
 
 namespace Metta
 

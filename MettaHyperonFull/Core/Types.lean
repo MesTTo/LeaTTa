@@ -1,3 +1,18 @@
+/-
+Module: MettaHyperonFull.Core.Types
+Layer: Core
+Purpose: The type environment read from a space and the typing it supports. Collects `(: a t)`
+  assignments and `(<: a b)` subtypings, computes the declared types of an atom, decides fuel-bounded
+  subtyping (with the gradual top and bottom types on either side), and splits arrow types. Also gives
+  the declarative typing judgement the metatheory uses. Runtime type checking is control-sensitive and
+  is modelled separately in the interpreter and TypeSoundness proofs.
+Imports: MettaHyperonFull.Core.Space
+Trusted boundary: none
+Main exports: TypeEnv, TypeEnv.empty, TypeEnv.fromSpace, TypeEnv.typesOf, TypeEnv.inheritsFuel,
+  TypeEnv.inherits, TypeEnv.matchTypes, TypeEnv.arrowParts?, HasType
+Open obligations: subtyping is fuel-bounded, with `inherits` using a depth budget of 64, so very deep
+  inheritance chains are not followed past that bound.
+-/
 import MettaHyperonFull.Core.Space
 
 namespace Metta

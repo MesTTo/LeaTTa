@@ -1,18 +1,20 @@
 /-
-Pure operations on presentations: the helpers the elaborator uses, and the three presentation
-lattice operators (union, intersection, difference).
-
-These mirror the Scala `handleDisj`/`handleConj`/`handleSubtract` and the small accessors in
-`ASTHelpers`/`LabelHelpers`. They follow the Scala behavior, including its quirks. Two to keep in
-mind. Category collection for the intersection and difference filters counts only plain non-terminal
-sorts (Scala's `collect { case nt: NTerminal => nt.cat_ }`), not binder items. And `labelsInAST`,
-which reads the head label of a term, is non-recursive (though `labelsInEquation` does recurse through
-a freshness guard).
-
-One representation difference: the lattice operators keep list order and use `List.contains` with
-`distinct`, where Scala uses unordered `Set`s. The results agree as sets with Scala; the elaborate
-oracle additionally relies on the deterministic list order these ops produce, which the `decide` proof
-confirms matches the tool's printed order.
+Module: MeTTaIL.Theory.Ops
+Layer: Theory
+Purpose: Pure operations on presentations, the helpers the elaborator uses plus the three presentation
+  lattice operators (union, intersection, difference). These mirror the Scala
+  `handleDisj`/`handleConj`/`handleSubtract` and the small accessors in `ASTHelpers`/`LabelHelpers`,
+  following the Scala behavior including its quirks. Category collection for the intersection and
+  difference filters counts only plain non-terminal sorts, not binder items, and `labelsInAST` reads
+  the head label non-recursively. One representation difference: the lattice operators keep list order
+  and use `List.contains` with `distinct` where Scala uses unordered `Set`s. The results agree as sets
+  with Scala, and the elaborate oracle relies on the deterministic list order these ops produce, which
+  the `decide` proof confirms matches the tool's printed order.
+Imports: MeTTaIL.Syntax
+Trusted boundary: none
+Main exports: distinct, Rule.nonTerminalItems, Rule.mentionedCats, Equation.labels, Rewrite.conclusion,
+  Presentation.union, Presentation.inter, Presentation.diff, DottedPath.baseName, Rewrite.premises
+Open obligations: none
 -/
 import MeTTaIL.Syntax
 

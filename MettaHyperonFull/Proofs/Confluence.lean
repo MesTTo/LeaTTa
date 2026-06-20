@@ -1,3 +1,17 @@
+/-
+Module: MettaHyperonFull.Proofs.Confluence
+Layer: Proofs
+Purpose: Confluence (Church-Rosser) of the abstract machine's deterministic fragment. MeTTa
+  reduction is intentionally nondeterministic, so the global relation has no unique normal form, but
+  the single-successor sub-relation of `interpretStack1` is functional and therefore confluent.
+  Wherever evaluation does not branch the result is independent of evaluation order, so it is
+  replayable. The branching part is the explicit nondeterminism, reified in the result list.
+Imports: MettaHyperonFull.Proofs.Basic
+Trusted boundary: none (fully proved)
+Main exports: deterministic_confluent, Minimal.DetStep, Minimal.detStep_functional,
+  Minimal.detStep_confluent
+Open obligations: none
+-/
 import MettaHyperonFull.Proofs.Basic
 
 /-!

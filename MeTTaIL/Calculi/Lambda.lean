@@ -1,22 +1,19 @@
 /-
-Simply-typed lambda calculus (STLC) with de Bruijn indices: the binder-calculus type-soundness
-companion to `MeTTaIL/Calculi/SKI.lean`.
-
-SKI handles the binder-free case, where typing and reduction are first-order and subject reduction is
-a clean structural induction with no substitution machinery. Here we pay the substitution cost. The
-calculus has variables and a binder (`lam`), so reduction needs capture-avoiding substitution and
-typing needs a context. We use de Bruijn indices: a `var i` is the binder `i` levels out, the typing
-context `Γ : List Ty` lists the binder types innermost-first, and `var i` looks up `Γ[i]?`.
-
-The two soundness results are the standard pair:
-
-* `preservation` (subject reduction): reduction keeps the type. The work is a substitution lemma and
-  a context-weakening lemma, both about how typing interacts with de Bruijn index shifting.
-* `progress`: a closed, well-typed term is either a value (here, a `lam`) or can take a step. So a
-  well-typed closed term never gets stuck.
-
-Everything stays Mathlib-free, like the SKI instance and the runnable kernel. The de Bruijn index
-arithmetic is handled with `omega` and the core `List.getElem?`/`List.insertIdx` lemmas.
+Module: MeTTaIL.Calculi.Lambda
+Layer: Calculi
+Purpose: Simply-typed lambda calculus (STLC) with de Bruijn indices, the binder-calculus
+  type-soundness companion to `MeTTaIL/Calculi/SKI.lean`. SKI handles the binder-free case, where
+  typing and reduction are first-order; here the calculus has a binder (`lam`), so reduction needs
+  capture-avoiding substitution and typing needs a context. A `var i` is the binder `i` levels out, the
+  typing context `Γ : List Ty` lists the binder types innermost first, and `var i` looks up `Γ[i]?`. The
+  two soundness results are the standard pair: `preservation` (subject reduction) says reduction keeps
+  the type, resting on a substitution lemma and a context-weakening lemma; `progress` says a closed,
+  well-typed term is a value (a `lam`) or can take a step, so it never gets stuck. The de Bruijn index
+  arithmetic is handled with `omega` and the core `List.getElem?`/`List.insertIdx` lemmas.
+Imports: none (Mathlib-free)
+Trusted boundary: human-reviewed spec
+Main exports: Ty, Tm, shift, subst, Step, HasTy, Value, weakening, subst_hasTy, preservation, progress
+Open obligations: none
 -/
 
 namespace MeTTaIL.STLC

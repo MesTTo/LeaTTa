@@ -1,16 +1,19 @@
 /-
-Category renaming and constructor relabeling, the traversals behind `addExports` rename and
-`addReplacements`.
-
-A `RenameExport old new` renames a sort `old` to `new` everywhere it occurs in the presentation (the
-correct rename; the section note records where Scala's buggy `RenameExport` differs, and
-`MeTTaIL/HYPERON_IMPROVEMENTS.md` lists those bugs for upstream). A `Replacement [perm] target . cat =>
-newDef` swaps the rule labelled `target` for `newDef` and, in every equation and rewrite, relabels each
-applied `target` to `newDef`'s label while permuting its arguments by `perm` (Scala `updateAST`).
-
-The traversals over `Cat` and `AST` are hand-written by mutual recursion because both nest through
-`List` (`prod` and `sexp`), which structural recursion handles in definitions but `deriving` does
-not.
+Module: MeTTaIL.Theory.Rename
+Layer: Theory
+Purpose: Category renaming and constructor relabeling, the traversals behind the `addExports` rename
+  and `addReplacements`. A `RenameExport old new` renames a sort `old` to `new` everywhere it occurs in
+  the presentation (the correct rename; the section note records where Scala's buggy `RenameExport`
+  differs, and `MeTTaIL/HYPERON_IMPROVEMENTS.md` lists those bugs for upstream). A `Replacement [perm]
+  target . cat => newDef` swaps the rule labelled `target` for `newDef` and, in every equation and
+  rewrite, relabels each applied `target` to `newDef`'s label while permuting its arguments by `perm`
+  (Scala `updateAST`). The traversals over `Cat` and `AST` are hand-written by mutual recursion because
+  both nest through `List` (`prod` and `sexp`).
+Imports: MeTTaIL.Theory.Instance
+Trusted boundary: none
+Main exports: Cat.replace, Rule.replaceCat, Presentation.replaceCat, AST.relabel,
+  Presentation.applyReplacement
+Open obligations: none
 -/
 import MeTTaIL.Theory.Instance
 

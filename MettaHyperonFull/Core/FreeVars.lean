@@ -1,3 +1,14 @@
+/-
+Module: MettaHyperonFull.Core.FreeVars
+Layer: Core
+Purpose: The free variables of an atom, kept as a named notion for the metatheory. Atoms have no
+  binders, so the free variables are exactly the variable occurrences (`Atom.vars`). Also gives the
+  closedness (ground) predicate and a small proof about it.
+Imports: MettaHyperonFull.Core.Atom
+Trusted boundary: none
+Main exports: freeVars, isGround, isGround_sym
+Open obligations: none
+-/
 import MettaHyperonFull.Core.Atom
 
 namespace Metta

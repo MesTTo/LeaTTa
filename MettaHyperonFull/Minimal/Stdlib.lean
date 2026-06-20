@@ -1,16 +1,22 @@
+/-
+Module: MettaHyperonFull.Minimal.Stdlib
+Layer: Minimal
+Purpose: The MeTTa standard library running on the minimal interpreter. Defines the grounded
+  operations beyond the arithmetic core (set ops, boolean ops, division, sorting, the `assert`
+  family) and the MeTTa-level prelude itself, a faithful subset of Hyperon's `stdlib.metta` loaded
+  into the knowledge base. Also provides the program runners (`evalSequential`, `runMinimalSource`,
+  `oracleReport`) that process a `.metta` file top to bottom the way Hyperon does.
+Imports: MettaHyperonFull.Minimal.Interpreter, MettaHyperonFull.Runtime.Parser,
+  MettaHyperonFull.Core (Pretty, Alpha)
+Trusted boundary: none
+Main exports: stdGroundings, preludeSrc, preludeAtoms, stdKb, runStd, runFull, splitProgram,
+  evalSequential, collectImports, collectModuleRoots, runMinimalSource, oracleReport
+Open obligations: none
+-/
 import MettaHyperonFull.Minimal.Interpreter
 import MettaHyperonFull.Runtime.Parser
 import MettaHyperonFull.Core.Pretty
 import MettaHyperonFull.Core.Alpha
-
-/-!
-# MeTTa standard library on the minimal interpreter
-
-Grounded operations beyond the arithmetic core (`Core/Builtins`) that Hyperon's `stdlib.metta`
-relies on, plus the MeTTa-level prelude itself (a faithful subset of
-`hyperon-experimental/lib/src/metta/runner/stdlib/stdlib.metta`) loaded into the knowledge base.
-The MeTTa-defined functions execute on the minimal interpreter from `Minimal/Interpreter`.
--/
 
 namespace Metta.Minimal
 open Metta Metta.Runtime

@@ -1,13 +1,18 @@
 /-
-The GSLT reduction core: a presentation's rewrites drive computation on terms.
-
-A rewrite `lhs ~> rhs` applies to a term `t` when `lhs` matches `t` (first-order matching binds the
-pattern variables to subterms); the contractum is `rhs` instantiated with those bindings, with the
-built-in `Subst` resolved. This is the base-rewrite step (no premises). Premised rewrites (the
-congruence rules) build on this in `Semantics/Relation.lean`. The equations are stored on the
-presentation but are not yet reflected in any reduction relation.
-
-Matching and the traversals are hand-written by mutual recursion because `AST` nests through `List`.
+Module: MeTTaIL.Semantics.Reduce
+Layer: Semantics
+Purpose: The GSLT reduction core, where a presentation's rewrites drive computation on terms. A rewrite
+  `lhs ~> rhs` applies to a term `t` when `lhs` matches `t` (first-order matching binds the pattern
+  variables to subterms); the contractum is `rhs` instantiated with those bindings, with the built-in
+  `Subst` resolved. These are the base-rewrite steps (no premises). Premised rewrites (the congruence
+  rules) build on this in `Semantics/Relation.lean`. The equations are stored on the presentation but
+  are not yet reflected in any reduction relation. Matching and the traversals are hand-written by
+  mutual recursion because `AST` nests through `List`.
+Imports: MeTTaIL.Theory.Ops
+Trusted boundary: human-reviewed spec
+Main exports: AST.matchPat, AST.subst1, AST.inst, applyBaseRewrite, baseReducts
+Open obligations: the equations are stored on the presentation but are not yet reflected in any
+  reduction relation.
 -/
 import MeTTaIL.Theory.Ops
 

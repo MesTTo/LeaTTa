@@ -1,9 +1,15 @@
 /-
-Reduction examples, checked by computation: the I and K (second-step) combinator rules and an RComm
-step that exercises the built-in `Subst`. These confirm the matching, substitution, and
-rewrite-application core.
-
-Results are compared with `BEq` (`==`) since `AST` carries `BEq`, not `DecidableEq`.
+Module: MeTTaILTests.Reduce
+Layer: Tests
+Purpose: Reduction examples, checked by computation. The cases cover the I and K (second-step)
+  combinator rules and an RComm step that exercises the built-in `Subst`, confirming the matching,
+  substitution, and rewrite-application core. Mismatched rules are checked to yield no reduct.
+  Results are compared with `BEq` (`==`) because `AST` carries `BEq`, not `DecidableEq`.
+Imports: MeTTaIL.Semantics.Reduce, MeTTaIL.Semantics.Relation
+Trusted boundary: none
+Main exports: example checks of applyBaseRewrite (iota1, kappa2, rcomm) and a Reduces witness on
+  concrete terms; no reusable definitions.
+Open obligations: none
 -/
 import MeTTaIL.Semantics.Reduce
 import MeTTaIL.Semantics.Relation

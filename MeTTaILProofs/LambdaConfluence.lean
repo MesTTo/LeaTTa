@@ -1,27 +1,18 @@
 /-
-Confluence (Church-Rosser) of beta reduction for the lambda calculus over the term language of
-`MeTTaIL/Calculi/Lambda.lean`. The theorem needs no typing hypothesis, so it holds whether or not the
-terms are well-typed (the de Bruijn term language is that of the untyped calculus).
-
-We reuse `Tm`, `shift`, `subst` and `Step` from `Lambda.lean` unchanged. The proof is the standard
-Tait / Martin-Löf / Takahashi argument by parallel reduction.
-
-* `ParRed` is one-step parallel reduction: it may contract any set of beta redexes at once, in
-  particular none (so it is reflexive) or several in parallel. One `Step` is one `ParRed`, and one
-  `ParRed` is a finite run of `Step`s, so the reflexive-transitive closures of `Step` and `ParRed`
-  coincide.
-* `Tm.dev a` is the complete development of `a`: contract every redex already in `a`, all at once.
-  The triangle property `ParRed a b → ParRed b (Tm.dev a)` says `dev a` is the greatest parallel
-  reduct, so it caps any parallel step out of `a`. The triangle gives the diamond for `ParRed` for
-  free.
-* The diamond for `ParRed` transfers to its closure, which equals the closure of `Step`, so
-  `Relation.church_rosser` delivers confluence of `Step` (`confluence`).
-
-The technical heart is the substitution lemma for `ParRed` (`par_subst`), and under it the de Bruijn
-arithmetic relating `shift` and `subst`. Those identities mirror the index bookkeeping already done
-in `Lambda.lean`'s `weakening` and `subst_hasTy`: each is an induction on the term, the binder cases
-bump the cutoffs and indices by one, `omega` discharges the order side conditions, and the variable
-case is the three-way split that `shift` and `subst` already perform.
+Module: MeTTaILProofs.LambdaConfluence
+Layer: Proofs
+Purpose: Confluence (Church-Rosser) of beta reduction for the lambda calculus over the term language
+  of `MeTTaIL.Calculi.Lambda`. The theorem needs no typing hypothesis, so it holds for well-typed
+  and ill-typed terms alike. The proof is the standard Tait, Martin-Lof, Takahashi argument by
+  parallel reduction: `ParRed` contracts any set of beta redexes at once, `Tm.dev` is the complete
+  development, the triangle property gives the diamond for `ParRed`, and that transfers to the
+  closure of `Step` through `Relation.church_rosser`. The technical core is the substitution lemma
+  `par_subst` and the de Bruijn arithmetic relating `shift` and `subst`.
+Imports: MeTTaIL.Calculi.Lambda, Mathlib
+Trusted boundary: none (fully proved)
+Main exports: confluence; supporting results ParRed, par_subst, par_triangle, par_diamond,
+  reflTransGen_step_eq_par.
+Open obligations: none
 -/
 import MeTTaIL.Calculi.Lambda
 import Mathlib.Logic.Relation

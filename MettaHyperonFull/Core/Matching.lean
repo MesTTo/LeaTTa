@@ -1,3 +1,17 @@
+/-
+Module: MettaHyperonFull.Core.Matching
+Layer: Core
+Purpose: Nondeterministic pattern matching for MeTTa atoms and the consistency-checking merge of
+  binding sets. Matching follows the official left/right style: variables on either side produce
+  bindings, expressions match pointwise, and a runtime-supplied custom matcher handles grounded atoms.
+  Merge combines two binding sets into all their consistent unions (Hyperon's `Bindings::merge`), using
+  unification to reconcile conflicting values.
+Imports: MettaHyperonFull.Core.Unification, MettaHyperonFull.Core.Bindings
+Trusted boundary: none
+Main exports: GroundMatcher, Bindings.addVarBinding, Bindings.addVarEquality, Bindings.mergeOne,
+  Bindings.merge, Bindings.ofSubst, matchAtomsWith, matchAll, matchAtoms, bindingsToSubst, instantiate
+Open obligations: none
+-/
 import MettaHyperonFull.Core.Unification
 import MettaHyperonFull.Core.Bindings
 

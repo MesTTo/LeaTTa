@@ -1,13 +1,18 @@
 /-
-The BNFCRenderer monomorphization pass: replace higher-order categories (arrows and products) by
-named first-order sorts, and append the constructor rules that give those sorts their syntax.
-Mirrors the Scala `BNFCRenderer.monomorphizeArrowsAndProducts`.
-
-For an arrow `s -> t`, the sort is `ArrowCC<s>_<t>DD` with an application `α{ f (x) }`, a variable
-`Ident`, and a lambda `λ{ (x) => body }`, plus a variable rule for the domain sort. For a product,
-a `Make...` constructor. List sorts are mangled and monomorphized like any other, but no list
-constructor rules are generated (no list sorts occur in the tested modules), matching the Scala
-renderer, which generates none either.
+Module: MeTTaIL.Transform.Monomorphize
+Layer: Transform
+Purpose: The BNFCRenderer monomorphization pass. It replaces higher-order categories (arrows and
+  products) by named first-order sorts, and appends the constructor rules that give those sorts their
+  syntax. Mirrors the Scala `BNFCRenderer.monomorphizeArrowsAndProducts`. For an arrow `s -> t` the
+  sort is `ArrowCC<s>_<t>DD` with an application `α{ f (x) }`, a variable `Ident`, and a lambda `λ{ (x)
+  => body }`, plus a variable rule for the domain sort. For a product, a `Make...` constructor. List
+  sorts are mangled and monomorphized like any other, but no list constructor rules are generated (no
+  list sorts occur in the tested modules), matching the Scala renderer.
+Imports: MeTTaIL.Theory.Ops
+Trusted boundary: none
+Main exports: Cat.mangleName, Cat.mono, Rule.mono, Cat.collectHO, Rule.collectHO, Cat.ctors,
+  monomorphize
+Open obligations: none
 -/
 import MeTTaIL.Theory.Ops
 

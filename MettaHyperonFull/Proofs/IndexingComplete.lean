@@ -1,3 +1,16 @@
+/-
+Module: MettaHyperonFull.Proofs.IndexingComplete
+Layer: Proofs
+Purpose: First-argument rule indexing is sound and complete. The head-k bucket holds exactly the
+  =-rules whose left-hand side is headed by k, and varRules holds exactly the head-less rules, so
+  every candidate offered for a query is a genuine rule and every rule that could fire is offered.
+  Indexing drops no firing rule, the very regime where Hyperon's own Space::visit under-counts (open
+  issue 1079). The syntactic half built on top of the semantic head-agreement law from Indexing.lean.
+Imports: MettaHyperonFull.Proofs.Indexing
+Trusted boundary: none (fully proved)
+Main exports: foldl_idx, ruleIndex_getD, ofAtomsGT_varRules, candidates_sound, candidates_complete
+Open obligations: none
+-/
 import MettaHyperonFull.Proofs.Indexing
 
 /-!

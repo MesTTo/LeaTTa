@@ -1,3 +1,17 @@
+/-
+Module: MettaHyperonFull.Core.Unification
+Layer: Core
+Purpose: First-order syntactic unification of atoms, returning a most-general unifier when one exists.
+  Each equation is decomposed structurally into variable constraints (a head clash or arity mismatch
+  fails), then the main loop eliminates one variable per round under an occurs-check. The loop is
+  fuel-bounded by the total term size, an upper bound on the number of distinct variables, so the
+  function is total. Grounded atoms with custom matching are handled in Matching.lean.
+Imports: MettaHyperonFull.Core.Substitution
+Trusted boundary: none
+Main exports: Unify.decomposeEq, Unify.decomposeList, Unify.decomposeAll, Unify.unifyRounds,
+  Unify.unifyTop
+Open obligations: none
+-/
 import MettaHyperonFull.Core.Substitution
 
 namespace Metta

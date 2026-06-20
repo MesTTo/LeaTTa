@@ -1,3 +1,16 @@
+/-
+Module: MettaHyperonFull.Core.Space
+Layer: Core
+Purpose: The MeTTa space (Atomspace), modelled as a multiset of atoms backed by a list. Duplicates are
+  kept, so adding the same atom twice makes it match twice, as in Hyperon. Provides the space
+  operations (insert, append, contains, single-copy removal), the query primitive over patterns, the
+  match-and-instantiate transform, and the readers for type assignments and equality rules.
+Imports: MettaHyperonFull.Core.Matching
+Trusted boundary: none
+Main exports: Space, Space.empty, Space.singleton, Space.insert, Space.append, Space.contains,
+  Space.removeOne, Space.query, Space.transform, Space.typeAssignments, Space.equalityRules
+Open obligations: none
+-/
 import MettaHyperonFull.Core.Matching
 
 namespace Metta

@@ -1,3 +1,19 @@
+/-
+Module: MettaHyperonFull.Proofs.Gradual
+Layer: Proofs
+Purpose: Gradual type consistency as a relation. MeTTa's type compatibility (Hyperon's match_types)
+  is Siek and Taha's consistency relation: reflexive and symmetric but pointedly not transitive,
+  because Number is consistent with %Undefined% and %Undefined% with String, yet Number is not
+  consistent with String. The intransitivity is what keeps the dynamic type sound instead of
+  collapsing every type into one, so compatibility is a tolerance relation, not a preorder. The
+  kernel's running matchType is shown to inherit the same non-transitivity.
+Imports: MettaHyperonFull.Proofs.TypeSoundness
+Trusted boundary: none (fully proved)
+Main exports: Consistent, ConsistentList, Consistent.refl, Consistent.symm,
+  Consistent.not_consistent_distinct_syms, Consistent.number_not_consistent_string,
+  Consistent.not_transitive, matchType_number_string_none, matchType_not_transitive
+Open obligations: none
+-/
 import MettaHyperonFull.Proofs.TypeSoundness
 
 /-!

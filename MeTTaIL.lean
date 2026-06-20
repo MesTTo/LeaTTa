@@ -1,13 +1,20 @@
 /-
-MeTTaIL in Lean 4: a faithful formalization of F1R3FLY-io's MeTTaIL (Meta Type Talk Intermediate
-Language), built alongside the LeaTTa MeTTa kernel, operational semantics, and metatheory.
-
-MeTTaIL is a meta-language: a `.module` is a program in an algebra of theory presentations, and the
-tool elaborates a chosen theory instance into a presentation (a graph-structured lambda theory) and
-can lift it from an untyped calculus to a typed one. See `MeTTaIL/SPECIFICATION.md` for the plan.
-
-This library follows LeaTTa's computability split: the data model, elaboration, transformations, and
-reduction are computable and Mathlib-free; the proofs about them live in a Mathlib-backed layer.
+Module: MeTTaIL
+Layer: Library root
+Purpose: The root of the MeTTaIL formalization in Lean 4, a faithful model of F1R3FLY-io's MeTTaIL
+  (Meta Type Talk Intermediate Language), built alongside the LeaTTa MeTTa kernel. MeTTaIL is a
+  meta-language: a `.module` is a program in an algebra of theory presentations, and the tool
+  elaborates a chosen theory instance into a presentation (a graph-structured lambda theory) and can
+  lift it from an untyped calculus to a typed one. The root aggregates the layers: the object syntax,
+  the theory-instance algebra and presentation operations, the elaborator, the desugar/type-lift/
+  monomorphize transforms, the GSLT reduction core and relation, the operational bridge, and the
+  SKI and lambda calculus instances with the present-moment spice extension. The data model and
+  passes are computable and Mathlib-free; the proofs live in a separate Mathlib-backed layer.
+Imports: the MeTTaIL.Syntax, MeTTaIL.Theory, MeTTaIL.Transform, MeTTaIL.Semantics, MeTTaIL.Bridge,
+  MeTTaIL.Calculi, and MeTTaIL.Extensions modules
+Trusted boundary: none
+Main exports: (aggregator; re-exports the library)
+Open obligations: none
 -/
 
 -- Layer 1: the object syntax of presentations.

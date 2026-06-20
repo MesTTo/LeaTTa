@@ -1,3 +1,17 @@
+/-
+Module: MettaHyperonFull.Proofs.Substitution
+Layer: Proofs
+Purpose: Foundational lemmas about Subst.apply (capture-free first-order substitution over Atom) and
+  instantiate, reused across the metatheory layer. Covers empty-substitution identity, that closed
+  atoms are fixed, size monotonicity (a variable may be replaced by a larger atom, so size only
+  grows), and the substitution composition law Subst.apply_compose.
+Imports: MettaHyperonFull.Proofs.Basic
+Trusted boundary: none (fully proved)
+Main exports: Subst.apply_nil, instantiate_nil, Subst.apply_of_closed, instantiate_of_closed,
+  Subst.apply_size_le, instantiate_size_le, Subst.lookup_append, Subst.lookup_map_snd,
+  Subst.apply_compose
+Open obligations: none
+-/
 import MettaHyperonFull.Proofs.Basic
 
 /-!

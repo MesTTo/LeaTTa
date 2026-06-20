@@ -1,3 +1,18 @@
+/-
+Module: MettaHyperonFull.Core.Atom
+Layer: Core
+Purpose: The core MeTTa atom datatype and the values it carries. Defines symbols, variables, grounded
+  payloads, and expressions, together with structural equality, the syntactic meta-types, the built-in
+  type designators, the arrow constructor, and basic measures over atoms. Structural equality is
+  hand-written so it reduces definitionally for the metatheory layer.
+Imports: (none beyond core)
+Trusted boundary: none
+Main exports: VarName, Ground, Atom, Atom.beq, Atom.beqList, the BEq Atom instance, MetaType,
+  ReduceResult, the built-in type-designator atoms, Atom.isError, Atom.metaType,
+  Atom.typeAtomOfMetaType, Atom.isBuiltinTypeSymbol, Atom.mkArrow, Atom.isArrow, Atom.head?,
+  Atom.args?, Atom.size, Atom.vars
+Open obligations: none
+-/
 namespace Metta
 
 /-- Names of MeTTa variables, without the leading `$`. -/

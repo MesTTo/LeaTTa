@@ -1,12 +1,19 @@
 /-
-The Rholang oracle: a machine-checked cross-test against the real MeTTaIL tool.
-
-`UnivAlg.module` and `Rholang.module` are encoded here as Lean `Module` values, transcribed from the
-parsed AST the Scala tool prints. The theorem at the end asserts that elaborating `FreeRholang()`
-produces exactly the presentation the tool prints as its `[Interpreted Presentation]` (verified by
-running `java -jar mettail_assembly.jar GSLT/src/test/module/Rholang.module`): the sorts `Proc`,
-`Name`; eight constructors `PZero PPar PRepl PNew PDrop NQuote PSend PRecv`; ten equations; and four
-rewrites `RPar1 RPar2 RNew RComm`. So our elaborator agrees with MeTTaIL on the flagship example.
+Module: MeTTaILTests.Rholang
+Layer: Tests
+Purpose: The Rholang oracle, a machine-checked cross-test against the real MeTTaIL tool.
+  `UnivAlg.module` and `Rholang.module` are encoded here as Lean `Module` values, transcribed from
+  the parsed AST the Scala tool prints. The checks assert that our elaborator, desugar, type-lift,
+  and monomorphize passes produce exactly the presentations the tool prints (the Interpreted,
+  Desugared, Hypercubed, and Generated-BNFC stages of `FreeRholang()`): the sorts Proc and Name,
+  eight constructors, ten equations, and four rewrites. So our pipeline agrees with MeTTaIL on the
+  flagship example. The category checker is also checked to reject ill-formed input.
+Imports: MeTTaIL.Theory.Elaborate, MeTTaIL.Transform.Desugar, MeTTaIL.Transform.TypeLift,
+  MeTTaIL.Transform.Monomorphize
+Trusted boundary: none
+Main exports: example oracle checks against expectedRholang, expectedDesugared, expectedGenerated,
+  and the type-lifted terms; no reusable definitions (the transcription helpers are private).
+Open obligations: none
 -/
 import MeTTaIL.Theory.Elaborate
 import MeTTaIL.Transform.Desugar

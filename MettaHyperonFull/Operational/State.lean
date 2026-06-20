@@ -1,3 +1,16 @@
+/-
+Module: MettaHyperonFull.Operational.State
+Layer: Operational
+Purpose: The four-register machine state of Meta-MeTTa (arXiv:2305.17218 §3): input, knowledge base,
+  workspace, and output, plus a `history` register for reflection. Defines the register-update
+  helpers used by the small-step semantics, the gas-extension resource token, and the runtime
+  configuration (fuel and grounding table).
+Imports: MettaHyperonFull.Core (Space, Grounding, Builtins)
+Trusted boundary: human-reviewed spec
+Main exports: State, State.empty, State.pushWork, State.pushOutput, State.addKb, State.remKb,
+  State.trace, ResourceToken, RuntimeConfig
+Open obligations: none
+-/
 import MettaHyperonFull.Core.Space
 import MettaHyperonFull.Core.Grounding
 import MettaHyperonFull.Core.Builtins

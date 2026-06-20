@@ -1,3 +1,16 @@
+/-
+Module: MettaHyperonFull.Operational.Bisimulation
+Layer: Operational
+Purpose: Barbed bisimulation for the four-register machine (arXiv:2305.17218 §5). Defines barbs (the
+  observable atoms in the input, workspace, and output registers), barbed simulation and
+  bisimulation, and bisimilarity. Proves that bisimilarity is an equivalence (reflexive, symmetric,
+  transitive). Also gives `outputAgreesAfter`, a fast falsifier that compares output registers.
+Imports: MettaHyperonFull.Operational.Trace
+Trusted boundary: none (fully proved)
+Main exports: Barb, IsBarbedSimulation, IsBarbedBisimulation, Bisimilar, Bisimilar.refl,
+  Bisimilar.symm, Bisimilar.trans, outputAgreesAfter
+Open obligations: none
+-/
 import MettaHyperonFull.Operational.Trace
 
 namespace Metta

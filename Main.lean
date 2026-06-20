@@ -1,3 +1,17 @@
+/-
+Module: Main
+Layer: Executable
+Purpose: The runnable LeaTTa entry point. It runs the minimal MeTTa interpreter and stdlib on a
+  program, with CLI modes for a built-in demo, running a `.metta` file (`--file` / `--min-file`),
+  running a program string (`--min`), and running a test file's `!`-assertions as an oracle report
+  (`--oracle`). It also resolves and transitively loads `import!` modules, handling both the plain
+  sibling-file form and the namespaced `register-module!` form, matching Hyperon's module system.
+  File reading is the only IO; the `import!` instruction itself is pure.
+Imports: MettaHyperonFull.Minimal.Stdlib
+Trusted boundary: none
+Main exports: main; the helpers demoSource, resolveImport, loadImportsFuel, loadImports.
+Open obligations: none
+-/
 import MettaHyperonFull.Minimal.Stdlib
 
 open Metta

@@ -1,3 +1,20 @@
+/-
+Module: MettaHyperonFull.Core.Builtins
+Layer: Core
+Purpose: The grounding core every knowledge base starts with. Defines the arithmetic, comparison, and
+  boolean operations on Int and Float atoms, the list-surgery ops (cons, decons, car, cdr, size), the
+  min/max/index number-and-list utilities, and the f64 math table (transcendental, rounding, and
+  isnan/isinf), each as a grounded operation. Mixed Int/Float pairs promote the Int to Float, matching
+  Hyperon's runtime (`runner/stdlib/math.rs`, `atom.rs`). The stdlib's `stdGroundings` extends `table`.
+Imports: MettaHyperonFull.Core.Grounding
+Trusted boundary: none
+Main exports: Builtins.toInt?, Builtins.toBool?, Builtins.toFloat?, Builtins.intBin, Builtins.intCmp,
+  Builtins.numBin, Builtins.numCmp, Builtins.boolBin, Builtins.eqAtom, Builtins.consAtom,
+  Builtins.deconsAtom, Builtins.carAtom, Builtins.cdrAtom, Builtins.sizeAtom, Builtins.floatUn,
+  Builtins.floatBin, Builtins.numRound, Builtins.floatPred, Builtins.ftrunc, Builtins.mathTable,
+  Builtins.minMaxAtom, Builtins.indexAtom, Builtins.table
+Open obligations: none
+-/
 import MettaHyperonFull.Core.Grounding
 
 namespace Metta

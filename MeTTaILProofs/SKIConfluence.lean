@@ -1,27 +1,20 @@
 /-
-Confluence (Church-Rosser) for the SKI combinatory logic of `MeTTaIL.Calculi.SKI`.
-
-`Step` is the one-step combinator reduction. We prove that its reflexive-transitive closure is
-confluent: if a term reduces in many steps to both `b` and `c`, then `b` and `c` have a common
-reduct. Combinatory logic is binder-free, so there is no substitution to manage and the whole
-argument is a structural induction.
-
-The method is Tait and Martin-Löf's parallel reduction, in Takahashi's "complete development"
-form. We add a relation `ParRed` that contracts any set of redexes in one step, with three
-properties:
-
-  - `Step` sits between `ParRed` and its own closure: `Step ⊆ ParRed ⊆ ReflTransGen Step`. So the
-    reflexive-transitive closures of `Step` and `ParRed` coincide.
-  - `ParRed` has the diamond property. We get it from a triangle: there is a function `CL.dev`
-    (the complete development, contract every redex at once) such that `ParRed a b` always implies
-    `ParRed b (CL.dev a)`. Two parallel reducts of `a` therefore both reduce to `CL.dev a`.
-
-Diamond for `ParRed` plus the closure coincidence gives Church-Rosser for `Step`, via Mathlib's
-`Relation.church_rosser`.
-
-References: Takahashi, "Parallel Reductions in lambda-Calculus" (1995); Hindley, "Church-Rosser
-for Combinatory Weak Reduction" (1974). The Lean shape mirrors `Arthur742Ramos/Metatheory`
-(`CL/Confluence.lean`), extended with the primitive `I` combinator.
+Module: MeTTaILProofs.SKIConfluence
+Layer: Proofs
+Purpose: Confluence (Church-Rosser) for the SKI combinatory logic of `MeTTaIL.Calculi.SKI`. We prove
+  the reflexive-transitive closure of one-step combinator reduction is confluent: if a term reduces
+  in many steps to both `b` and `c`, then `b` and `c` have a common reduct. Combinatory logic is
+  binder-free, so there is no substitution to manage and the argument is a structural induction by
+  Tait and Martin-Lof parallel reduction in Takahashi's complete-development form. `ParRed` sits
+  between `Step` and its closure and has the diamond property via the triangle for `CL.dev`, so
+  Mathlib's `Relation.church_rosser` delivers Church-Rosser for `Step`. References: Takahashi,
+  Parallel Reductions in lambda-Calculus (1995); Hindley, Church-Rosser for Combinatory Weak
+  Reduction (1974). The Lean shape mirrors Arthur742Ramos/Metatheory, extended with the primitive
+  `I` combinator.
+Imports: MeTTaIL.Calculi.SKI, Mathlib
+Trusted boundary: none (fully proved)
+Main exports: confluence; supporting results ParRed, ParRed.triangle, ParRed.diamond, CL.dev.
+Open obligations: none
 -/
 
 import MeTTaIL.Calculi.SKI

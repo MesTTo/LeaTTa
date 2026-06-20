@@ -1,21 +1,21 @@
 /-
-The bridge from LeaTTa's MeTTa to MeTTaIL's GSLT terms.
-
-LeaTTa formalizes MeTTa (the four-metatype object language `Metta.Atom` in `MettaHyperonFull.Core`)
-and its operational semantics; MeTTaIL formalizes the GSLT meta-language whose terms are `MeTTaIL.AST`.
-This file embeds the former into the latter: a symbol becomes a nullary constructor labelled by the
-symbol, a variable becomes a GSLT variable, an expression becomes a (wild-labelled) applied
-constructor over the embedded children, and a grounded atom becomes a nullary constructor keyed by
-its payload. So MeTTa's four metatypes map to distinguishable GSLT term shapes, which is the precise
-sense in which MeTTa is a GSLT object language.
-
-The embedding is injective on the grounded-free fragment, which is why `embed_inj` is stated there.
-Grounded atoms are not embedded injectively because floats are not: `0.0` and `-0.0` key alike and
-`NaN` is not equal to itself, the IEEE-754 caveat LeaTTa documents for `Atom`'s own equality. Every
-other grounded payload keys injectively. The injectivity theorems are stated on the grounded-free
-fragment; extending them to the non-float grounded atoms is future work.
-
-Mathlib-free.
+Module: MeTTaIL.Bridge.Operational
+Layer: Bridge
+Purpose: The bridge from LeaTTa's MeTTa to MeTTaIL's GSLT terms. LeaTTa formalizes MeTTa (the
+  four-metatype object language `Metta.Atom` in `MettaHyperonFull.Core`) and its operational semantics;
+  MeTTaIL formalizes the GSLT meta-language whose terms are `MeTTaIL.AST`. The file embeds the former
+  into the latter: a symbol becomes a nullary constructor labelled by the symbol, a variable becomes a
+  GSLT variable, an expression becomes a (wild-labelled) applied constructor over the embedded children,
+  and a grounded atom becomes a nullary constructor keyed by its payload. So MeTTa's four metatypes map
+  to distinguishable GSLT term shapes, which is the precise sense in which MeTTa is a GSLT object
+  language. The embedding is injective on the grounded-free fragment, which is why `embed_inj` is stated
+  there. Grounded atoms are not embedded injectively because floats are not (`0.0` and `-0.0` key alike,
+  `NaN` is not equal to itself, the IEEE-754 caveat LeaTTa documents for `Atom` equality). Mathlib-free.
+Imports: MettaHyperonFull.Core.Atom, MeTTaIL.Syntax
+Trusted boundary: none
+Main exports: groundKey, embed, embedList, gndFree, embed_inj, embedList_inj
+Open obligations: the injectivity theorems are stated on the grounded-free fragment; extending them to
+  the non-float grounded atoms is future work.
 -/
 import MettaHyperonFull.Core.Atom
 import MeTTaIL.Syntax

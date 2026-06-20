@@ -1,3 +1,17 @@
+/-
+Module: MettaHyperonFull.Operational.Minimal
+Layer: Operational
+Purpose: The minimal-MeTTa instruction set of the operational-semantics model (arXiv:2305.17218) as
+  an enum, with its executor `evalMinimal`. The set is close to but not identical with the kernel's
+  embedded operations: some instructions are shared, `call-native` is model-only, and
+  `metta-thread`/`capture` are kernel-only. The executor is total; unrecognized atoms return
+  unchanged.
+Imports: MettaHyperonFull.Operational.Semantics
+Trusted boundary: human-reviewed spec
+Main exports: MinimalInstr, minimalInstrOf?, evalUnifyInstr, chainResults, evalMinimal
+Open obligations: `chain`, `metta`, and `call-native` have no case in `evalMinimal` and fall through
+  to the identity result.
+-/
 import MettaHyperonFull.Operational.Semantics
 
 namespace Metta

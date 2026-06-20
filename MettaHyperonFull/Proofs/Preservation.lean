@@ -1,3 +1,18 @@
+/-
+Module: MettaHyperonFull.Proofs.Preservation
+Layer: Proofs
+Purpose: Subject reduction (type preservation) for MeTTa's user-defined =-rewriting, the central
+  type-soundness theorem. Reconstructs a compositional typing judgment WT over the space's (: a T)
+  declarations, proves the substitution lemma WT.subst (typing stable under a context-grounding
+  substitution), and concludes reduction_preserves_type: for a type-preserving rule (= L R) and any
+  grounding σ, the redex σL and contractum σR both have the rule's type T. The type-preserving-rule
+  hypothesis is the formal statement that the programmer wrote a well-typed rule.
+Imports: MettaHyperonFull.Proofs.Substitution
+Trusted boundary: none (fully proved)
+Main exports: WT, WTArgs, mkArrow, Grounds, WT.subst, WTArgs.subst, reduction_preserves_type
+Open obligations: none. Preservation holds over a fixed signature, so reflective programs that
+  rewrite their own :/<: facts are out of scope, as the scope note records.
+-/
 import MettaHyperonFull.Proofs.Substitution
 
 /-!

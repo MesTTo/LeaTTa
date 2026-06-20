@@ -1,10 +1,15 @@
 /-
-The DesugarBinds pass: after each rule that binds a variable, add a `...ToArrow` companion whose
-higher-order argument is written as an arrow. Mirrors the Scala `DesugarBinds` (`mangleBindLabel`,
-`addDesugaredLambdas`). The type-lift pass needs this form, since it skips rules with raw binders.
-
-Example (from the Rholang module): `PNew . Proc ::= "new" (Bind x Name) "in" (x) Proc` gains
-`PNewToArrow . Proc ::= "PNewToArrow" "(" (Name -> Proc) ")"`.
+Module: MeTTaIL.Transform.Desugar
+Layer: Transform
+Purpose: The DesugarBinds pass. After each rule that binds a variable, it adds a `...ToArrow` companion
+  whose higher-order argument is written as an arrow. Mirrors the Scala `DesugarBinds`
+  (`mangleBindLabel`, `addDesugaredLambdas`). The type-lift pass needs this form because it skips rules
+  with raw binders. Example (from the Rholang module): `PNew . Proc ::= "new" (Bind x Name) "in" (x)
+  Proc` gains `PNewToArrow . Proc ::= "PNewToArrow" "(" (Name -> Proc) ")"`.
+Imports: MeTTaIL.Syntax
+Trusted boundary: none
+Main exports: bindEnv, Item.argCat, desugarArgs, Rule.hasBind, Rule.toArrow, desugarBinds
+Open obligations: none
 -/
 import MeTTaIL.Syntax
 

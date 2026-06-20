@@ -1,3 +1,22 @@
+/-
+Module: MettaHyperonFull.Proofs.Correspondence
+Layer: Proofs
+Purpose: Interpreter-to-specification correspondence for the QUERY step. Shows the kernel's
+  first-argument indexed rule firing produces exactly the whole-space QUERY reduct set of the
+  published MOPS semantics (arXiv 2305.17218, section 3.3), so indexing drops no reduct and
+  fabricates none. The single-step result is lifted to the whole reduction relation, where the
+  kernel's and MOPS's steps coincide and the identity witnesses a bisimulation. The proof reuses
+  indexing soundness and completeness.
+Imports: MettaHyperonFull.Proofs.IndexingComplete, MettaHyperonFull.Operational.Properties,
+  Mathlib.Logic.Relation
+Trusted boundary: none (fully proved)
+Main exports: equalityReductions_eq_firedReducts, kernel_query_eq_mops_query,
+  kernel_irreducible_iff_mops_insensitive, MopsStep, KernelStep, kernelStep_iff_mopsStep, IsBisim,
+  kernel_mops_bisim, reflTransGen_kernelStep_iff_mops
+Open obligations: none. The correspondence covers the reduct-set core on the symbol-headed fragment;
+  rule-variable freshening, ambient-binding merge, and loop-pruning are abstracted out of KernelStep
+  by design, and runtime additions to &self are outside its scope, as the scope note records.
+-/
 import MettaHyperonFull.Proofs.IndexingComplete
 import MettaHyperonFull.Operational.Properties
 import Mathlib.Logic.Relation

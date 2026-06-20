@@ -1,3 +1,15 @@
+/-
+Module: MettaHyperonFull.Core.Result
+Layer: Core
+Purpose: The four evaluation outcomes from the Hyperon specification: an ordinary value, `Empty` (prune
+  the branch), `NotReducible` (no rule applied), or an `Error`. Also reifies an outcome back into the
+  atom that represents it. The nondeterministic result list and binding pairing are handled in later
+  modules.
+Imports: MettaHyperonFull.Core.Atom
+Trusted boundary: none
+Main exports: EvalStatus, EvalStatus.toAtom
+Open obligations: none
+-/
 import MettaHyperonFull.Core.Atom
 
 namespace Metta

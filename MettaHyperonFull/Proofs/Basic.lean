@@ -1,3 +1,14 @@
+/-
+Module: MettaHyperonFull.Proofs.Basic
+Layer: Proofs
+Purpose: Shared infrastructure for the metatheory layer. Supplies a structural induction principle
+  for the nested inductive Atom, tagged so plain `induction a` uses it everywhere downstream, plus
+  the structural lemmas about variable renaming that the rest of the proofs reuse.
+Imports: Mathlib, MettaHyperonFull
+Trusted boundary: none (fully proved)
+Main exports: Atom.recAux, renameVars_nil, size_renameVars
+Open obligations: none
+-/
 import Mathlib
 import MettaHyperonFull
 

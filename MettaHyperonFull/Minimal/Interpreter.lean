@@ -1,30 +1,26 @@
+/-
+Module: MettaHyperonFull.Minimal.Interpreter
+Layer: Minimal
+Purpose: A Lean port of Hyperon's minimal MeTTa interpreter (`interpreter.rs`), a
+  continuation-passing nondeterministic stack machine over the minimal instruction set
+  (`eval`, `evalc`, `chain`, `unify`, `cons-atom`, `decons-atom`, `function`/`return`,
+  `collapse-bind`, `superpose-bind`, `metta`, `metta-thread`, `capture`, `context-space`) plus the
+  embedded space, state, and type operations (`match`, `get-type`, `add-atom`, `bind!`, `import!`).
+  The stack is an immutable list of frames (head is the top) and the return handler is an explicit
+  tag. One step (`interpretStack1`) is total; the driver (`interpretFuel`) is fuel-bounded because
+  MeTTa programs may fail to terminate. The type-directed evaluator (`mettaEval`) sits on top.
+Imports: MettaHyperonFull.Core (Matching, Space, Builtins), Std.Data.HashMap
+Trusted boundary: none
+Main exports: Frame, Stack, Item, MinEnv, World, St, atomToStack, queryOp, evalOp, getTypes,
+  matchType, typeMismatch, interpretStack1, interpretFuel, mettaEval, interpretAtom, evalAtomMin
+Open obligations: fuel is shared with the nested `collapse-bind` driver, so deeply nested calls
+  deplete the outer budget; on exhaustion, unfinished items surface as `StackOverflow` rather than
+  resumable partial results.
+-/
 import MettaHyperonFull.Core.Matching
 import MettaHyperonFull.Core.Space
 import MettaHyperonFull.Core.Builtins
 import Std.Data.HashMap
-
-/-!
-# Minimal MeTTa interpreter
-
-A Lean port of Hyperon's minimal MeTTa interpreter
-(`hyperon-experimental/lib/src/metta/interpreter.rs`): a continuation-passing,
-nondeterministic stack machine over the thirteen minimal instructions
-`eval`, `evalc`, `chain`, `unify`, `cons-atom`, `decons-atom`, `function`/`return`,
-`collapse-bind`, `superpose-bind`, `metta`, `metta-thread`, `capture`, `context-space`
-(`return` is handled via the `function` frame, not as a standalone op). `isEmbeddedOp` recognizes
-these together with the embedded space/state/type operations (`match`, `get-type`, `add-atom`, ...).
-
-The Rust implementation uses `Rc<RefCell<Stack>>` shared mutability and `fn`-pointer
-return handlers. Here the stack is an immutable list of frames (head = top) and the
-return handler is an explicit tag (`Ret`). One interpreter step (`interpretStack1`) is
-total; the driver (`interpretFuel`) is fuel-bounded, since MeTTa programs may
-legitimately fail to terminate.
-
-This module covers the full minimal-MeTTa instruction set: `eval`/`evalc`, `chain`,
-`function`/`return`, `unify`, `cons-atom`/`decons-atom`, `collapse-bind`/`superpose-bind`, `metta`,
-`metta-thread`, `capture`, `context-space`, together with the embedded space/state/type operations (`new-space`,
-`add-atom`, `match`, `get-type`, `bind!`, `import!`, ...) and the type-directed evaluator.
--/
 
 namespace Metta.Minimal
 open Metta

@@ -1,21 +1,17 @@
 /-
-MeTTa / OpenCog Hyperon in Lean 4.
-
-ARCHITECTURE. The minimal MeTTa interpreter (`Minimal/Interpreter`) is the assembly language of
-MeTTa. The standard library (`Minimal/Stdlib`) is written in MeTTa over those thirteen instructions,
-exactly as in Hyperon. This is the active, validated artifact: it agrees with Hyperon's own oracle
-`lib/tests/test_stdlib.metta` (see the Improvements over Hyperon appendix in the book).
-
-`Operational.*` is a separate, machine-checked library (its own `lean_lib «Operational»` target,
-rooted at `MettaHyperonFull.Operational`). It formalises the published Meta-MeTTa operational
-semantics (arXiv 2305.17218): the four-register abstract machine ⟨i,k,w,o⟩, barbed bisimulation,
-the resource-bounded (gas) extension, and the on-chain guarantees (knowledge-base auditability and
-gas non-creation). It shares `Core` with the interpreter but is a specification library for
-reasoning about MeTTa, not a runnable interpreter, and is not imported here.
-
-Earlier exploratory models live under `archive/` at the repository root. They are kept for
-reference, are not built, and are not part of the faithful core. Each is an approximation rather
-than the faithful minimal-MeTTa semantics. See `archive/README.md`.
+Module: MettaHyperonFull
+Layer: Library root
+Purpose: The root of the MeTTa / OpenCog Hyperon formalization in Lean 4. It aggregates the faithful
+  core: the object-language foundation under `Core`, the text-to-atoms parser under `Runtime`, the
+  minimal MeTTa interpreter (the assembly language of MeTTa) under `Minimal.Interpreter`, and the
+  standard library written in MeTTa over those instructions under `Minimal.Stdlib`. The stdlib is
+  the validated artifact: it agrees with Hyperon's own oracle test_stdlib.metta. The `Operational.*`
+  specification library has its own `lean_lib` target and is not imported here. Earlier exploratory
+  models live under archive/ and are not built.
+Imports: the MettaHyperonFull.Core, MettaHyperonFull.Runtime, and MettaHyperonFull.Minimal modules
+Trusted boundary: none
+Main exports: (aggregator; re-exports the library)
+Open obligations: none
 -/
 
 -- Faithful foundation: the object language the assembly is built on.

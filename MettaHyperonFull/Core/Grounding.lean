@@ -1,3 +1,15 @@
+/-
+Module: MettaHyperonFull.Core.Grounding
+Layer: Core
+Purpose: The contract for grounded symbols and the table that holds them. A grounding pairs a symbol
+  name with its argument mode (evaluate or quote), an optional declared type signature, and the
+  reduction that maps argument atoms to a `ReduceResult`. Provides table lookup and the dispatch that
+  runs a grounded symbol if present.
+Imports: MettaHyperonFull.Core.Types
+Trusted boundary: none
+Main exports: GroundMode, Grounding, GroundingTable, GroundingTable.lookup, callGrounded
+Open obligations: none
+-/
 import MettaHyperonFull.Core.Types
 
 namespace Metta

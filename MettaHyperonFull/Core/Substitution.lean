@@ -1,3 +1,16 @@
+/-
+Module: MettaHyperonFull.Core.Substitution
+Layer: Core
+Purpose: Substitutions, the finite maps from variables to atoms used internally by unification and
+  instantiation. Distinct from `Bindings`, which also carries variable aliases. Provides lookup, erase,
+  extend, single-pass application over an atom, the occurs-check, and composition that agrees with
+  function composition of the applied substitutions.
+Imports: MettaHyperonFull.Core.Bindings
+Trusted boundary: none
+Main exports: Subst, Subst.empty, Subst.lookup, Subst.erase, Subst.extend, Subst.apply, Subst.occurs,
+  Subst.compose
+Open obligations: none
+-/
 import MettaHyperonFull.Core.Bindings
 
 namespace Metta

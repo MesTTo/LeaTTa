@@ -1,11 +1,19 @@
 /-
-Invariants of the elaboration and transformation pipeline. These are the structural guarantees that
-hold regardless of the input: the three transformation passes touch only the term list (they preserve
-the exports, equations, rewrites, and references), and they only extend the terms (the originals
-remain, in order, as a prefix). Elaborating the empty instance gives the empty presentation.
-
-These are the easy, equality-free half of the Layer-1/2 metatheory; the lattice laws (which reason
-about `distinct` and membership) live separately and need decidable equality of the data model.
+Module: MeTTaILProofs.Pipeline
+Layer: Proofs
+Purpose: Invariants of the elaboration and transformation pipeline. These structural guarantees hold
+  regardless of the input. The three transformation passes (desugar, type-lift, monomorphize) touch
+  only the term list, so they preserve the exports, equations, rewrites, and references, and they
+  only extend the terms because the originals remain in order as a prefix. Elaborating the empty
+  instance gives the empty presentation. These are the equality-free half of the Layer-1/2
+  metatheory; the lattice laws live separately because they need decidable equality.
+Imports: MeTTaIL.Theory.Elaborate, MeTTaIL.Transform.Desugar, MeTTaIL.Transform.TypeLift,
+  MeTTaIL.Transform.Monomorphize
+Trusted boundary: none (fully proved)
+Main exports: elaborate_empty; the component-preservation simp lemmas desugarBinds_*, typeLift_*,
+  monomorphize_*; the prefix-extension results typeLift_terms_extends, monomorphize_terms_extends,
+  desugarBinds_terms.
+Open obligations: none
 -/
 import MeTTaIL.Theory.Elaborate
 import MeTTaIL.Transform.Desugar

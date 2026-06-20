@@ -1,3 +1,17 @@
+/-
+Module: MettaHyperonFull.Proofs.Results
+Layer: Proofs
+Purpose: The abstract machine is deterministic. interpretStack1, interpretFuel, and mettaEval are
+  total functions of their inputs, so every configuration has a unique successor and a unique result.
+  MeTTa's nondeterminism is reified in the returned list, not left as don't-know nondeterminism in
+  the transition relation, which is the replayable discipline a blockchain VM needs. Also records the
+  driver's base cases, accumulator correctness, and the cartesian branching-factor law.
+Imports: MettaHyperonFull.Proofs.Basic
+Trusted boundary: none (fully proved)
+Main exports: interpretStack1_deterministic, interpretFuel_deterministic, mettaEval_deterministic,
+  interpretFuel_nil, interpretFuel_zero_cons, interpretFuel_done, cartesian_cons, cartesian_length
+Open obligations: none
+-/
 import MettaHyperonFull.Proofs.Basic
 
 /-!

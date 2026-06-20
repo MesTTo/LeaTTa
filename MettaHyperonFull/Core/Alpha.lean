@@ -1,3 +1,16 @@
+/-
+Module: MettaHyperonFull.Core.Alpha
+Layer: Core
+Purpose: Alpha-equivalence for MeTTa Core atoms. Canonicalizes each distinct variable to a positional
+  name in first-occurrence order, so atoms equal up to a consistent variable renaming become
+  syntactically equal. Faithful to Hyperon's `atoms_are_equivalent`. MeTTa variables are first-order
+  query variables, so no binder scoping is involved.
+Imports: MettaHyperonFull.Core.Substitution
+Trusted boundary: none
+Main exports: distinctVarsAux, renameVars, canonicalizeVars, alphaEq, AlphaEquivalent, the Decidable
+  instance for AlphaEquivalent
+Open obligations: none
+-/
 import MettaHyperonFull.Core.Substitution
 
 namespace Metta

@@ -1,17 +1,22 @@
 /-
-The GSLT reduction relation: a presentation's rewrites induce reduction on terms.
-
-`Reduces p t t'` holds when some rewrite of `p` fires on `t`: its conclusion's left-hand side matches
-`t` (binding the pattern variables), each premise `src ~> tgt` requires the bound `src` subterm to
-itself reduce (binding `tgt` to the reduct), and the contractum is the conclusion's right-hand side
-instantiated with the bindings. Base rewrites (no premises) reduce a redex directly; premised
-rewrites are the congruence/context rules (par1, par2, RNew, ...). This is the precise sense in which
-"presentations of GSLTs describe the operational semantics of computational calculi."
-
-The relation is built on the executable matcher/instantiator of `Semantics/Reduce.lean`. The final
-theorem is a soundness result: every reduct the executable `applyBaseRewrite` produces is a genuine
-one-step reduction. The converse (completeness, that every reduction is produced by the matcher) is
-not proved. Mathlib-free.
+Module: MeTTaIL.Semantics.Relation
+Layer: Semantics
+Purpose: The GSLT reduction relation, where a presentation's rewrites induce reduction on terms.
+  `Reduces p t t'` holds when some rewrite of `p` fires on `t`: its conclusion's left-hand side matches
+  `t` (binding the pattern variables), each premise `src ~> tgt` requires the bound `src` subterm to
+  itself reduce (binding `tgt` to the reduct), and the contractum is the conclusion's right-hand side
+  instantiated with the bindings. Base rewrites (no premises) reduce a redex directly; premised rewrites
+  are the congruence/context rules (par1, par2, RNew, and so on). The relation builds on the executable
+  matcher and instantiator of `Semantics/Reduce.lean`, giving the precise sense in which presentations
+  of GSLTs describe the operational semantics of computational calculi. The final theorem is a
+  soundness result: every reduct the executable `applyBaseRewrite` produces is a genuine one-step
+  reduction. Mathlib-free.
+Imports: MeTTaIL.Semantics.Reduce
+Trusted boundary: human-reviewed spec
+Main exports: Reduces, PremisesHold, ReducesMany, ReducesMany.trans, reduces_base,
+  reduces_of_applyBaseRewrite
+Open obligations: the converse of the soundness theorem (completeness, that every reduction is produced
+  by the matcher) is not proved.
 -/
 import MeTTaIL.Semantics.Reduce
 

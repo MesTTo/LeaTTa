@@ -1,25 +1,20 @@
 /-
-The category checks the elaborator runs when accepting equations and rewrites, mirroring the Scala
-`AddEqRwHelpers` type checker. An equation's two sides must have compatible top-level categories; a
-rewrite's two conclusion sides likewise, and every right-hand-side variable must be bound either on
-the left-hand side or by a premise (`let src ~> tgt in ...` binds both `src` and `tgt`, as Scala's
-`leftVars` does).
-
-`headCat` is the top-level category of a term: the output sort of the rule its head label names, the
-body's category through a substitution, and `none` (undetermined) for a variable or a head label that
-names no rule. `catCompatible` treats an undetermined side as compatible with anything. This is more
-permissive than Scala's `sameCategory` in three edge cases the tested modules never hit. Scala rejects
-an equation or rewrite whose two sides are both bare variables; it errors when a head label is not
-found; and on a substitution whose body is the variable being substituted for, Scala's `catOfAST`
-takes the replacement's category, where `headCat` here always takes the body's.
-
-Variables are compared by their base identifier (`DottedPath.baseName`), matching the rest of this
-development's variable model (the matcher in `Semantics/Reduce` keys on the base name too). Scala's
-`varsInAST`/`leftVars` use the full dotted-path string, so a check involving two qualified paths that
-share a head identifier would diverge; the tested modules use only base-name variables.
-
-The deeper per-variable consistency check (`catOfIdentInAST`, that every variable resolves to a single
-category) is not yet implemented; these are the category-match and bound-variable checks.
+Module: MeTTaIL.Theory.Check
+Layer: Theory
+Purpose: The category checks the elaborator runs when accepting equations and rewrites, mirroring the
+  Scala `AddEqRwHelpers` type checker. An equation's two sides must have compatible top-level
+  categories, a rewrite's two conclusion sides likewise, and every right-hand-side variable must be
+  bound on the left-hand side or by a premise (`let src ~> tgt in ...` binds both `src` and `tgt`, as
+  Scala's `leftVars` does). `catCompatible` treats an undetermined side as compatible with anything, so
+  it is more permissive than Scala's `sameCategory` in three edge cases the tested modules never hit.
+  Variables compare by base identifier (`DottedPath.baseName`), matching the matcher in
+  `Semantics/Reduce`, where Scala uses the full dotted-path string.
+Imports: MeTTaIL.Theory.Ops
+Trusted boundary: none
+Main exports: AST.vars, AST.headCat, catCompatible, checkEquation, checkRewrite
+Open obligations: the deeper per-variable consistency check (`catOfIdentInAST`, that every variable
+  resolves to a single category) is not yet implemented; these are the category-match and
+  bound-variable checks.
 -/
 import MeTTaIL.Theory.Ops
 

@@ -1,3 +1,19 @@
+/-
+Module: MettaHyperonFull.Operational.Semantics
+Layer: Operational
+Purpose: The small-step semantics of the four-register machine (arXiv:2305.17218 §3.3). Defines the
+  one-step function `smallStep?` with its step kinds (QUERY, CHAIN, add/remove-atom, OUTPUT), the
+  one-step reducer `reduceAtom` for atoms (equality rules, grounded operators, `if`/`let`/`match`/
+  `transform`/`superpose`), and the fuel-bounded drivers `runFuel` and `run`. Input is drained
+  first, then the workspace.
+Imports: MettaHyperonFull.Operational.State, MettaHyperonFull.Core.Builtins
+Trusted boundary: human-reviewed spec
+Main exports: StepKind, equalityReductions, equalityStep, stepAddAtom, stepRemAtom, reduceAtom,
+  reduceArgs, smallStep?, runFuel, run
+Open obligations: `call-native` has no dispatch table here, so native-function atoms fall through to
+  the equality-rule case; on fuel exhaustion, `runFuel` returns the state with no halt-versus-cutoff
+  signal.
+-/
 import MettaHyperonFull.Operational.State
 import MettaHyperonFull.Core.Builtins
 

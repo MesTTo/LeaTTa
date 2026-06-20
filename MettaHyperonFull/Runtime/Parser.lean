@@ -1,3 +1,17 @@
+/-
+Module: MettaHyperonFull.Runtime.Parser
+Layer: Runtime
+Purpose: A parser for a practical subset of MeTTa s-expressions. The tokenizer is a structural state
+  machine that recognises parentheses, the `!` query prefix, `;`-comments, `"`-strings, and
+  whitespace-separated symbols. The parser then folds the token stream against a stack of in-progress
+  expression frames into a list of top-level atoms. Single tokens parse to variables, booleans, the
+  empty expression, strings, integer or float literals, or symbols.
+Imports: MettaHyperonFull.Core.Atom
+Trusted boundary: none
+Main exports: tokenize, parseFloat?, parseAtomToken, parseTokens, parseProgram
+Open obligations: float literals are IEEE 64-bit doubles, so values like `0.1` carry the usual binary
+  rounding.
+-/
 import MettaHyperonFull.Core.Atom
 
 namespace Metta.Runtime

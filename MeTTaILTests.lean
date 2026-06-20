@@ -1,10 +1,15 @@
 /-
-Machine-checked sanity tests for the MeTTaIL elaborator. These are small oracle checks: elaborate a
-theory instance and compare the result to a hand-written expected presentation. The full
-cross-test against the Scala tool (the Rholang module) lives separately and needs the elaborator
-fully implemented.
-
-This is its own library target so the core `MeTTaIL` library ships without test code.
+Module: MeTTaILTests
+Layer: Library root
+Purpose: The root of the machine-checked tests for the MeTTaIL elaborator. It holds small oracle
+  checks (elaborate a theory instance and compare the result to a hand-written expected
+  presentation) and aggregates the larger cross-tests against the Scala tool, the Rholang module
+  and the reduction examples. Keeping tests in their own library target lets the core MeTTaIL library
+  ship without test code.
+Imports: MeTTaIL.Theory.Elaborate, MeTTaILTests.Rholang, MeTTaILTests.Reduce
+Trusted boundary: none
+Main exports: (aggregator; re-exports the library)
+Open obligations: none
 -/
 import MeTTaIL.Theory.Elaborate
 import MeTTaILTests.Rholang

@@ -1,3 +1,17 @@
+/-
+Module: MettaHyperonFull.Proofs
+Layer: Proofs
+Purpose: Aggregator for the metatheory layer. Pulls together every proof module that reasons about
+  the executable kernel without taking part in execution. The collected results target what matters
+  for on-chain use: determinism, type soundness, confluence of the deterministic fragment, sound and
+  complete rule indexing, and interpreter-to-specification correspondence.
+Imports: every module under MettaHyperonFull.Proofs (Basic, Substitution, Alpha, Indexing,
+  IndexingComplete, Results, TypeSoundness, Confluence, Preservation, Gradual, Correspondence)
+Trusted boundary: none (fully proved)
+Main exports: re-exports of the proof modules; no new declarations of its own
+Open obligations: none. The 4-register MOPS semantics, its bisimulation, and the gas model live in
+  the sibling MettaHyperonFull.Operational library.
+-/
 import MettaHyperonFull.Proofs.Basic
 import MettaHyperonFull.Proofs.Substitution
 import MettaHyperonFull.Proofs.Alpha

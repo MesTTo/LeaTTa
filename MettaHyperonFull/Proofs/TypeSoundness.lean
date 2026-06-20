@@ -1,3 +1,18 @@
+/-
+Module: MettaHyperonFull.Proofs.TypeSoundness
+Layer: Proofs
+Purpose: The gradual type system is permissive, total, and reports errors faithfully. Undeclared
+  operators, extra arguments, and the wildcards %Undefined%/Atom are never rejected, getTypes assigns
+  every atom at least one type, a reported BadArgType always names a real actual type, and the runtime
+  invents no type errors. Preservation for the grounded numeric core: arithmetic is closed on Number,
+  comparison and == yield Bool or faithfully propagate an error.
+Imports: MettaHyperonFull.Proofs.Basic
+Trusted boundary: none (fully proved)
+Main exports: typeMismatch_undeclared, matchType_undefined_left, matchType_undefined_right,
+  matchType_atom_left, matchType_atom_right, typeCheckArgs_no_param, mettaEval_badArgType,
+  getTypes_ne_nil, typeCheckArgs_act_real, numBin_isNumber, numCmp_isBool, eqAtom_isBoolOrError
+Open obligations: none. Subject reduction over user-defined =-rewriting is proved in Preservation.lean.
+-/
 import MettaHyperonFull.Proofs.Basic
 
 /-!

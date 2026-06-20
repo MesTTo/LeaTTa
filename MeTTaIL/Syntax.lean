@@ -1,18 +1,18 @@
 /-
-MeTTaIL syntax: the data model of theory presentations.
-
-These types mirror the Scala `BasePres` and the BNFC abstract syntax of MeTTaIL
-(package `io.f1r3fly.mettail`, grammar `GSLT/src/main/bnfc/metta_venus.cf`). A `.module` program is
-a program in an algebra of theory presentations, and this file is the object syntax those programs
-build and elaborate to. Lean names match the Scala constructs so the correspondence is auditable.
-
-This layer is computable and does not import Mathlib, so it can run.
-
-Equality. The Scala interpreter compares categories, labels, and terms with structural `.equals`
-(a Boolean). We mirror that with `BEq`. Lean's `deriving` handlers do not support inductives that
-nest through `List` (a documented limitation: see lean4 issue #7580 and the Lean reference on
-Deriving Instances), so `Cat` (through `prod`), `AST` (through `sexp`), and `Presentation` (through
-`references`) get hand-written structural `BEq` by mutual recursion. The non-nested types derive it.
+Module: MeTTaIL.Syntax
+Layer: Syntax
+Purpose: The data model of theory presentations, the object syntax that `.module` programs build and
+  elaborate to. These types mirror the Scala `BasePres` and the BNFC abstract syntax of MeTTaIL
+  (package `io.f1r3fly.mettail`, grammar `GSLT/src/main/bnfc/metta_venus.cf`), with Lean names matching
+  the Scala constructs so the correspondence is auditable. The layer is computable and does not import
+  Mathlib, so it runs. Structural equality follows the Scala `.equals`, mirrored with `BEq`. The types
+  that nest through `List` (`Cat` via `prod`, `AST` via `sexp`, `Presentation` via `references`) get a
+  hand-written `BEq` by mutual recursion because Lean's `deriving` does not support that nesting (lean4
+  issue #7580); the non-nested types derive it.
+Imports: none (Mathlib-free)
+Trusted boundary: human-reviewed spec
+Main exports: DottedPath, Cat, Label, Item, Rule, AST, Equation, Hyp, Rewrite, RewriteDecl, Presentation
+Open obligations: none
 -/
 
 namespace MeTTaIL

@@ -1,3 +1,15 @@
+/-
+Module: MettaHyperonFull.Core.Pretty
+Layer: Core
+Purpose: Rendering atoms back to MeTTa surface syntax. Symbols print verbatim, variables get a `$`
+  prefix, grounded values print in their surface form (numbers, quoted strings, True/False, unit,
+  errors, external tags), and expressions print space-separated and parenthesised. Result lists print
+  in the bracketed form the runners use. Also gives the ToString instance for Atom.
+Imports: MettaHyperonFull.Core.Atom
+Trusted boundary: none
+Main exports: Pretty.joinSep, Pretty.ground, Pretty.atom, Pretty.atoms, the ToString Atom instance
+Open obligations: none
+-/
 import MettaHyperonFull.Core.Atom
 
 namespace Metta

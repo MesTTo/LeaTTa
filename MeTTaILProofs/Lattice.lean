@@ -1,20 +1,18 @@
 /-
-The presentation lattice laws: union, intersection, and difference behave as set operations on
-each component of a presentation.
-
-The three operators in `MeTTaIL.Theory.Ops` build their five components with `distinct`,
-`List.filter`, and `List.contains`. We characterize membership in the result component by component.
-
-The key lemma is `mem_distinct`: `distinct` keeps exactly the elements it was given. Everything else
-reads off from the definitions, because each operator's component is either a `distinct` of an append
-(for union) or a `List.filter` (for intersection and difference), and membership in those is standard
-list reasoning.
-
-For intersection and difference the term, equation, and rewrite components carry extra side
-conditions (a definition survives only if its mentioned categories are all common, an equation or
-rewrite survives only if its labels all point at a surviving definition). For those we state the
-implication that holds unconditionally: membership in the result implies membership in each input.
-The exports component has no side condition, so there we prove the full `↔`.
+Module: MeTTaILProofs.Lattice
+Layer: Proofs
+Purpose: The presentation lattice laws. Union, intersection, and difference behave as set operations
+  on each component of a presentation. The three operators in `MeTTaIL.Theory.Ops` build their five
+  components with `distinct`, `List.filter`, and `List.contains`, so we characterize membership in
+  the result component by component. The key lemma is `mem_distinct`: `distinct` keeps exactly the
+  elements it was given. For intersection and difference the term, equation, and rewrite components
+  carry survival side conditions, so there we prove the implication into the inputs; the exports
+  component has no side condition, so there the full `↔` holds.
+Imports: MeTTaIL.Theory.Ops, MeTTaILProofs.DecEq
+Trusted boundary: none (fully proved)
+Main exports: mem_distinct, distinct_nodup; the membership characterizations mem_union_*,
+  mem_inter_*, mem_diff_*; the corollaries mem_union_exports_comm, mem_union_exports_self.
+Open obligations: none
 -/
 import MeTTaIL.Theory.Ops
 import MeTTaILProofs.DecEq

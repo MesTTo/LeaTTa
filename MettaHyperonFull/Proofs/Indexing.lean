@@ -1,3 +1,17 @@
+/-
+Module: MettaHyperonFull.Proofs.Indexing
+Layer: Proofs
+Purpose: Soundness of first-argument rule indexing, the semantic half. Proves matchAtoms_headKey: if
+  a query is headed by symbol k and a rule left-hand side matches it, then that left-hand side is
+  headed by the same k or is head-less. A rule in a different head bucket can never match, so
+  restricting candidates to k's bucket plus the head-less rules loses nothing.
+Imports: MettaHyperonFull.Proofs.Basic
+Trusted boundary: none (fully proved)
+Main exports: matchAtoms_headKey, headKey_some, matchAll_nil, matchAll_fst, matchAtoms_sym_expr,
+  matchAtoms_expr_sym
+Open obligations: none. The syntactic companion characterising MinEnv.candidates is in
+  IndexingComplete.lean.
+-/
 import MettaHyperonFull.Proofs.Basic
 
 /-!

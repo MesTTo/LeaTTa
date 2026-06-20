@@ -1,3 +1,16 @@
+/-
+Module: MettaHyperonFull.Core.Bindings
+Layer: Core
+Purpose: The binding sets that matching and unification produce. A binding set is a conjunction of
+  variable-binding relations, comprising value bindings and variable aliases (Hyperon's `Bindings`).
+  Provides lookup, alias classes, removal, loop detection, and the raw insertion primitives. The
+  consistency-checking merge lives in Matching.lean.
+Imports: MettaHyperonFull.Core.Atom, MettaHyperonFull.Core.Pretty
+Trusted boundary: none
+Main exports: BindingRel, Bindings, Bindings.empty, Bindings.lookupVal, Bindings.eqClasses,
+  Bindings.removeVal, Bindings.hasLoop, Bindings.addValRaw, Bindings.addEqRaw
+Open obligations: none
+-/
 import MettaHyperonFull.Core.Atom
 import MettaHyperonFull.Core.Pretty
 

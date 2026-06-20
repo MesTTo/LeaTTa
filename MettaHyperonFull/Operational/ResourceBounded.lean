@@ -1,3 +1,16 @@
+/-
+Module: MettaHyperonFull.Operational.ResourceBounded
+Layer: Operational
+Purpose: The resource-bounded (gas) extension of Meta-MeTTa (arXiv:2305.17218 §6). Gives a concrete
+  syntactic cost model (an atom costs its size), the resource state (machine state plus a token
+  list), and the cost-guarded step `resourceStep?`, which consumes the head input atom and debits the
+  head token only when the token can afford the atom. Backs the on-chain gas guarantees proved in
+  `Properties`.
+Imports: MettaHyperonFull.Operational.Semantics
+Trusted boundary: human-reviewed spec
+Main exports: transitionCost, affordable, debit, ResourceState, resourceStep?
+Open obligations: none
+-/
 import MettaHyperonFull.Operational.Semantics
 
 namespace Metta

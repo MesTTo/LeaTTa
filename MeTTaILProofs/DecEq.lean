@@ -1,21 +1,19 @@
 /-
-Decidable equality for the MeTTaIL data model.
-
-The kernel layer (`MeTTaIL.Syntax`) only needs Boolean `BEq`, because the Scala interpreter compares
-with structural `.equals`. The metatheory wants more: `LawfulBEq`, so a `==` test agrees with logical
-`=`, and `DecidableEq`, so proofs may case-split on equality. This file supplies both for every type
-in the data model.
-
-Three types nest through `List` and so the hand-written `BEq` in `Syntax` cannot be a `deriving`:
-`Cat` (through `prod : List Cat`), `AST` (through `sexp ... : List AST`), and `Presentation`
-(through `references : List (String × Presentation)`). For each we prove `LawfulBEq` by mutual
-structural induction: a reflexivity lemma (`beq a a = true`) paired with its list version, and an
-`eq_of_beq` lemma (`beq a b = true → a = b`) paired with its list version. `DecidableEq` then falls
-out of `decidable_of_iff`.
-
-Every other type is a plain (non-`List`-nested) inductive or structure, so its `LawfulBEq` and
-`DecidableEq` are derived. The instances are ordered by dependency: a type's instance is declared
-after the instances of the types it mentions.
+Module: MeTTaILProofs.DecEq
+Layer: Proofs
+Purpose: Decidable equality for the MeTTaIL data model. The kernel layer (`MeTTaIL.Syntax`) only
+  needs Boolean `BEq`, because the Scala interpreter compares with structural `.equals`. The
+  metatheory wants more: `LawfulBEq`, so a `==` test agrees with logical `=`, and `DecidableEq`, so
+  proofs may case-split on equality. The file supplies both for every type in the data model. Three
+  types nest through `List` and so cannot be `deriving` (`Cat`, `AST`, `Presentation`); for each we
+  prove `LawfulBEq` by mutual structural induction, then derive `DecidableEq`. The remaining types
+  are derived directly.
+Imports: MeTTaIL.Syntax, Mathlib
+Trusted boundary: none (fully proved)
+Main exports: LawfulBEq and DecidableEq instances for Cat, AST, Presentation, and the rest of the
+  data model; the reflexivity and eq_of_beq lemmas Cat.beq_refl, Cat.eq_of_beq, AST.beq_refl,
+  AST.eq_of_beq, Presentation.beq_refl, Presentation.eq_of_beq.
+Open obligations: none
 -/
 import MeTTaIL.Syntax
 import Mathlib.Tactic

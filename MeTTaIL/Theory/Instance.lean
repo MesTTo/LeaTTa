@@ -1,9 +1,15 @@
 /-
-The theory-instance algebra: the expression language whose elaboration produces a `Presentation`.
-
-Mirrors the Scala `TheoryInst` family (the cases `InstInterpreter.interpret` dispatches) and the
-declaration layer (`TheoryDecl`, `VariableDecl`, `Module`) used to resolve `ctor` and `free`. A
-`.module` file is a program in this algebra; the last `theory INST` in a module is its entry point.
+Module: MeTTaIL.Theory.Instance
+Layer: Theory
+Purpose: The theory-instance algebra, the expression language whose elaboration produces a
+  `Presentation`. Mirrors the Scala `TheoryInst` family (the cases `InstInterpreter.interpret`
+  dispatches) and the declaration layer (`TheoryDecl`, `VariableDecl`, `Module`) used to resolve `ctor`
+  and `free`. A `.module` file is a program in this algebra, and the last `theory INST` in a module is
+  its entry point.
+Imports: MeTTaIL.Syntax
+Trusted boundary: human-reviewed spec
+Main exports: Export, Replacement, VarDecl, TheoryInst, TheoryDecl, Module, Module.find?
+Open obligations: none
 -/
 import MeTTaIL.Syntax
 

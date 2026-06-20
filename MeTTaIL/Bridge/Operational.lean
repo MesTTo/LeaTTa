@@ -10,10 +10,10 @@ its payload. So MeTTa's four metatypes map to distinguishable GSLT term shapes, 
 sense in which MeTTa is a GSLT object language.
 
 The embedding is injective on the grounded-free fragment, which is why `embed_inj` is stated there.
-Grounded atoms are not embedded injectively: floats inherit the IEEE-754 caveat LeaTTa documents for
-`Atom`'s own equality (`0.0` vs `-0.0`, `NaN`), and an `external`'s two string fields are joined by a
-colon in `groundKey`, so `external "a:b" "c"` and `external "a" "b:c"` collide. The injectivity
-theorems are therefore stated only on the grounded-free fragment.
+Grounded atoms are not embedded injectively because floats are not: `0.0` and `-0.0` key alike and
+`NaN` is not equal to itself, the IEEE-754 caveat LeaTTa documents for `Atom`'s own equality. Every
+other grounded payload keys injectively. The injectivity theorems are stated on the grounded-free
+fragment; extending them to the non-float grounded atoms is future work.
 
 Mathlib-free.
 -/
@@ -24,10 +24,10 @@ namespace MeTTaIL.Bridge
 
 open MeTTaIL
 
-/-- A string key for a grounded payload. Not injective on every grounded atom: floats collide
-    (`0.0`/`-0.0`, `NaN ≠ NaN`), the IEEE-754 caveat LeaTTa documents for `Atom` equality; and an
-    `external t p` joins its two free strings with a colon, so e.g. `external "a:b" "c"` and
-    `external "a" "b:c"` both key to `"ext:a:b:c"`. -/
+/-- A string key for a grounded payload, injective except on floats (`0.0`/`-0.0` key alike and
+    `NaN ≠ NaN`, the IEEE-754 caveat LeaTTa documents for `Atom` equality). The `external` key
+    length-prefixes its type string, so the two fields cannot run together (`external "a:b" "c"` and
+    `external "a" "b:c"` get distinct keys). -/
 def groundKey : Metta.Ground → String
   | .int n => "int:" ++ toString n
   | .float f => "float:" ++ toString f
@@ -35,7 +35,7 @@ def groundKey : Metta.Ground → String
   | .bool b => "bool:" ++ toString b
   | .unit => "unit"
   | .error e => "error:" ++ e
-  | .external t p => "ext:" ++ t ++ ":" ++ p
+  | .external t p => "ext:" ++ toString t.length ++ ":" ++ t ++ ":" ++ p
 
 mutual
   /-- Embed a MeTTa atom into a GSLT term. -/

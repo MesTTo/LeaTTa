@@ -12,20 +12,22 @@ Purpose: The top-level safety statement (the blueprint's Theorem 4.54 core). It 
 Imports: CordialMiners.Spec.FinalLeader, CordialMiners.Spec.TauOrderSpec, CordialMiners.Ref.TauOrder
 Trusted boundary: none (fully proved; rests only on the human-reviewed specs it composes)
 Main exports: cm_threshold_agreement, cm_end_to_end_safety, cm_end_to_end_safety_anchored,
-  cm_end_to_end_safety_finalized, cm_concrete_ordering_valid
+  cm_end_to_end_safety_finalized, cm_end_to_end_safety_permanent, cm_concrete_ordering_valid
 Open obligations: the ordering hypothesis is discharged in stages. cm_end_to_end_safety takes abstract
   OutputMonotone; cm_end_to_end_safety_anchored derives it from AnchorPrefixMonotone (TAU-08);
-  cm_end_to_end_safety_finalized derives that in turn from the single scalar fact that the
-  finalized-wave count is monotone in the blocklace (finality permanence plus wave-ordered
-  finalization). That residual scalar fact rests on the protocol's finality machinery. Liveness
-  (dissemination completeness, scheduler non-starvation) is conditional on the network and scheduler
-  fairness assumptions stated in the dissemination and scheduler specs.
+  cm_end_to_end_safety_finalized derives that from the scalar fact that the finalized-wave count is
+  monotone; cm_end_to_end_safety_permanent derives even that from finality permanence (a finalized wave
+  stays finalized as the blocklace grows). The safety story then rests on three named facts: the
+  Byzantine-weight bound, honest non-equivocation, and finality permanence. Liveness (dissemination
+  completeness, scheduler non-starvation) is conditional on the network and scheduler fairness
+  assumptions stated in the dissemination and scheduler specs.
 -/
 import CordialMiners.Spec.FinalLeader
 import CordialMiners.Spec.TauOrderSpec
 import CordialMiners.Ref.TauOrder
 import CordialMiners.Ref.AnchoredOrder
 import CordialMiners.Ref.FinalizedAnchors
+import CordialMiners.Ref.FinalityPermanence
 
 namespace CordialMiners
 
@@ -127,5 +129,35 @@ theorem cm_end_to_end_safety_finalized {P Wave Slot Hash : Type*}
   cm_end_to_end_safety_anchored S hWF L honest hByz hNoEquiv
     (finalizedAnchors finalCount leaderOf) hist
     (finalizedAnchors_prefixMonotone finalCount leaderOf hCount)
+
+/-- The capstone: PoR-weighted Cordial Miners is safe, resting on three named facts. Given the
+    Byzantine-weight bound (hByz), honest non-equivocation (hNoEquiv), and finality permanence (hperm:
+    a finalized wave stays finalized as the blocklace grows), the protocol guarantees leader-agreement,
+    output consistency, and blocklace integrity, for the fully concrete finalized-anchor ordering. The
+    bound monotonicity (hbound) is a technical artifact satisfied by the block count. Every other
+    ordering property (the finalized-wave count's monotonicity, anchor prefix-monotonicity, and
+    output-prefix monotonicity) is derived. -/
+theorem cm_end_to_end_safety_permanent {P Wave Slot Hash : Type*}
+    [DecidableEq P] [DecidableEq Wave] [DecidableEq Slot] [DecidableEq Hash]
+    (S : CommitteeSnapshot P) (hWF : S.WF) (L : Blocklace P Wave Slot Hash) (honest : Finset P)
+    (hByz : S.ByzBound honest)
+    (hNoEquiv : ∀ p ∈ honest, ∀ b b' : Block P Wave Slot Hash,
+      BlockApproves L p b → BlockApproves L p b' → b = b')
+    (Final : Blocklace P Wave Slot Hash → ℕ → Prop) [∀ L w, Decidable (Final L w)]
+    (bound : Blocklace P Wave Slot Hash → ℕ) (leaderOf : ℕ → Hash) (hist : Hash → List Hash)
+    (hperm : ∀ (w : ℕ) {L₁ L₂ : Blocklace P Wave Slot Hash}, L₁ ⊆ L₂ → Final L₁ w → Final L₂ w)
+    (hbound : ∀ {L₁ L₂ : Blocklace P Wave Slot Hash}, L₁ ⊆ L₂ → bound L₁ ≤ bound L₂) :
+    (∀ {rc rc' : ThresholdCert P (Block P Wave Slot Hash)},
+        ValidRatCert S L rc → ValidRatCert S L rc' → ¬ ConflictBlock rc.value rc'.value)
+    ∧ (∀ {L₁ L₂ Limit : Blocklace P Wave Slot Hash}, L₁ ⊆ Limit → L₂ ⊆ Limit →
+        anchoredOrder (finalizedAnchors (finalCountOf Final bound) leaderOf) hist L₁
+          <+: anchoredOrder (finalizedAnchors (finalCountOf Final bound) leaderOf) hist L₂
+        ∨ anchoredOrder (finalizedAnchors (finalCountOf Final bound) leaderOf) hist L₂
+          <+: anchoredOrder (finalizedAnchors (finalCountOf Final bound) leaderOf) hist L₁)
+    ∧ (∀ {L' : Blocklace P Wave Slot Hash} {b : Block P Wave Slot Hash},
+        ParentClosed L' → b.parents ⊆ hashesOf L' → ParentClosed (insert b L')) :=
+  cm_end_to_end_safety_finalized S hWF L honest hByz hNoEquiv
+    (finalCountOf Final bound) leaderOf hist
+    (finalCountOf_monotone Final bound hperm hbound)
 
 end CordialMiners

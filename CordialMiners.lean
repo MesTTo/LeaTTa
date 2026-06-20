@@ -25,3 +25,4 @@ import CordialMiners.Spec.TauOrderSpec
 import CordialMiners.Spec.DisseminationSpec
 import CordialMiners.Spec.SchedulerSpec
 import CordialMiners.Trec.Syntax
+import CordialMiners.Trec.Safety

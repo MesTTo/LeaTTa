@@ -34,6 +34,7 @@ import CordialMiners.Ref.TauOrder
 import CordialMiners.Ref.AnchoredOrder
 import CordialMiners.Ref.FinalizedAnchors
 import CordialMiners.Ref.FinalityPermanence
+import CordialMiners.Ref.BlockOrder
 import CordialMiners.Spec.Blocklace
 import CordialMiners.Spec.Equivocation
 import CordialMiners.Spec.FinalLeader

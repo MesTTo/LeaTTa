@@ -2,7 +2,7 @@ import Lake
 open Lake DSL
 
 package «MettaHyperonFull» where
-  version := v!"0.4.0"
+  version := v!"0.5.0"
   keywords := #["MeTTa", "Hyperon", "formal semantics", "metatheory", "verified interpreter"]
   leanOptions := #[⟨`autoImplicit, false⟩, ⟨`relaxedAutoImplicit, false⟩]
 

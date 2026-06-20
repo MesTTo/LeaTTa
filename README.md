@@ -6,7 +6,9 @@
 > formalization of MeTTa-IL, the MeTTa intermediate language, built from F1R3FLY's MeTTaIL repository
 > (<https://github.com/F1R3FLY-io/MeTTaIL>). That MeTTa-IL layer is work in progress: it models the
 > determinate core, cross-checks it against the real tool, and flags the parts that are still open (see
-> the MeTTaIL section below). MeTTa on Rholang is still planned.
+> the MeTTaIL section below). This release also adds a formalization of PoR-weighted Cordial Miners, a
+> leaderless DAG consensus protocol, with a machine-checked end-to-end safety result (see the Cordial
+> Miners section below). MeTTa on Rholang is still planned.
 
 This is a Lean 4 formalization of Hyperon's minimal MeTTa interpreter, the small "assembly language"
 that the rest of MeTTa is built on. The standard library is written in MeTTa on top of those
@@ -138,6 +140,29 @@ rest of the proofs:
 lake build MeTTaIL MeTTaILProofs MeTTaILTests
 ```
 
+## Cordial Miners (PoR-weighted consensus)
+
+`CordialMiners/` is a machine-checked formalization of PoR-weighted Cordial Miners, a leaderless
+DAG-based BFT consensus protocol (arXiv 2205.09174), in the weighted Proof-of-Reputation variant from a
+blueprint by Ben Goertzel. It is the consensus layer a MeTTa contract would run on a chain, and it is
+held to the same bar: 0 `sorry`/`admit`/`native_decide`/`partial`/`unsafe`, with every headline theorem
+axiom-clean (only the three standard axioms, never `sorryAx`).
+
+The headline is end-to-end safety: under a Byzantine-weight bound, honest non-equivocation, and finality
+permanence, the protocol never finalizes conflicting values and correct miners never publish conflicting
+positions. The hard part, the ordering's prefix-monotonicity, is not assumed. It is derived in stages
+down to those three named facts. The library spans the full pipeline: the weighted-overlap safety
+keystone and threshold finality, the blocklace and equivocation detection, final-leader ratification, a
+verified concrete topological-sort ordering (deterministic, complete, causally sound, no `partial`), a
+coarse/fine refinement tied by a forward simulation, lossless extraction to MeTTa-IL atoms, an
+executable end-to-end simulation, and the top-level safety aggregate. The overview is in
+[`CordialMiners/README.md`](CordialMiners/README.md), and the full treatment is the Cordial Miners
+chapter in the book.
+
+```bash
+lake build CordialMiners
+```
+
 ## Documentation
 
 The book and a generated API reference are published together at
@@ -152,8 +177,8 @@ The book and a generated API reference are published together at
 
 A textbook-style treatment of the formalization is in [`book/`](book/), built with Verso. It covers
 the object language, the interpreter, the type system, the metatheory, the operational semantics and
-its correspondence to the kernel, and the blockchain angle. The book is its own Lean project, so build
-it separately:
+its correspondence to the kernel, the blockchain angle, the MeTTaIL framework, and the Cordial Miners
+consensus formalization. The book is its own Lean project, so build it separately:
 
 ```bash
 cd book
@@ -175,8 +200,8 @@ the Lean toolchain. Download an archive from the [releases page](https://github.
 then:
 
 ```bash
-tar xzf leatta-0.4.0-linux-x86_64.tar.gz
-cd leatta-0.4.0-linux-x86_64 && ./install.sh   # installs to ~/.local/bin
+tar xzf leatta-0.5.0-linux-x86_64.tar.gz
+cd leatta-0.5.0-linux-x86_64 && ./install.sh   # installs to ~/.local/bin
 LeaTTa --min '!(+ 1 (* 2 (- 10 4)))'             # [13]
 ```
 
@@ -212,7 +237,8 @@ Improvements over Hyperon appendix at [mestto.github.io/LeaTTa](https://mestto.g
 
 - Active: `Core` (the object language), `Runtime.Parser`, `Minimal.Interpreter`, `Minimal.Stdlib`.
   `Proofs` and `Operational` are the metatheory and the published semantics. `MeTTaIL` (with
-  `MeTTaILProofs` and `MeTTaILTests`) is the work-in-progress MeTTa-IL formalization.
+  `MeTTaILProofs` and `MeTTaILTests`) is the work-in-progress MeTTa-IL formalization. `CordialMiners` is
+  the PoR-weighted Cordial Miners consensus formalization, with its safety metatheory.
 - Archived and not built: earlier exploratory models, including a four-register runtime, categorical
   metagraph rewriting, a Ruliad sketch, and an earlier approximate standard library. They live under
   [archive/](archive/) with their own README, kept for reference and not part of the verified work.

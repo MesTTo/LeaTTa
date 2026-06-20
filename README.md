@@ -1,10 +1,12 @@
 # MeTTa minimal interpreter: a machine-checked reference semantics in Lean 4
 
 > **Alpha.** LeaTTa is an early, alpha-stage release and a starting foundation. It will be improved
-> substantially in upcoming iterations as MeTTa is more fully formalised. It currently formalizes
-> Hyperon Experimental's minimal interpreter and standard library. It does not yet cover the
-> semantics of MeTTa-IL, the MeTTa intermediate language, which is still in development. Future
-> iterations are planned to add MeTTa-IL and MeTTa on Rholang.
+> substantially in upcoming iterations as MeTTa is more fully formalised. It formalizes Hyperon
+> Experimental's minimal interpreter and standard library, and now adds a first, still-incomplete
+> formalization of MeTTa-IL, the MeTTa intermediate language, built from F1R3FLY's MeTTaIL repository
+> (<https://github.com/F1R3FLY-io/MeTTaIL>). That MeTTa-IL layer is work in progress: it models the
+> determinate core, cross-checks it against the real tool, and flags the parts that are still open (see
+> the MeTTaIL section below). MeTTa on Rholang is still planned.
 
 This is a Lean 4 formalization of Hyperon's minimal MeTTa interpreter, the small "assembly language"
 that the rest of MeTTa is built on. The standard library is written in MeTTa on top of those
@@ -106,6 +108,36 @@ bisimulation, and a resource-bounded (gas) extension. The bridge between the ind
 specification is in `Proofs/Correspondence.lean`, covered in the book's operational-semantics and
 correspondence chapters at [mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/).
 
+## MeTTaIL (work in progress)
+
+`MeTTaIL/` is a first machine-checked formalization of F1R3FLY's MeTTaIL, the meta-language that turns a
+presentation of a graph-structured lambda theory into a calculus's grammar, equations, and rewrites. It
+is built from the F1R3FLY MeTTaIL repository (<https://github.com/F1R3FLY-io/MeTTaIL>) and it is not
+finished. It models the determinate core and is honest about what is still open.
+
+What is checked: the elaborate, desugar, type-lift, and monomorphize pipeline, pinned by kernel
+`decide` against output captured from the real Scala tool on `Rholang.module`; the GSLT reduction
+relation (soundness); subject reduction and confluence for SKI and the simply-typed lambda calculus;
+the semantic cores of the two papers' calculi (the spice bounded-reachability rule and the mq-calculus
+Born-rule probability conservation); the MeTTa-to-GSLT bridge; and the presentation lattice laws with
+decidable equality. It builds with 0 `sorry`/`admit`/`native_decide`/`partial`/`unsafe`, and the axiom
+audit shows only the three standard axioms.
+
+What is open: the modal hypercube typing for binder calculi (open in the source itself), the
+rho-calculus full-abstraction result, the spice and mq calculi as full reduction theories, a standalone
+rho-calculus reduction development, the per-variable category-consistency check in the elaborator, and
+an operational bisimulation against the four-register machine. These are flagged in the code and in
+[`MeTTaIL/SPECIFICATION.md`](MeTTaIL/SPECIFICATION.md).
+
+Formalizing the tool also turned up several bugs in it. They are written up for the F1R3FLY team in
+[`MeTTaIL/HYPERON_IMPROVEMENTS.md`](MeTTaIL/HYPERON_IMPROVEMENTS.md). The full treatment is the MeTTaIL
+chapter in the book at [mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/). Build it with the
+rest of the proofs:
+
+```bash
+lake build MeTTaIL MeTTaILProofs MeTTaILTests
+```
+
 ## Documentation
 
 The book and a generated API reference are published together at
@@ -143,8 +175,8 @@ the Lean toolchain. Download an archive from the [releases page](https://github.
 then:
 
 ```bash
-tar xzf leatta-0.3.1-linux-x86_64.tar.gz
-cd leatta-0.3.1-linux-x86_64 && ./install.sh   # installs to ~/.local/bin
+tar xzf leatta-0.4.0-linux-x86_64.tar.gz
+cd leatta-0.4.0-linux-x86_64 && ./install.sh   # installs to ~/.local/bin
 LeaTTa --min '!(+ 1 (* 2 (- 10 4)))'             # [13]
 ```
 
@@ -179,11 +211,13 @@ Improvements over Hyperon appendix at [mestto.github.io/LeaTTa](https://mestto.g
 ## Layout and scope
 
 - Active: `Core` (the object language), `Runtime.Parser`, `Minimal.Interpreter`, `Minimal.Stdlib`.
-  `Proofs` and `Operational` are the metatheory and the published semantics.
+  `Proofs` and `Operational` are the metatheory and the published semantics. `MeTTaIL` (with
+  `MeTTaILProofs` and `MeTTaILTests`) is the work-in-progress MeTTa-IL formalization.
 - Archived and not built: earlier exploratory models, including a four-register runtime, categorical
   metagraph rewriting, a Ruliad sketch, and an earlier approximate standard library. They live under
   [archive/](archive/) with their own README, kept for reference and not part of the verified work.
 - In scope: the minimal interpreter, the standard library (computation, control, lists, sets,
   asserts), the runtime type system, mixed arithmetic, mutable spaces and state, conjunctive match,
   and the metatheory layer.
-- TODO: the full module system is not yet covered.
+- TODO: the full module system is not yet covered; the MeTTa-IL formalization is incomplete (its open
+  parts are listed in the MeTTaIL section above and in [`MeTTaIL/SPECIFICATION.md`](MeTTaIL/SPECIFICATION.md)).

@@ -12,6 +12,7 @@ Open obligations: none
 import CordialMiners.Ref.TauOrder
 import CordialMiners.Ref.WeightedCollector
 import CordialMiners.Spec.SchedulerSpec
+import CordialMiners.Extract.MettaIL
 
 namespace CordialMiners.Tests
 open CordialMiners
@@ -60,5 +61,24 @@ example :
     discipline). -/
 example : safePublish ([1, 2] : List Nat) [1, 2, 3] = [1, 2, 3] := by decide
 example : safePublish ([1, 2] : List Nat) [1, 3] = [1, 2] := by decide
+
+/-- A number codec for extraction: a Wave or Hash is just a number atom here, and parsing reads it
+    back. It is a left inverse, so extraction round-trips. -/
+def numDec : Sexpr → Option Nat
+  | .num n => some n
+  | _ => none
+
+#eval encodeFact (Wave := Nat) (Hash := Nat) Sexpr.num Sexpr.num (TrecFact.final 3 7)
+-- (final 3 7)
+
+/-- A `final` fact extracts to the atom `(final 3 7)` and parses straight back. -/
+example :
+    decodeFact numDec numDec (encodeFact Sexpr.num Sexpr.num (TrecFact.final 3 7))
+      = some (TrecFact.final (Wave := Nat) (Hash := Nat) 3 7) := by decide
+
+/-- The variable-length ordered-prefix fact also round-trips through MeTTa-IL. -/
+example :
+    decodeFact numDec numDec (encodeFact Sexpr.num Sexpr.num (TrecFact.orderedPrefix [1, 2, 3]))
+      = some (TrecFact.orderedPrefix (Wave := Nat) (Hash := Nat) [1, 2, 3]) := by decide
 
 end CordialMiners.Tests

@@ -36,11 +36,9 @@ shortTitle := "LeaTTa"
 %%%
 
 :::paragraph
-*Alpha.* This is an early, alpha-stage release and a starting foundation. It will be improved
-substantially in upcoming iterations as MeTTa is more fully formalised. It currently formalises
-Hyperon Experimental's minimal interpreter and standard library. It does *not* yet cover the
-semantics of MeTTa-IL, the MeTTa intermediate language, which is still in development. Future
-iterations are planned to add MeTTa-IL and MeTTa on Rholang.
+*Release 1.0.* This book covers the public 1.0 surface: Hyperon Experimental's minimal interpreter
+and standard library, the published MeTTa operational semantics, the MeTTaIL spec-to-runtime path, and
+the Cordial Miners safety core. The limitations chapter states the remaining gaps directly.
 :::
 
 {index}[LeaTTa]
@@ -53,16 +51,20 @@ kernel verifies. The formalization covers:
  * the minimal interpreter;
  * the standard library;
  * the gradual type system;
+ * the published four-register operational semantics;
+ * the MeTTaIL formalization and editable runtime-file path;
+ * the PoR-weighted Cordial Miners safety formalization;
  * a body of machine-checked *metatheory*: determinism, confluence of the deterministic fragment,
    type soundness, gradual-typing consistency, soundness *and* completeness of first-argument
    indexing, and a bisimulation connecting the kernel's rule-firing core to the published
    operational semantics of MeTTa at the level of which rules fire {citep mops}[].
 
 Every theorem in this book is checked by Lean's kernel. The development contains *no* `sorry`,
-`admit`, `native_decide`, `partial`, or `unsafe`; `#print axioms` reports only the three standard
-classical axioms of Mathlib {citep mathlib}[], and the gradual-typing non-transitivity result depends
-on no axioms at all. The executable interpreter is validated against Hyperon's own test corpus
-(270/270 assertions).
+`admit`, `native_decide`, `partial`, or `unsafe`; the central axiom audit reports only the three
+standard classical axioms of Mathlib {citep mathlib}[], and the gradual-typing non-transitivity
+result depends on no axioms at all. The executable interpreter is validated against Hyperon's own
+test corpus (270/270 assertions). CI fails on root Lean/Lake warnings and on any unreviewed book
+warning; the only allowed book warning is the known upstream Verso v4.31.0 `@[expose]` warning.
 
 :::paragraph
 LeaTTa is written for two audiences:
@@ -126,8 +128,8 @@ cd do
 
 The remaining chapters cover the object language, the minimal interpreter and its standard
 library, the gradual type system, the metatheory, the operational semantics and its correspondence to
-the interpreter, the blockchain-oriented guarantees, the `future-work` branch, and a discussion
-of the development's current limitations and open problems.
+the interpreter, the blockchain-oriented guarantees, future work, and a discussion of the
+development's current limitations and open problems.
 
 {include 1 Docs.ObjectLanguage}
 

@@ -1,0 +1,7 @@
+# A runnable MeTTaIL dialect file for the shipped CLI.
+sort Tm
+term tt : Tm
+term ff : Tm
+term notOp : Tm -> Tm
+rewrite notTt : (notOp tt) => ff
+rewrite notFf : (notOp ff) => tt

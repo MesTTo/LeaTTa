@@ -41,38 +41,12 @@ strip "$OUT/bin/LeaTTa" 2>/dev/null || true   # smaller download; debug info is 
 for f in a1_symbols b1_equal_chain c1_grounded_basic d1_gadt test_stdlib; do
   [ -f "tests/corpus/${f}.metta" ] && cp "tests/corpus/${f}.metta" "$OUT/examples/"
 done
+[ -f tests/mettail/bool.mettail ] && cp tests/mettail/bool.mettail "$OUT/examples/"
 
 [ -f LICENSE ] && cp LICENSE "$OUT/LICENSE"
 cp scripts/install.sh "$OUT/install.sh"
 chmod +x "$OUT/install.sh"
-
-cat > "$OUT/README.md" <<EOF
-# LeaTTa ${VERSION} (${PLATFORM})
-
-A single-binary build of the machine-checked minimal MeTTa interpreter from the LeaTTa
-project: https://github.com/MesTTo/LeaTTa
-
-This bundle was built and tested on Linux x86_64. The same binary runs on other glibc
-Linux machines of the same architecture. For macOS or Windows, build from source (see
-the project INSTALL.md) or use the binaries attached to the GitHub release.
-
-## Install
-
-    ./install.sh                 # installs bin/LeaTTa to ~/.local/bin
-
-Pass a prefix to install elsewhere, for example \`sudo ./install.sh /usr/local\`.
-
-## Run
-
-    LeaTTa --min '!(+ 1 (* 2 (- 10 4)))'           # [13]
-    LeaTTa --min '!(map-atom (1 2 3) \$x (* \$x \$x))'  # [(1 4 9)]
-    LeaTTa --file examples/test_stdlib.metta
-    LeaTTa --oracle examples/a1_symbols.metta      # PASS/FAIL/TOTAL over a test file
-    LeaTTa                                          # built-in demo
-
-Each result is printed as the list of values that \`!\`-evaluation produces. The binary
-depends only on the standard C library; no Lean toolchain is needed to run it.
-EOF
+scripts/write-release-readme.sh "$OUT" "$VERSION" "$PLATFORM"
 
 echo "==> Creating tarball ..."
 ( cd dist && tar czf "${NAME}.tar.gz" "${NAME}" )

@@ -1,3 +1,4 @@
+/- jscpd:ignore-start -/
 /-
 LeaTTa: Chapter: The Operational Semantics (MOPS).
 -/
@@ -18,6 +19,7 @@ set_option verso.code.warnLineLength 100
 %%%
 tag := "sec-operational"
 %%%
+/- jscpd:ignore-end -/
 
 Alongside the executable interpreter, LeaTTa formalizes the *published* operational semantics of MeTTa: the four-register abstract machine of {citet mops}[], which its authors describe as an independent specification of the language. To our knowledge this is its first machine-checked rendering.
 
@@ -48,7 +50,7 @@ The small-step semantics is a computable function `smallStep?` (`Operational/Sem
 
  * *QUERY*: reduces an input term against `k`'s equations, depositing all matching instantiated right-hand sides into the workspace. A `transform` atom reduces under QUERY, not as a separate step.
  * *CHAIN*: does the same for a workspace term.
- * *ADDATOM* / *REMATOM*: mutate the knowledge base and emit unit.
+ * *ADDATOM* / *REMATOM*: consume the matched input command, mutate the knowledge base, and emit unit.
  * *OUTPUT*: moves an irreducible (`insensitive`) workspace term to the output.
 
 The matcher used is the kernel's own `matchAtoms`, so the spec is wired to the same matcher the interpreter runs.
@@ -60,6 +62,13 @@ LeaTTa proves three properties of this machine:
  * *QUERY is sound and complete*: a workspace contractum is produced if and only if it is a genuine instantiated equation firing (`mem_equalityReductions`).
  * *The knowledge base is auditable*: a single step changes `k` only by an explicit `add-atom`/`remove-atom`. Pure reduction never mutates it (`smallStep?_kb_auditable`).
  * *Gas is never created*: in the resource-bounded extension (effort tokens with a non-negative transition cost), total energy is monotonically non-increasing (`resourceStep?_energy_nonincreasing`). A contract can spend gas but never mint it.
+
+The input registers are multisets, so one transition consumes exactly one command atom. The aliases
+`add-atom`/`addAtom` and `remove-atom`/`remAtom` are accepted, but firing one spelling does not silently
+delete the other spelling if both are present. `Operational/SemanticsCoverage.lean` checks those four
+alias cases directly. `Operational/Properties.lean` proves the general helper facts
+`stepAddAtom_input_eq` and `stepRemAtom_input_eq`, plus one dispatch theorem for each spelling, so the
+matched command atom is the one removed from the input register.
 
 # Program Equivalence: Barbed Bisimulation
 

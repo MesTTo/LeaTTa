@@ -1,6 +1,6 @@
 # Build the LeaTTa interpreter binary on Linux, macOS, and Windows, and attach the
 # bundles to the GitHub release for the pushed tag. Trigger by pushing a tag like
-# `v0.3.0`, or run manually from the Actions tab. The interpreter binary does not link
+# `v1.0.0`, or run manually from the Actions tab. The interpreter binary does not link
 # Mathlib, so these jobs build only the small kernel and finish quickly.
 name: release
 
@@ -55,6 +55,8 @@ jobs:
           for f in a1_symbols b1_equal_chain c1_grounded_basic d1_gadt test_stdlib; do
             cp "tests/corpus/$f.metta" "dist/$NAME/examples/" 2>/dev/null || true
           done
+          cp tests/mettail/bool.mettail "dist/$NAME/examples/" 2>/dev/null || true
+          scripts/write-release-readme.sh "dist/$NAME" "$VERSION" "${{ matrix.platform }}"
           ( cd dist && tar czf "$NAME.tar.gz" "$NAME" )
           ( cd dist && (sha256sum "$NAME.tar.gz" || shasum -a 256 "$NAME.tar.gz") > "$NAME.tar.gz.sha256" )
 
@@ -71,6 +73,8 @@ jobs:
           for f in a1_symbols b1_equal_chain c1_grounded_basic d1_gadt test_stdlib; do
             cp "tests/corpus/$f.metta" "dist/$NAME/examples/" 2>/dev/null || true
           done
+          cp tests/mettail/bool.mettail "dist/$NAME/examples/" 2>/dev/null || true
+          scripts/write-release-readme.sh "dist/$NAME" "$VERSION" "windows-x86_64"
           ( cd dist && 7z a "$NAME.zip" "$NAME" >/dev/null )
           ( cd dist && certutil -hashfile "$NAME.zip" SHA256 > "$NAME.zip.sha256" )
 
@@ -88,6 +92,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          body_path: RELEASE_NOTES.md
           files: |
             dist/*.tar.gz
             dist/*.tar.gz.sha256

@@ -1,3 +1,4 @@
+/- jscpd:ignore-start -/
 /-
 LeaTTa: Chapter: MeTTaIL, formalized.
 -/
@@ -17,6 +18,7 @@ set_option verso.code.warnLineLength 100
 %%%
 tag := "sec-mettail"
 %%%
+/- jscpd:ignore-end -/
 
 MeTTaIL is F1R3FLY-io's intermediate language for MeTTa. Its full name is the Meta Type Talk
 Intermediate Language, and it is the work of Lucius Gregory Meredith and Mike Stay, the people behind
@@ -77,6 +79,50 @@ type-lift, `monomorphize`) and prove each reproduces the tool's printed output f
 example: the `...ToArrow` companions, the `TypeLiftCC..DD` companions with the duplicated-channel
 extension, and the `ArrowCC..DD` sort with its application, lambda, and variable constructors.
 
+The shipped binary exposes the same idea for an editable runtime file. `MeTTaIL/Runtime/LanguageFile.lean`
+parses a small external dialect format with `sort`, `term`, and `rewrite` declarations, elaborates it,
+monomorphizes it, and runs a term with the generic reducer. For example, the checked fixture
+`tests/mettail/bool.mettail` declares `tt`, `ff`, and `notOp`; running
+`LeaTTa --mettail tests/mettail/bool.mettail --term '(notOp tt)'` prints `ff`. That file format is not
+the full BNFC MeTTaIL surface. It is the product-facing MVP for base-rewrite dialects, wired to the
+same verified runtime path.
+
+# Running an Editable Dialect
+
+The external format is deliberately small enough to inspect. A dialect file is a sequence of
+line-oriented declarations:
+
+```
+sort Tm
+term tt : Tm
+term ff : Tm
+term notOp : Tm -> Tm
+rewrite notTt : (notOp tt) => ff
+rewrite notFf : (notOp ff) => tt
+```
+
+The `sort` line exports a sort. A `term` line declares a prefix constructor and its arity. A `rewrite`
+line gives a base rewrite over S-expression terms. Blank lines and `#` comments are ignored.
+
+The command below parses the file, elaborates it into a `TheoryInst`, monomorphizes the presentation,
+and normalizes the supplied term:
+
+```
+LeaTTa --mettail tests/mettail/bool.mettail --term '(notOp tt)'
+```
+
+The result is:
+
+```
+ff
+```
+
+Changing the file changes the runtime. For example, replacing the two rewrites with
+`rewrite keep : (notOp tt) => tt` makes the same command print `tt`. That is the intended MeTTaIL
+workflow in small form: edit the language description, then run terms through the runtime derived from
+that description. The current file format covers base rewrites; richer MeTTaIL syntax can elaborate to
+the same `TheoryInst` core.
+
 # The Operational Semantics
 
 A presentation's rewrites induce reduction on terms. The relation `Reduces` fires a rewrite when its
@@ -85,6 +131,15 @@ bound `src` to itself reduce, binding `tgt`; the contractum is the right-hand si
 those bindings. Base rewrites contract a redex directly, premised rewrites are the congruence rules.
 The executable matcher and the relation are tied together: every reduct the matcher produces is a
 genuine reduction.
+
+The conditional runtime bridge has two layers. `RuntimeCongruenceStep` is the broad runtime predicate:
+it covers one-premise `sexp` argument congruence and both `Subst` context forms (`substB`, `substR`).
+`SexpArgCongExtension` is the presentation-level predicate for premised rewrite declarations; it covers
+the rules that a presentation can add syntactically, including the RHO `RNew` shape
+`PNew[x, Src] -> PNew[x, Tgt]`. The bridge proves a `SexpArgCongExtension` extends the base runtime
+only by `RuntimeCongruenceStep`s, then derives the confluence transport as a corollary. A top-level
+`Subst` right-hand side is still not treated as a declaration-level `SexpArgCongRule`, because runtime
+instantiation resolves `Subst` immediately with `subst1` rather than rebuilding the `Subst` node.
 
 # Type Soundness and Confluence
 
@@ -100,6 +155,19 @@ Every one of these is a real kernel-checked proof. An axiom audit shows the whol
 on the three standard axioms (`propext`, `Classical.choice`, `Quot.sound`); several proofs use none
 beyond `propext`. There is no `sorry`, `admit`, `native_decide`, `partial`, or `unsafe` anywhere in
 the development, and a CI guard enforces that.
+
+The proof architecture is split across small source modules. `MeTTaIL/Semantics/Eval.lean`,
+`Normal.lean`, `Terminate.lean`, and `Strategy.lean` give the executable reducer, normal-form driver,
+termination measure, and leftmost-outermost strategy. Newman's lemma and the Knuth-Bendix-Huet
+critical-pair route live in `MeTTaILProofs/Newman.lean` and `CriticalPairs.lean`. The conditional
+fragment uses the extended critical-pair obligations described in the conditional-rewriting
+literature, with proper conditional critical pairs and conditional variable pairs supplied as
+hypotheses. The OSLF line follows Stay and Meredith's distributive-law view of operational semantics
+{citep stayMeredithLogic}[] and its enriched-Lawvere-theory companion
+{citep enrichedLawvereSemantics}[]. The general categorical backbone is Beck's composite-monad theorem
+{citep beckDistributiveLaws}[], in the 2-categorical setting made explicit by Street
+{citep streetFormalTheoryMonads}[]; `MeTTaILProofs/DistributiveLaw.lean` formalizes that theorem for
+Mathlib monads.
 
 # Two Calculi from the Papers
 

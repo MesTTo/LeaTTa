@@ -1,3 +1,4 @@
+/- jscpd:ignore-start -/
 /-
 LeaTTa: Chapter: The Metatheory.
 -/
@@ -18,8 +19,11 @@ set_option verso.code.warnLineLength 100
 %%%
 tag := "sec-meta"
 %%%
+/- jscpd:ignore-end -/
 
 This chapter walks through the machine-checked metatheory. Every result here is a theorem in Lean's kernel. The development contains no `sorry` or `admit`, and `#print axioms` reports only Mathlib's three standard classical axioms (`propext`, `Classical.choice`, `Quot.sound`). The gradual-typing non-transitivity result depends on no axioms at all.
+
+The headline axiom checks are now collected in `MeTTaILProofs/AxiomAudit.lean`, which is imported by the proof root and built in CI. The root CI build also fails on any Lean or Lake warning, so a proof that starts leaning on a placeholder warning cannot slip through as a green build. The book CI separately builds the Verso source and generated site, failing on every book warning except the reviewed upstream Verso v4.31.0 `@[expose]` warning.
 
 # Determinism and Replayability
 

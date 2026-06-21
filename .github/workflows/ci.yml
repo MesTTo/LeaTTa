@@ -35,11 +35,8 @@ jobs:
       - name: Build (kernel, interpreter binary, metatheory, operational)
         run: lake build 2>&1 | tee build.log
 
-      - name: No sorry or admit (Lean's own warning)
-        run: |
-          if grep -q "declaration uses 'sorry'" build.log; then
-            echo "Build reported a use of sorry/admit."; exit 1
-          fi
+      - name: No Lean build warnings
+        run: scripts/ci/check-build-warnings.sh build.log
 
       - name: No forbidden placeholders (partial, unsafe, native_decide)
         run: scripts/ci/check-no-forbidden.sh
@@ -49,3 +46,28 @@ jobs:
 
       - name: Regression suite
         run: ./scripts/run-regression.sh
+
+  book:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install elan
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Build the Verso book library
+        working-directory: book
+        run: lake build Docs 2>&1 | tee book-build.log
+
+      - name: No unreviewed book build warnings
+        run: scripts/ci/check-book-warnings.sh book/book-build.log
+
+      - name: Build the Verso book site
+        working-directory: book
+        run: lake exe docs 2>&1 | tee book-docs.log
+
+      - name: No unreviewed book generation warnings
+        run: scripts/ci/check-book-warnings.sh book/book-docs.log

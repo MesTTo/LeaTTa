@@ -7,11 +7,12 @@ Purpose: The root of the MeTTaIL formalization in Lean 4, a faithful model of F1
   elaborates a chosen theory instance into a presentation (a graph-structured lambda theory) and can
   lift it from an untyped calculus to a typed one. The root aggregates the layers: the object syntax,
   the theory-instance algebra and presentation operations, the elaborator, the desugar/type-lift/
-  monomorphize transforms, the GSLT reduction core and relation, the operational bridge, and the
-  SKI and lambda calculus instances with the present-moment spice extension. The data model and
+  monomorphize transforms, the GSLT reduction core and relation, the executable runtime (the one-step
+  reducer, the fuel-bounded normalizer, and the S-expression front end), the operational bridge, and
+  the SKI and lambda calculus instances with the present-moment spice extension. The data model and
   passes are computable and Mathlib-free; the proofs live in a separate Mathlib-backed layer.
-Imports: the MeTTaIL.Syntax, MeTTaIL.Theory, MeTTaIL.Transform, MeTTaIL.Semantics, MeTTaIL.Bridge,
-  MeTTaIL.Calculi, and MeTTaIL.Extensions modules
+Imports: the MeTTaIL.Syntax, MeTTaIL.Theory, MeTTaIL.Transform, MeTTaIL.Semantics, MeTTaIL.Runtime,
+  MeTTaIL.Bridge, MeTTaIL.Calculi, and MeTTaIL.Extensions modules
 Trusted boundary: none
 Main exports: (aggregator; re-exports the library)
 Open obligations: none
@@ -37,6 +38,27 @@ import MeTTaIL.Transform.Monomorphize
 import MeTTaIL.Semantics.Reduce
 -- Layer 3: the GSLT reduction relation (base + premised/congruence rules) + matcher soundness.
 import MeTTaIL.Semantics.Relation
+-- Runtime: the executable one-step reducer over the relation (leftmost-outermost), its fuel-bounded
+-- normalizer, the normal-form characterization, and conditional termination under a measure.
+import MeTTaIL.Semantics.Context
+import MeTTaIL.Semantics.Eval
+import MeTTaIL.Semantics.Normal
+import MeTTaIL.Semantics.Terminate
+-- Runtime: evaluation-context strategies (K-style strictness) restricting where the reducer descends.
+import MeTTaIL.Semantics.Strategy
+-- Runtime: the sort discipline derived from the grammar, with subject reduction (the runtime keeps a
+-- term at its sort).
+import MeTTaIL.Semantics.Sorts
+-- Runtime: a recursive all-subterms sort system with its substitution lemma (deeper than head-sort).
+import MeTTaIL.Semantics.WellSorted
+-- Runtime: operational semantics in logical form (Stay-Meredith), the spatial-behavioral logic derived
+-- from a presentation, with the arrow type as a special case of the possibly modal operator.
+import MeTTaIL.Semantics.OSLF
+-- Runtime: a generic S-expression front end (parse and pretty-print) and the `run` entry point.
+import MeTTaIL.Runtime.Sexpr
+import MeTTaIL.Runtime.Generic
+-- Runtime: external file surface for runnable dialect presentations.
+import MeTTaIL.Runtime.LanguageFile
 -- Bridge: embedding LeaTTa's MeTTa terms into GSLT terms (faithful on the grounded-free fragment).
 import MeTTaIL.Bridge.Operational
 -- Layer 4: SKI combinatory logic instance with subject reduction (type soundness).

@@ -2,7 +2,7 @@
 # It requires the main library by path and doc-gen4 pinned to the matching toolchain, and
 # reuses the parent's already-fetched packages (Mathlib, etc.) via packagesDir. This keeps
 # doc-gen4 out of the main build. Generate docs with:
-#   cd docbuild && lake build MettaHyperonFull:docs Metatheory:docs Operational:docs
+#   cd docbuild && lake build MettaHyperonFull:docs Metatheory:docs Operational:docs MeTTaIL:docs MeTTaILProofs:docs CordialMiners:docs
 # Output lands in docbuild/.lake/build/doc/.
 name = "docbuild"
 reservoir = false

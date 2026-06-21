@@ -2,7 +2,7 @@ import Lake
 open Lake DSL
 
 package «MettaHyperonFull» where
-  version := v!"0.5.0"
+  version := v!"1.0.0"
   keywords := #["MeTTa", "Hyperon", "formal semantics", "metatheory", "verified interpreter"]
   leanOptions := #[⟨`autoImplicit, false⟩, ⟨`relaxedAutoImplicit, false⟩]
 
@@ -38,8 +38,8 @@ lean_lib «Operational» where
 -- graph-structured lambda theories (presentations + the elaboration algebra), its type-lifting
 -- transformation, the GSLT operational semantics, the hypercube typing, and the spice/mq-calculus
 -- extensions. The computable core (data model, elaboration, transforms, reduction) is Mathlib-free,
--- like the kernel; a separate target so it is machine-checked in CI and the `LeaTTa` binary never
--- links it.
+-- like the kernel. The `LeaTTa` binary imports the external file runner from this target, so users can
+-- run a small editable MeTTaIL dialect file from the command line.
 @[default_target]
 lean_lib «MeTTaIL» where
   roots := #[`MeTTaIL]

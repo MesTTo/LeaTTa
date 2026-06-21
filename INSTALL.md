@@ -17,8 +17,8 @@ Download the archive for your platform from the
 [releases page](https://github.com/MesTTo/LeaTTa/releases), then unpack and install it:
 
 ```bash
-tar xzf leatta-0.3.1-linux-x86_64.tar.gz
-cd leatta-0.3.1-linux-x86_64
+tar xzf leatta-1.0.0-linux-x86_64.tar.gz
+cd leatta-1.0.0-linux-x86_64
 ./install.sh                 # installs to ~/.local/bin by default
 ```
 
@@ -34,6 +34,7 @@ Then test it:
 
 ```bash
 LeaTTa --min '!(+ 1 (* 2 (- 10 4)))'      # [13]
+LeaTTa --mettail examples/bool.mettail --term '(notOp tt)'  # ff
 LeaTTa --oracle examples/a1_symbols.metta
 ```
 
@@ -60,7 +61,7 @@ so once `LeaTTa` is built it runs anywhere without the proof layer.
 ## Usage
 
 `LeaTTa` runs programs on the minimal interpreter. For each `!`-evaluation, it prints the
-list of values it produces.
+list of values it produces. It can also run a small editable MeTTaIL dialect file with `--mettail`.
 
 | Command | What it does |
 | --- | --- |
@@ -68,6 +69,7 @@ list of values it produces.
 | `LeaTTa --min 'PROGRAM'` | run a program given on the command line |
 | `LeaTTa --file PATH` | run a `.metta` source file |
 | `LeaTTa --oracle PATH` | run a test file's `!`-assertions and report PASS/FAIL/TOTAL |
+| `LeaTTa --mettail PATH --term TERM [--fuel N]` | run a term through an editable MeTTaIL dialect file |
 
 An assertion passes under `--oracle` when it evaluates to the unit atom `()`.
 
@@ -77,7 +79,33 @@ Examples:
 LeaTTa --min '!(map-atom (1 2 3) $x (* $x $x))'   # [(1 4 9)]
 LeaTTa --min '!(case (+ 1 1) ((1 one) (2 two)))'  # [two]
 LeaTTa --file examples/test_stdlib.metta
+LeaTTa --mettail examples/bool.mettail --term '(notOp tt)'  # ff
 ```
+
+## Editable MeTTaIL dialect files
+
+The `--mettail` mode is for small line-oriented dialect files. The release bundle includes
+`examples/bool.mettail`:
+
+```text
+sort Tm
+term tt : Tm
+term ff : Tm
+term notOp : Tm -> Tm
+rewrite notTt : (notOp tt) => ff
+rewrite notFf : (notOp ff) => tt
+```
+
+Run a term through that dialect:
+
+```bash
+LeaTTa --mettail examples/bool.mettail --term '(notOp tt)'   # ff
+LeaTTa --mettail examples/bool.mettail --term '(notOp ff)'   # tt
+```
+
+The format supports blank lines and `#` comments. `sort` declares a result sort, `term` declares a
+prefix constructor with an optional argument list, and `rewrite` declares a base rewrite. A term with
+no matching rewrite is already in normal form and prints back unchanged.
 
 ## Reproducing the validation
 
@@ -87,6 +115,7 @@ From a source checkout:
 make oracle        # differential oracle against Hyperon's corpus, 270/270
 make regression    # stdlib and grounded-op feature tests
 make test          # both of the above
+lake build MeTTaILTests
 ```
 
 ## Building a release bundle

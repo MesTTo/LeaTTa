@@ -9,8 +9,8 @@ Purpose: The minimal-MeTTa instruction set of the operational-semantics model (a
 Imports: MettaHyperonFull.Operational.Semantics
 Trusted boundary: human-reviewed spec
 Main exports: MinimalInstr, minimalInstrOf?, evalUnifyInstr, chainResults, evalMinimal
-Open obligations: `chain`, `metta`, and `call-native` have no case in `evalMinimal` and fall through
-  to the identity result.
+Open obligations: `metta` and `call-native` have no case in `evalMinimal` and fall through to the
+  identity result.
 -/
 import MettaHyperonFull.Operational.Semantics
 
@@ -26,7 +26,7 @@ namespace Metta
       model-only:   call-native   -- a host-call placeholder
       kernel-only:  metta-thread, capture   -- used by the standard library, not modelled here
 
-    `evalMinimal` implements ten of the enum's instructions; `chain`, `metta`, and `call-native`
+    `evalMinimal` implements the structural instructions directly. `metta` and `call-native`
     have no case and fall through to the identity result. The two layers are related by the
     correspondence proofs at the abstract level, not by an identical instruction list. -/
 inductive MinimalInstr where
@@ -62,10 +62,11 @@ def chainResults (results : List Atom) (x : VarName) (tmpl : Atom) : List Atom :
   results.map (fun r => Subst.apply [(x,r)] tmpl)
 
 /-- Dispatch a minimal instruction and return its results. The function is total; unrecognized atoms
-    are returned unchanged. Of the enum, `chain`, `metta`, and `call-native` have no case here and
-    fall through to the identity case. -/
+    are returned unchanged. Of the enum, `metta` and `call-native` have no case here and fall through
+    to the identity case. -/
 def evalMinimal (cfg : RuntimeConfig) (ctx : Space) : Atom → List Atom
   | Atom.expr [Atom.sym "unify", a, p, th, el] => evalUnifyInstr a p th el
+  | Atom.expr [Atom.sym "chain", nested, Atom.var x, tmpl] => chainResults (evalMinimal cfg ctx nested) x tmpl
   | Atom.expr [Atom.sym "cons-atom", h, Atom.expr t] => [Atom.expr (h::t)]
   | Atom.expr [Atom.sym "decons-atom", Atom.expr (h::t)] => [Atom.expr [h, Atom.expr t]]
   | Atom.expr [Atom.sym "collapse-bind", a] => [Atom.expr ((run cfg { State.empty with input := Space.singleton a, kb := ctx }).output.atoms)]

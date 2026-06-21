@@ -14,6 +14,11 @@ on:
     paths:
       - 'book/**'
       - 'MettaHyperonFull/**'
+      - 'MeTTaIL/**'
+      - 'MeTTaILProofs/**'
+      - 'MeTTaILTests/**'
+      - 'CordialMiners/**'
+      - 'tests/mettail/**'
       - 'docbuild/**'
       - 'lakefile.lean'
       - '.github/workflows/docs.yml'
@@ -40,16 +45,26 @@ jobs:
             | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
-      - name: Build the book
+      - name: Build the book library
         working-directory: book
-        run: lake exe docs
+        run: lake build Docs 2>&1 | tee book-build.log
+
+      - name: No unreviewed book build warnings
+        run: scripts/ci/check-book-warnings.sh book/book-build.log
+
+      - name: Build the book site
+        working-directory: book
+        run: lake exe docs 2>&1 | tee book-docs.log
+
+      - name: No unreviewed book generation warnings
+        run: scripts/ci/check-book-warnings.sh book/book-docs.log
 
       - name: Fetch the prebuilt Mathlib cache (shared with the API build)
         run: lake exe cache get
 
       - name: Build the API documentation (doc-gen4)
         working-directory: docbuild
-        run: lake build MettaHyperonFull:docs Metatheory:docs Operational:docs
+        run: lake build MettaHyperonFull:docs Metatheory:docs Operational:docs MeTTaIL:docs MeTTaILProofs:docs CordialMiners:docs
 
       - name: Trim API docs for hosting (retarget Mathlib links, drop local Mathlib tree)
         working-directory: docbuild

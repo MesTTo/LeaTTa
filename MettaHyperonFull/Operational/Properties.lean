@@ -80,6 +80,54 @@ theorem foldl_pushWork_kb (reds : List Atom) (s : State) :
   | nil => rfl
   | cons r rs ih => rw [List.foldl_cons, ih]; rfl
 
+/-! ## Input consumption for command atoms -/
+
+/-- `stepAddAtom` consumes exactly the command atom it was passed. -/
+theorem stepAddAtom_input_eq (s : State) (call a : Atom) :
+    (stepAddAtom s call a).input = Space.removeOne s.input call :=
+  rfl
+
+/-- `stepRemAtom` consumes exactly the command atom it was passed. -/
+theorem stepRemAtom_input_eq (s : State) (call a : Atom) :
+    (stepRemAtom s call a).input = Space.removeOne s.input call :=
+  rfl
+
+/-- The dashed add spelling dispatches to `stepAddAtom` with the same dashed command atom. -/
+theorem smallStep?_addAtomDash_eq_stepAddAtom (cfg : RuntimeConfig) (s : State) (x : Atom)
+    (rest : List Atom) :
+    smallStep? cfg { s with input := ⟨Atom.expr [Atom.sym "add-atom", x] :: rest⟩ } =
+      some (StepKind.addAtom,
+        stepAddAtom { s with input := ⟨Atom.expr [Atom.sym "add-atom", x] :: rest⟩ }
+          (Atom.expr [Atom.sym "add-atom", x]) x) :=
+  rfl
+
+/-- The camel add spelling dispatches to `stepAddAtom` with the same camel command atom. -/
+theorem smallStep?_addAtomCamel_eq_stepAddAtom (cfg : RuntimeConfig) (s : State) (x : Atom)
+    (rest : List Atom) :
+    smallStep? cfg { s with input := ⟨Atom.expr [Atom.sym "addAtom", x] :: rest⟩ } =
+      some (StepKind.addAtom,
+        stepAddAtom { s with input := ⟨Atom.expr [Atom.sym "addAtom", x] :: rest⟩ }
+          (Atom.expr [Atom.sym "addAtom", x]) x) :=
+  rfl
+
+/-- The dashed remove spelling dispatches to `stepRemAtom` with the same dashed command atom. -/
+theorem smallStep?_remAtomDash_eq_stepRemAtom (cfg : RuntimeConfig) (s : State) (x : Atom)
+    (rest : List Atom) :
+    smallStep? cfg { s with input := ⟨Atom.expr [Atom.sym "remove-atom", x] :: rest⟩ } =
+      some (StepKind.remAtom,
+        stepRemAtom { s with input := ⟨Atom.expr [Atom.sym "remove-atom", x] :: rest⟩ }
+          (Atom.expr [Atom.sym "remove-atom", x]) x) :=
+  rfl
+
+/-- The camel remove spelling dispatches to `stepRemAtom` with the same camel command atom. -/
+theorem smallStep?_remAtomCamel_eq_stepRemAtom (cfg : RuntimeConfig) (s : State) (x : Atom)
+    (rest : List Atom) :
+    smallStep? cfg { s with input := ⟨Atom.expr [Atom.sym "remAtom", x] :: rest⟩ } =
+      some (StepKind.remAtom,
+        stepRemAtom { s with input := ⟨Atom.expr [Atom.sym "remAtom", x] :: rest⟩ }
+          (Atom.expr [Atom.sym "remAtom", x]) x) :=
+  rfl
+
 /-- Knowledge-base auditability. One small step either leaves `kb` unchanged (`QUERY`/`CHAIN`/`OUTPUT`)
     or inserts exactly one atom (`add-atom`) or removes exactly one atom (`remove-atom`). No reduction
     step mutates the knowledge base as a side effect. -/

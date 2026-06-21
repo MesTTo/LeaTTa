@@ -1,5 +1,5 @@
 /-
-LeaTTa: Chapter: The future-work branch and the roadmap.
+LeaTTa: Chapter: future work and the roadmap.
 -/
 import VersoManual
 import Illuminate
@@ -13,12 +13,14 @@ open Docs
 set_option pp.rawOnError true
 set_option verso.code.warnLineLength 100
 
-#doc (Manual) "The future-work Branch" =>
+#doc (Manual) "Future Work" =>
 %%%
 tag := "sec-future"
 %%%
 
-The development has two branches. The `metatheory` branch covers MeTTa as it stands today: the minimal-MeTTa kernel and standard library, validated against Hyperon's corpus, with the full machine-checked metatheory and no `sorry`. The `future-work` branch prototypes the directions the minimal-MeTTa specification itself lists under "future work", together with a fuller module system. A feature is admitted to the branch only once the metatheory still goes through, or its interaction with the metatheory is documented precisely.
+This chapter records directions that are not part of the 1.0 release contract. Some have small
+prototypes; some are only scoped. A feature belongs in the main development only once the existing
+metatheory still checks, or once its interaction with the metatheory is stated precisely.
 
 # A Feature, and a Finding
 
@@ -28,7 +30,8 @@ The feature was first prototyped not in `unify` but in the general matcher `matc
 
 # The Roadmap
 
-The branch records the remaining items from the specification's future-work section, each annotated with its interaction with the existing metatheory.
+The remaining items below come from the minimal-MeTTa specification and from the gaps exposed by the
+formalization. Each item is listed with the proof obligation it creates.
 
  * *Gap matching* `(A ... D ...)`, which matches part of an expression with holes. Like `(:= x)`,
    this is a matcher-level feature whose interaction with first-argument indexing must be worked out,
@@ -39,6 +42,6 @@ The branch records the remaining items from the specification's future-work sect
    core.
  * *General matching modifiers* `(:mod atom)`, the specification's proposed syntax for adding
    matching directives, of which `:=` is the first, without clashing with user symbols.
- * *A fuller module system*. Beyond the namespaced `import!` and `register-module!` already on the
-   `metatheory` branch, this covers the `import * from`, `import as`, and `import item from` forms,
-   package metadata with version selection, and the catalog-management operations.
+ * *A fuller module system*. Beyond the namespaced `import!` and `register-module!` already present,
+   this covers the `import * from`, `import as`, and `import item from` forms, package metadata with
+   version selection, and the catalog-management operations.

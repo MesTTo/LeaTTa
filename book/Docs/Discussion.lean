@@ -22,7 +22,21 @@ This chapter tells you what LeaTTa establishes, what it does not yet establish, 
 
 # What Is Established
 
-LeaTTa gives you an executable minimal-MeTTa kernel and standard library that pass Hyperon's test corpus at 270 of 270 assertions, together with a metatheory layer in which every theorem is checked by Lean's kernel with no `sorry`, `admit`, `native_decide`, `partial`, or `unsafe`. `#print axioms` reports only the three standard classical axioms of Mathlib. The metatheory proves: determinism, confluence of the deterministic fragment, soundness and completeness of first-argument indexing, gradual-type soundness, non-transitivity of consistency for both the relation and the executable matcher, and a bisimulation tying the indexed kernel to the published operational semantics at the level of rule firing.
+LeaTTa gives you an executable minimal-MeTTa kernel and standard library that pass Hyperon's test
+corpus at 270 of 270 assertions, together with a metatheory layer in which every theorem is checked by
+Lean's kernel with no `sorry`, `admit`, `native_decide`, `partial`, or `unsafe`. `#print axioms`
+reports only the three standard classical axioms of Mathlib. The kernel metatheory proves
+determinism, confluence of the deterministic fragment, soundness and completeness of first-argument
+indexing, gradual-type soundness, non-transitivity of consistency for both the relation and the
+executable matcher, and a bisimulation tying the indexed kernel to the published operational semantics
+at the level of rule firing.
+
+The 1.0 release also establishes two larger extensions around that kernel. The MeTTaIL development
+formalizes presentation algebra, the elaboration and transform pipeline, the generic reducer, the
+monomorphized runtime path, the small external dialect-file parser, and the associated soundness,
+sort-preservation, confluence, OSLF, and distributive-law results. The Cordial Miners development
+formalizes a PoR-weighted leaderless DAG consensus model and proves end-to-end safety from the named
+Byzantine-weight, honest non-equivocation, and finality-permanence assumptions.
 
 # Current Limitations
 
@@ -47,13 +61,37 @@ Here are four boundaries, each stated plainly, each a candidate for the next inc
    never created. It does not yet classify a halted configuration as completed, out of gas, or stuck,
    nor prove that a strictly-positive per-step cost yields termination within a fixed budget. The
    ingredients are present; a three-way outcome type would complete the on-chain metering story.
+ * *The MeTTaIL external file format.* The `--mettail` runner is the public entry point for editable
+   dialect files, but it intentionally accepts only `sort`, `term`, and base `rewrite` declarations
+   over S-expression terms. The full BNFC MeTTaIL surface parser is not part of 1.0.
+ * *The remaining MeTTaIL research layer.* Modal hypercube typing for binder calculi, rho-calculus
+   full abstraction, full spice and mq reduction theories, and an operational bisimulation from
+   MeTTaIL back to the four-register machine remain outside this release.
+ * *Cordial Miners liveness and environment assumptions.* The safety theorem is explicit about the
+   consensus assumptions it needs. Network fairness, scheduler fairness, and certificate persistence
+   under blocklace extension are not hidden in the theorem; they are modeled as hypotheses or scoped
+   as future work.
 
 None of these limitations contradicts a stated result. Each marks where a stated result can be strengthened or its scope widened.
 
 # Related Work
 
-The type-system layer follows the gradual-typing tradition of {citet siekTaha}[], adopting their consistency relation and extending their non-transitivity result to the executable matcher. The operational layer is a machine-checked rendering of the MeTTa operational semantics of {citet mops}[], which its authors propose as an independent specification of the language. The motivation for that specification and for a language of thought built on metagraph rewriting is given by {citet goertzelMetagraph}[]. The development uses Lean 4 {citep lean4}[] and draws on Mathlib {citep mathlib}[] for order-theoretic and relational infrastructure.
+The type-system layer follows the gradual-typing tradition of {citet siekTaha}[], adopting their
+consistency relation and extending their non-transitivity result to the executable matcher. The
+operational layer is a machine-checked rendering of the MeTTa operational semantics of {citet mops}[],
+which its authors propose as an independent specification of the language. The motivation for that
+specification and for a language of thought built on metagraph rewriting is given by
+{citet goertzelMetagraph}[]. The MeTTaIL layer follows the GSLT and OSLF line of work by Stay and
+Meredith, plus Beck and Street for the categorical distributive-law backbone. The consensus layer
+formalizes the PoR-weighted Cordial Miners blueprint in the same style: executable reference pieces
+where possible, explicit hypotheses where the environment matters, and kernel-checked safety
+theorems. The development uses Lean 4 {citep lean4}[] and draws on Mathlib {citep mathlib}[] for
+order-theoretic and relational infrastructure.
 
 # Conclusion
 
-LeaTTa shows that MeTTa's minimal interpreter, its gradual type system, and the published operational semantics can be expressed in one machine-checked development, and that the optimisations a production evaluator relies on can be proved faithful to the specification. The limitations above mark where the next increments of work can extend that scope.
+LeaTTa shows that MeTTa's minimal interpreter, its gradual type system, the published operational
+semantics, the MeTTaIL spec-to-runtime path, and the Cordial Miners safety story can be expressed in
+one machine-checked development. It also shows that optimisations and runtime entry points can be
+given a proof boundary instead of being treated as implementation folklore. The limitations above mark
+where the next increments of work can extend that scope.

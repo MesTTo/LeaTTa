@@ -3,20 +3,47 @@ Module: Main
 Layer: Executable
 Purpose: The runnable LeaTTa entry point. It runs the minimal MeTTa interpreter and stdlib on a
   program, with CLI modes for a built-in demo, running a `.metta` file (`--file` / `--min-file`),
-  running a program string (`--min`), and running a test file's `!`-assertions as an oracle report
-  (`--oracle`). It also resolves and transitively loads `import!` modules, handling both the plain
-  sibling-file form and the namespaced `register-module!` form, matching Hyperon's module system.
-  File reading is the only IO; the `import!` instruction itself is pure.
-Imports: MettaHyperonFull.Minimal.Stdlib
+  running a program string (`--min`), running a test file's `!`-assertions as an oracle report
+  (`--oracle`), and running an external MeTTaIL dialect file (`--mettail FILE --term TERM`). It also
+  resolves and transitively loads `import!` modules, handling both the plain sibling-file form and the
+  namespaced `register-module!` form, matching Hyperon's module system. File reading is the only IO;
+  the `import!` instruction itself is pure.
+Imports: MettaHyperonFull.Minimal.Stdlib, MeTTaIL.Runtime.LanguageFile
 Trusted boundary: none
 Main exports: main; the helpers demoSource, resolveImport, loadImportsFuel, loadImports.
 Open obligations: none
 -/
 import MettaHyperonFull.Minimal.Stdlib
+import MeTTaIL.Runtime.LanguageFile
 
 open Metta
 open Metta.Runtime
 open Metta.Minimal
+
+def parseFuelArg (s : String) : Except String Nat :=
+  match s.toNat? with
+  | some n => .ok n
+  | none => .error ("invalid fuel `" ++ s ++ "`")
+
+def runMeTTaILFile (path term : String) (fuel : Nat) : IO UInt32 := do
+  let src ← IO.FS.readFile path
+  match MeTTaIL.LanguageFile.runSource src fuel term with
+  | .ok (some out) =>
+      IO.println out
+      pure 0
+  | .ok none =>
+      IO.eprintln "MeTTaIL term did not parse"
+      pure 1
+  | .error msg =>
+      IO.eprintln msg
+      pure 1
+
+def runMeTTaILFileWithFuelArg (path term fuelRaw : String) : IO UInt32 :=
+  match parseFuelArg fuelRaw with
+  | .ok fuel => runMeTTaILFile path term fuel
+  | .error msg => do
+      IO.eprintln msg
+      pure 1
 
 /-- A short demo program used when LeaTTa is invoked with no arguments. -/
 def demoSource : String := "(= (double $x) ($x $x)) !(double Bob)"
@@ -72,6 +99,7 @@ def loadImports (path : String) (src : String) : IO (Std.HashMap String (List At
     * no arguments: run the demo program;
     * `--file PATH` / `--min-file PATH`: run a `.metta` file;
     * `--min PROGRAM`: run a program string;
+    * `--mettail PATH --term TERM [--fuel N]`: run `TERM` with a MeTTaIL dialect file;
     * `--oracle PATH`: run a test file's `!`-assertions and report how many evaluate to `()`.
     An earlier `Runtime.CLI` four-register runner was retired; see `MettaHyperonFull.lean`. -/
 def main : List String → IO UInt32
@@ -90,6 +118,15 @@ def main : List String → IO UInt32
   | "--min" :: rest => do
       IO.println (runMinimalSource (" ".intercalate rest))
       pure 0
+  | ["--mettail", path, "--term", term] =>
+      runMeTTaILFile path term 256
+  | ["--mettail", path, "--term", term, "--fuel", fuel] =>
+      runMeTTaILFileWithFuelArg path term fuel
+  | ["--mettail", path, "--fuel", fuel, "--term", term] =>
+      runMeTTaILFileWithFuelArg path term fuel
+  | "--mettail" :: _ => do
+      IO.eprintln "usage: LeaTTa --mettail FILE --term TERM [--fuel N]"
+      pure 1
   | [] => do
       IO.println (runMinimalSource demoSource)
       pure 0

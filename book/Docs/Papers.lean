@@ -23,6 +23,40 @@ def goertzelMetagraph : ArXiv where
   year := 2021
   id := "2112.08272"
 
+/-- Stay & Meredith; OSLF and the distributive-law view of operational semantics. -/
+def stayMeredithLogic : ArXiv where
+  title := inlines!"Logic as a Distributive Law"
+  authors := #[inlines!"Mike Stay", inlines!"Lucius Gregory Meredith"]
+  year := 2016
+  id := "1610.02247"
+
+/-- Stay & Meredith; enriched Lawvere theories as a source of operational semantics. -/
+def enrichedLawvereSemantics : ArXiv where
+  title := inlines!"Representing operational semantics with enriched Lawvere theories"
+  authors := #[inlines!"Mike Stay", inlines!"Lucius Gregory Meredith"]
+  year := 2017
+  id := "1704.03080"
+
+/-- Beck; the classical composite-monad theorem for distributive laws. -/
+def beckDistributiveLaws : InProceedings where
+  title := inlines!"Distributive laws"
+  authors := #[inlines!"Jon Beck"]
+  year := 1969
+  booktitle := inlines!"Seminar on Triples and Categorical Homology Theory, Lecture Notes in Mathematics 80"
+  url := "https://doi.org/10.1007/BFb0083084"
+
+/-- Street; the 2-categorical formal theory of monads. -/
+def streetFormalTheoryMonads : Article where
+  title := inlines!"The formal theory of monads"
+  authors := #[inlines!"Ross Street"]
+  journal := inlines!"Journal of Pure and Applied Algebra"
+  year := 1972
+  month := none
+  volume := inlines!"2"
+  number := inlines!"2"
+  pages := some (149, 168)
+  url := "https://doi.org/10.1016/0022-4049(72)90019-9"
+
 /-- Keidar, Naor, Poupko & Shapiro; the Cordial Miners leaderless DAG consensus protocol. -/
 def cordialMiners : ArXiv where
   title := inlines!"Cordial Miners: Fast and Efficient Consensus for Every Eventuality"

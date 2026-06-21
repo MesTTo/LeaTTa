@@ -1,3 +1,4 @@
+/- jscpd:ignore-start -/
 /-
 LeaTTa: Appendices. Reference material consolidated into the book from the repository's former
 standalone markdown files: proof status, coverage, and the comparison with Hyperon.
@@ -18,6 +19,7 @@ set_option verso.code.warnLineLength 100
 %%%
 tag := "sec-appendices"
 %%%
+/- jscpd:ignore-end -/
 
 This appendix collects the reference material that used to live in separate files at the repository root. You will find exactly what is machine-checked, where each MeTTa and Hyperon topic is formalized, and how the development compares with Hyperon's current implementation.
 
@@ -27,7 +29,8 @@ The development separates three things that are easy to conflate: results checke
 
 ## Machine-checked in the active build
 
-Every theorem named here is checked by Lean's kernel in `MettaHyperonFull/Proofs/` or `MettaHyperonFull/Operational/`, with no `sorry`, `admit`, `native_decide`, `partial`, or `unsafe`.
+Every theorem named here is checked by Lean's kernel in the active libraries, with no `sorry`,
+`admit`, `native_decide`, `partial`, or `unsafe`.
 
  * *Determinism.* The abstract machine is a function; all nondeterminism is reified in the result
    list, not the transition relation: `interpretStack1_deterministic`, `interpretFuel_deterministic`,
@@ -50,6 +53,22 @@ Every theorem named here is checked by Lean's kernel in `MettaHyperonFull/Proofs
    gas non-creation (`Operational/Properties.lean`), with a bisimulation tying the indexed kernel to
    the published semantics at the level of rule firing: `kernel_mops_bisim`
    (`Proofs/Correspondence.lean`).
+ * *MeTTaIL runtime path.* The generic MeTTaIL reducer is sound for the presentation-induced relation:
+   `oneStep_sound`, `eval_sound`, and `run_sound` (`MeTTaIL/Semantics/Eval.lean`,
+   `MeTTaIL/Runtime/Generic.lean`). The monomorphized runtime agrees with the direct runtime:
+   `runInstMono_eq_runInst` (`MeTTaIL/Runtime/Generic.lean`).
+ * *MeTTaIL type and confluence results.* The all-subterms sort system is preserved by contraction and
+   many-step reduction (`subjectReduction_base`, `rewStepMany_preserves_wellSorted`), the first-order
+   critical-pair theorem is formalized (`localConfluent_of_CPJ`, `confluent_of_CPJ`), and the
+   conditional runtime bridge transports confluence through runtime congruence extensions
+   (`c_confluent_of_joins`, `cong_RewStep_confluent_on_emb`).
+ * *MeTTaIL algebra and logic.* The presentation algebra has set-like laws over its components, the
+   OSLF recurrence proofs cover the safety and confinement modalities, and
+   `MeTTaIL.Beck.DistributiveLaw.composeMonad` formalizes the composite-monad result used by the
+   categorical account.
+ * *Cordial Miners.* The PoR-weighted Cordial Miners model proves end-to-end safety from the expected
+   Byzantine-weight, non-equivocation, and finality assumptions, with a verified deterministic ordering
+   and a forward simulation between the coarse and fine models (`CordialMiners/Proofs/EndToEndSafety.lean`).
 
 ## Archived exploration, not part of the verified build
 
@@ -120,6 +139,34 @@ This section maps MeTTa and Hyperon topics to the files that formalize them. The
    `Operational/ResourceBounded.lean`, `Operational/Trace.lean`.
  * The metatheory results listed under Proof Status above: `Proofs/`.
 
+## MeTTaIL
+
+ * Presentation syntax and algebra: `MeTTaIL/Syntax.lean`, `MeTTaIL/Theory/Instance.lean`,
+   `MeTTaIL/Theory/Elaborate.lean`.
+ * Tool-aligned transforms: `MeTTaIL/Transform/Desugar.lean`, `TypeLift.lean`,
+   `Monomorphize.lean`.
+ * Runtime semantics: `MeTTaIL/Semantics/Context.lean`, `Eval.lean`, `Normal.lean`,
+   `Strategy.lean`, `Terminate.lean`.
+ * Sort preservation and subject reduction: `MeTTaIL/Semantics/Sorts.lean`,
+   `WellSorted.lean`, `MeTTaILProofs/SubjectReduction.lean`, `SortSoundness.lean`.
+ * Confluence and rewriting theory: `MeTTaILProofs/Newman.lean`, `CriticalPairs.lean`,
+   `ConditionalCP.lean`, `ConditionalCPRuntime.lean`, `AC.lean`, `ACEngine.lean`,
+   `ACNormal.lean`.
+ * Runtime front ends: `MeTTaIL/Runtime/Sexpr.lean`, `Generic.lean`, `LanguageFile.lean`.
+ * Checked examples: `MeTTaILTests/Runtime.lean`, `MeTTaILTests/LanguageFile.lean`, and the CLI
+   fixture `tests/mettail/bool.mettail`.
+
+## Cordial Miners
+
+ * Weighted-overlap safety and threshold finality: `CordialMiners/Foundation/FinsetWeight.lean`,
+   `CordialMiners/Spec/ThresholdFinality.lean`.
+ * Blocklace, equivocation, and final-leader reasoning: `CordialMiners/Spec/Blocklace.lean`,
+   `CordialMiners/Spec/Equivocation.lean`, `CordialMiners/Spec/FinalLeader.lean`.
+ * Deterministic ordering and simulation: `CordialMiners/Ref/TauOrder.lean`,
+   `CordialMiners/Ref/BlockOrder.lean`, `CordialMiners/Tfine/Abstraction.lean`.
+ * Extraction and runnable examples: `CordialMiners/Extract/MettaIL.lean`,
+   `CordialMiners/Sim/Run.lean`, `CordialMiners/Tests/Examples.lean`.
+
 ## Runtime spine
 
 The executable runtime parses atoms, stores ordinary atoms in the knowledge base, treats `!` forms
@@ -187,6 +234,54 @@ Here are the sources this development draws on.
    makes machine-checked at the QUERY step.
  * Lucius Gregory Meredith, Ben Goertzel, Jonathan Warrell, and Adam Vandervorst, *Meta-MeTTa: an
    Operational Semantics for MeTTa* (arXiv:2305.17218): the four-register machine and bisimulation.
+ * Mike Stay and Lucius Gregory Meredith, *Logic as a Distributive Law* (arXiv:1610.02247) and
+   *Representing operational semantics with enriched Lawvere theories* (arXiv:1704.03080): OSLF,
+   spatial/behavioral modalities, and the GSLT route from operational rules to logic.
+ * Jon Beck, *Distributive laws* (1969), and Ross Street, *The formal theory of monads* (1972):
+   the composite-monad theorem and the 2-categorical monad setting formalized in
+   `MeTTaILProofs/DistributiveLaw.lean`.
+
+## Paper-to-formalization map
+
+The map below states what each source supports in the Lean development, and what it does not claim.
+
+ * Goertzel's metagraph rewriting paper {citep goertzelMetagraph}[] supports the atom language,
+   equality-rule reduction, matching, spaces, grounding, and traces. The Lean surface is
+   `MettaHyperonFull/Core`, `MettaHyperonFull/Minimal`, and the oracle-backed executable. The checked
+   claims include first-argument indexing soundness and completeness (`matchAtoms_headKey`,
+   `candidates_sound`, `candidates_complete`) and QUERY soundness/completeness
+   (`mem_equalityReductions`). The claim is not that every current Hyperon import/runtime feature is
+   reimplemented; the exact corpus boundary is the 270/270 oracle run described above.
+ * The MOPS paper {citep mops}[] supports the four-register machine, barbed bisimulation, and the
+   QUERY/CHAIN/ADD/REM/OUTPUT step split. The Lean surface is `Operational/State.lean`,
+   `Operational/Semantics.lean`, `Operational/Bisimulation.lean`, and `Operational/Properties.lean`.
+   The checked claims include `kernel_mops_bisim`, `smallStep?_kb_auditable`,
+   `resourceStep?_energy_nonincreasing`, and the command-consumption theorems
+   `stepAddAtom_input_eq` / `stepRemAtom_input_eq`. The claim is not that the operational machine and
+   the minimal interpreter are the same artifact; the theorem states their reduct-level correspondence.
+ * The MeTTaIL runtime modules set the spec-to-runtime contract: derive a reducer from a presentation
+   and prove each executable step sound against the induced relation. The Lean surface is
+   `MeTTaIL/Semantics/Context.lean`, `Eval.lean`, `Normal.lean`, `Terminate.lean`, `Strategy.lean`,
+   `WellSorted.lean`, `Runtime/Generic.lean`, and `Runtime/LanguageFile.lean`. The checked claims
+   include `oneStep_sound`, `eval_sound`, `eval_reaches_normal`, and `subjectReduction_base`. The claim
+   is conditional where rewriting theory is conditional: unique normal forms require termination and
+   confluence hypotheses.
+ * The rewriting-theory route uses Newman's lemma and the Knuth-Bendix-Huet critical-pair criterion.
+   The Lean surface is `MeTTaILProofs/Newman.lean`, `CriticalPairs.lean`, `ConditionalCP.lean`, and
+   `ConditionalCPRuntime.lean`. The checked claims include `confluent_of_CPJ`, `c_confluent_of_joins`,
+   `RuntimeCongruenceStep.reachable`, and `cong_RewStep_confluent_on_emb`. The runtime bridge covers
+   runtime congruence schemas; genuinely non-congruence multi-step side conditions remain in the
+   abstract conditional-rewriting layer.
+ * Stay and Meredith's OSLF papers {citep stayMeredithLogic}[] {citep enrichedLawvereSemantics}[]
+   support the spatial and behavioral modalities. The Lean surface is `MeTTaIL/Semantics/OSLF.lean`,
+   `MeTTaILProofs/OSLFRec.lean`, and `MeTTaILProofs/OSLFCat.lean`. The checked claims include
+   `arrow_eq_diaCtx`, `box_preserved`, and the greatest-fixed-point invariance lemmas. The claim is not
+   that every construction in the papers has been mechanized; the mechanized part is the predicate-model
+   core used by this runtime story.
+ * Beck and Street {citep beckDistributiveLaws}[] {citep streetFormalTheoryMonads}[] support the
+   categorical backbone. The Lean surface is `MeTTaILProofs/DistributiveLaw.lean`; the checked headline
+   is `MeTTaIL.Beck.DistributiveLaw.composeMonad`. The claim is not a full formalization of Street's
+   paper, only the composite-monad theorem needed here.
 
 ## Other sources checked
 

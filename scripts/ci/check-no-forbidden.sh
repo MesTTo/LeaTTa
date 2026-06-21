@@ -6,8 +6,8 @@
 # is exploratory and excluded.
 #
 # This is a static check. It strips line comments and backtick-quoted mentions (our docstrings say
-# things like "no `sorry`") so only real Lean uses are flagged. The CI also greps the build log for
-# Lean's own "declaration uses 'sorry'" warning, which is the authoritative check for sorry/admit.
+# things like "no `sorry`") so only real Lean uses are flagged. The CI also fails on every Lean/Lake
+# build warning through scripts/ci/check-build-warnings.sh.
 #
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

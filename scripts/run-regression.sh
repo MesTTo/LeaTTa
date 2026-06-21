@@ -16,5 +16,12 @@ for f in tests/regression/*.metta; do
 done
 echo "---------------------------------------------"
 echo "REGRESSION TOTAL: PASS=$tot_pass FAIL=$tot_fail"
+mt_out=$("$BIN" --mettail tests/mettail/bool.mettail --term "(notOp tt)" 2>&1 | tail -1)
+if [ "$mt_out" = "ff" ]; then
+  echo "mettail-runtime: PASS"
+else
+  echo "mettail-runtime: FAIL expected ff got $mt_out"
+  rc=1
+fi
 [ $rc -eq 0 ] && echo "REGRESSION OK" || echo "REGRESSION FAILURES"
 exit $rc

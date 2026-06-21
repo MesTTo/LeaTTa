@@ -32,20 +32,16 @@ def equalityReductions (space : Space) (a : Atom) : List Atom :=
     | [] => []
     | bs => bs.map (fun b => instantiate b p.snd))
 
-/-- Apply one `add-atom` (or its alias `addAtom`) step: insert `a` into the knowledge base and write
-    `()` to output. Both spellings are consumed from the input register. -/
-def stepAddAtom (s : State) (a : Atom) : State :=
-  let call1 := Atom.expr [Atom.sym "add-atom", a]
-  let call2 := Atom.expr [Atom.sym "addAtom", a]
-  let st := { s with input := Space.removeOne (Space.removeOne s.input call1) call2 }
+/-- Apply one `add-atom` step: consume the matched input command, insert `a` into the knowledge base,
+    and write `()` to output. -/
+def stepAddAtom (s : State) (call a : Atom) : State :=
+  let st := { s with input := Space.removeOne s.input call }
   State.pushOutput (State.addKb st a) Atom.unit
 
-/-- Apply one `remove-atom` (or its alias `remAtom`) step: delete one occurrence of `a` from the
-    knowledge base and write `()` to output. -/
-def stepRemAtom (s : State) (a : Atom) : State :=
-  let call1 := Atom.expr [Atom.sym "remove-atom", a]
-  let call2 := Atom.expr [Atom.sym "remAtom", a]
-  let st := { s with input := Space.removeOne (Space.removeOne s.input call1) call2 }
+/-- Apply one `remove-atom` step: consume the matched input command, delete one occurrence of `a` from
+    the knowledge base, and write `()` to output. -/
+def stepRemAtom (s : State) (call a : Atom) : State :=
+  let st := { s with input := Space.removeOne s.input call }
   State.pushOutput (State.remKb st a) Atom.unit
 
 /-- Return `some` of the equality-rule reductions of `a`, or `none` when no rule in `kb` matches. -/
@@ -135,10 +131,14 @@ def smallStep? (cfg : RuntimeConfig) (s : State) : Option (StepKind × State) :=
   match s.input.atoms with
   | a :: _ =>
     match a with
-    | Atom.expr [Atom.sym "add-atom", x] => some (StepKind.addAtom, stepAddAtom s x)
-    | Atom.expr [Atom.sym "addAtom", x] => some (StepKind.addAtom, stepAddAtom s x)
-    | Atom.expr [Atom.sym "remove-atom", x] => some (StepKind.remAtom, stepRemAtom s x)
-    | Atom.expr [Atom.sym "remAtom", x] => some (StepKind.remAtom, stepRemAtom s x)
+    | Atom.expr [Atom.sym "add-atom", x] =>
+        some (StepKind.addAtom, stepAddAtom s (Atom.expr [Atom.sym "add-atom", x]) x)
+    | Atom.expr [Atom.sym "addAtom", x] =>
+        some (StepKind.addAtom, stepAddAtom s (Atom.expr [Atom.sym "addAtom", x]) x)
+    | Atom.expr [Atom.sym "remove-atom", x] =>
+        some (StepKind.remAtom, stepRemAtom s (Atom.expr [Atom.sym "remove-atom", x]) x)
+    | Atom.expr [Atom.sym "remAtom", x] =>
+        some (StepKind.remAtom, stepRemAtom s (Atom.expr [Atom.sym "remAtom", x]) x)
     | _ =>
         let s' := { s with input := Space.removeOne s.input a }
         match reduceAtom cfg s.kb a with

@@ -36,9 +36,10 @@ shortTitle := "LeaTTa"
 %%%
 
 :::paragraph
-*Release 1.0.* This book covers the public 1.0 surface: Hyperon Experimental's minimal interpreter
-and standard library, the published MeTTa operational semantics, the MeTTaIL spec-to-runtime path, and
-the Cordial Miners safety core. The limitations chapter states the remaining gaps directly.
+*Alpha.* This is an early, alpha-stage release and a starting foundation. It currently formalises
+Hyperon Experimental's minimal interpreter and standard library, the published MeTTa operational
+semantics, the MeTTaIL formalization, and the Cordial Miners safety core. The limitations chapter
+states the remaining gaps directly.
 :::
 
 {index}[LeaTTa]
@@ -52,8 +53,7 @@ kernel verifies. The formalization covers:
  * the standard library;
  * the gradual type system;
  * the published four-register operational semantics;
- * the MeTTaIL formalization and editable runtime-file path;
- * the PoR-weighted Cordial Miners safety formalization;
+ * the MeTTaIL formalization;
  * a body of machine-checked *metatheory*: determinism, confluence of the deterministic fragment,
    type soundness, gradual-typing consistency, soundness *and* completeness of first-argument
    indexing, and a bisimulation connecting the kernel's rule-firing core to the published
@@ -128,8 +128,8 @@ cd do
 
 The remaining chapters cover the object language, the minimal interpreter and its standard
 library, the gradual type system, the metatheory, the operational semantics and its correspondence to
-the interpreter, the blockchain-oriented guarantees, future work, and a discussion of the
-development's current limitations and open problems.
+the interpreter, the blockchain-oriented guarantees, the `future-work` branch, and a discussion
+of the development's current limitations and open problems.
 
 {include 1 Docs.ObjectLanguage}
 

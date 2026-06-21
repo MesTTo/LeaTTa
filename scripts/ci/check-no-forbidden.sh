@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 #
 # Static guard for the project invariant: the active development uses no sorry, admit, native_decide,
-# partial, or unsafe. Covers the MeTTa kernel/metatheory (MettaHyperonFull/) and the MeTTaIL
-# formalization (MeTTaIL/, MeTTaILProofs/, MeTTaILTests/ and their library roots). The archive/ tree
-# is exploratory and excluded.
+# partial, or unsafe. Covers the MeTTa kernel/metatheory, the MeTTaIL formalization, and the Cordial
+# Miners formalization. The archive/ tree is exploratory and excluded.
 #
 # This is a static check. It strips line comments and backtick-quoted mentions (our docstrings say
 # things like "no `sorry`") so only real Lean uses are flagged. The CI also fails on every Lean/Lake
@@ -27,4 +26,4 @@ if [ -n "$hits" ]; then
   echo "$hits"
   exit 1
 fi
-echo "OK: no forbidden placeholders in MettaHyperonFull/ or the MeTTaIL formalization."
+echo "OK: no forbidden placeholders in MettaHyperonFull/, MeTTaIL/, MeTTaILProofs/, MeTTaILTests/, or CordialMiners/."

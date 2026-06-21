@@ -22,16 +22,15 @@ tag := "sec-mettail"
 
 MeTTaIL is F1R3FLY-io's intermediate language for MeTTa. Its full name is the Meta Type Talk
 Intermediate Language, and it is the work of Lucius Gregory Meredith and Mike Stay, the people behind
-the rho-calculus and the F1R3FLY blockchain. This chapter is about a second Lean development, built
-alongside the MeTTa kernel of the rest of this book, that formalizes MeTTaIL and checks it against the
-real tool.
+the rho-calculus and the F1R3FLY blockchain. Here we formalize MeTTaIL alongside the MeTTa kernel and
+check the result against the real tool.
 
 The short version: MeTTaIL is a meta-language. You do not write a program in it, you write down a
 *model of computation*, and the tool turns that description into the concrete syntax, equations, and
 rewrite rules of the calculus you described. The description is a presentation of a graph-structured
 lambda theory, a GSLT. We formalize the presentations, the algebra that builds them, the pipeline
-that elaborates and transforms them, the reduction they induce, and the metatheory you would want of
-all of it. As far as we can tell this is the first machine-checked formalization of MeTTaIL: the
+that elaborates and transforms them, the reduction they induce, and the expected metatheory. I have not
+found an earlier machine-checked formalization of MeTTaIL: the
 F1R3FLY repositories named for this work (`OSLF`, Mike Stay's `GSLT`) are at present only READMEs.
 
 # What a GSLT Presentation Is
@@ -63,9 +62,9 @@ intersection, and difference, and apply parameterized theories. The Lean `elabor
 interprets that algebra into a presentation. It is fuel-bounded, because applying a theory expands
 another theory's body, and that keeps the development free of `partial`.
 
-Here is the part worth dwelling on. We did not just write an elaborator and hope it matches MeTTaIL.
-We built the real Scala tool and ran it, and then proved, by `decide` in the Lean kernel, that our
-elaborator reproduces its output exactly. Take F1R3FLY's own `Rholang.module`, which builds the RHO
+The trust point is concrete. We built the real Scala tool and ran it. Then we proved, by `decide` in the
+Lean kernel, that the Lean elaborator reproduces its output exactly. Take F1R3FLY's own
+`Rholang.module`, which builds the RHO
 calculus from universal algebra (`EmptySet`, `Monoid`, `CommutativeMonoid`, then the process layers).
 The tool prints an Interpreted Presentation with the sorts `Proc` and `Name`, eight constructors, ten
 equations, and four rewrites. Our oracle states that elaborating the same module gives precisely that
@@ -84,44 +83,8 @@ parses a small external dialect format with `sort`, `term`, and `rewrite` declar
 monomorphizes it, and runs a term with the generic reducer. For example, the checked fixture
 `tests/mettail/bool.mettail` declares `tt`, `ff`, and `notOp`; running
 `LeaTTa --mettail tests/mettail/bool.mettail --term '(notOp tt)'` prints `ff`. That file format is not
-the full BNFC MeTTaIL surface. It is the product-facing MVP for base-rewrite dialects, wired to the
-same verified runtime path.
-
-# Running an Editable Dialect
-
-The external format is deliberately small enough to inspect. A dialect file is a sequence of
-line-oriented declarations:
-
-```
-sort Tm
-term tt : Tm
-term ff : Tm
-term notOp : Tm -> Tm
-rewrite notTt : (notOp tt) => ff
-rewrite notFf : (notOp ff) => tt
-```
-
-The `sort` line exports a sort. A `term` line declares a prefix constructor and its arity. A `rewrite`
-line gives a base rewrite over S-expression terms. Blank lines and `#` comments are ignored.
-
-The command below parses the file, elaborates it into a `TheoryInst`, monomorphizes the presentation,
-and normalizes the supplied term:
-
-```
-LeaTTa --mettail tests/mettail/bool.mettail --term '(notOp tt)'
-```
-
-The result is:
-
-```
-ff
-```
-
-Changing the file changes the runtime. For example, replacing the two rewrites with
-`rewrite keep : (notOp tt) => tt` makes the same command print `tt`. That is the intended MeTTaIL
-workflow in small form: edit the language description, then run terms through the runtime derived from
-that description. The current file format covers base rewrites; richer MeTTaIL syntax can elaborate to
-the same `TheoryInst` core.
+the full BNFC MeTTaIL surface. It is the external runtime path for base-rewrite dialects, wired to the
+same verified reducer.
 
 # The Operational Semantics
 
@@ -156,18 +119,16 @@ on the three standard axioms (`propext`, `Classical.choice`, `Quot.sound`); seve
 beyond `propext`. There is no `sorry`, `admit`, `native_decide`, `partial`, or `unsafe` anywhere in
 the development, and a CI guard enforces that.
 
-The proof architecture is split across small source modules. `MeTTaIL/Semantics/Eval.lean`,
-`Normal.lean`, `Terminate.lean`, and `Strategy.lean` give the executable reducer, normal-form driver,
-termination measure, and leftmost-outermost strategy. Newman's lemma and the Knuth-Bendix-Huet
-critical-pair route live in `MeTTaILProofs/Newman.lean` and `CriticalPairs.lean`. The conditional
-fragment uses the extended critical-pair obligations described in the conditional-rewriting
-literature, with proper conditional critical pairs and conditional variable pairs supplied as
-hypotheses. The OSLF line follows Stay and Meredith's distributive-law view of operational semantics
-{citep stayMeredithLogic}[] and its enriched-Lawvere-theory companion
-{citep enrichedLawvereSemantics}[]. The general categorical backbone is Beck's composite-monad theorem
-{citep beckDistributiveLaws}[], in the 2-categorical setting made explicit by Street
-{citep streetFormalTheoryMonads}[]; `MeTTaILProofs/DistributiveLaw.lean` formalizes that theorem for
-Mathlib monads.
+The proof architecture follows the checked runtime modules under `MeTTaIL/Semantics`,
+`MeTTaIL/Runtime`, and `MeTTaILProofs`. Newman's lemma and the Knuth-Bendix-Huet critical-pair route
+handle first-order confluence. The conditional fragment
+uses the extended critical-pair obligations described in the conditional-rewriting literature, with
+proper conditional critical pairs and conditional variable pairs supplied as hypotheses. The OSLF line
+follows Stay and Meredith's distributive-law view of operational semantics {citep stayMeredithLogic}[]
+and its enriched-Lawvere-theory companion {citep enrichedLawvereSemantics}[]. The general categorical
+backbone is Beck's composite-monad theorem {citep beckDistributiveLaws}[], in the 2-categorical setting
+made explicit by Street {citep streetFormalTheoryMonads}[]; `MeTTaILProofs/DistributiveLaw.lean`
+formalizes that theorem for Mathlib monads.
 
 # Two Calculi from the Papers
 
@@ -204,16 +165,15 @@ data model, the pipeline invariants (each transformation touches only the term l
 presentation algebra's set laws (union, intersection, and difference behave as set operations on each
 component).
 
-# What Is Left Open, Honestly
+# What Remains Open
 
 The source itself leaves its deepest layer open. MeTTaIL's modal type system (the possibility
 modalities and the recovery of arrow types in the design notes) is admitted there to be intuited
 rather than finished, and the rho-calculus full-abstraction result it points at is work in progress.
-We formalize the determinate fragments and flag the open parts in place rather than papering over
-them. The Scala tool's own `--hypercube` pass omits the modal types too, and our type-lift matches the
-tool, not the unfinished note. The per-variable category-consistency check of the elaborator's type
-checker is the one piece of the tool we have left as future work; the category-match and
-bound-variable checks are in place.
+We formalize the determinate fragments and mark the open parts in place. The Scala tool's own
+`--hypercube` pass omits the modal types too, and our type-lift matches the tool, not the unfinished
+note. The per-variable category-consistency check of the elaborator's type checker remains future work;
+the category-match and bound-variable checks are in place.
 
 Building a faithful model is also a good way to find bugs in the thing you are modeling, and we found a
 few in the tool's rename and checking code. Where the Scala does something wrong, an export rename that

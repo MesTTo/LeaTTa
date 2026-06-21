@@ -53,6 +53,8 @@ import MeTTaILProofs.Order
 import MeTTaILProofs.AC
 -- Runtime metatheory: the canonical form wired into the one-step engine (rewriting modulo AC).
 import MeTTaILProofs.ACEngine
+-- Runtime metatheory: executable AC-aware matching for the linear collection fragment.
+import MeTTaILProofs.ACMatch
 -- Runtime metatheory: normalization modulo AC and its coherence (Church-Rosser modulo AC).
 import MeTTaILProofs.ACNormal
 -- Runtime metatheory: commutative variadic (n-ary) AC operators.

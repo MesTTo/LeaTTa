@@ -24,9 +24,9 @@ def updateDef(d: Def, oldCat: Cat, newCat: Cat): Def = d match {
 ```
 
 The output sort is set to `newCat` unconditionally. `handleAddExports` maps this over every rule, so a
-`RenameExport old new` sets the output sort of *every* rule to `new`, not only the rules whose output
-sort was `old`. On a presentation with more than one sort this corrupts all the rules whose output sort
-is not the renamed one.
+`RenameExport old new` sets the output sort of *every* rule to `new`, including rules whose output sort
+was not `old`. On a presentation with more than one sort this corrupts all the rules whose output sort is
+not the renamed one.
 
 Correct behavior: rename the output sort only where it mentions `old`. Our `Rule.replaceCat` in
 `MeTTaIL/Theory/Rename.lean` uses a conditional replace.

@@ -1,0 +1,126 @@
+/-
+Module: CordialMiners.Runtime.AxiomAudit
+Layer: Runtime
+Purpose: Build-visible axiom audit for the Cordial Miners runtime bridge. This module imports the
+  executable run and relational bridge, then prints the axiom sets of the named theorem surfaces.
+Imports: CordialMiners.Runtime.Run
+Trusted boundary: none
+Main exports: (audit output only)
+Open obligations: keep this list aligned with the runtime bridge claims in the README and book.
+-/
+import CordialMiners.Runtime.Run
+
+#print axioms CordialMiners.Runtime.decodeListA_encodeListA
+#print axioms CordialMiners.Runtime.decodeFactA_encodeFactA
+#print axioms CordialMiners.Runtime.decodeEventA_encodeEventA
+#print axioms CordialMiners.Runtime.collectA_stateOp_encodeFactA
+#print axioms CordialMiners.Runtime.collectA_inboxOp_encodeEventA
+#print axioms CordialMiners.Runtime.decodedFacts_encStateList
+#print axioms CordialMiners.Runtime.decodeInboxA_encInbox
+#print axioms CordialMiners.Runtime.decodeInboxA_cons_encodeEventA
+#print axioms CordialMiners.Runtime.astToInbox_encConfigList
+#print axioms CordialMiners.Runtime.astToInbox_encConfig
+#print axioms CordialMiners.Runtime.decodeStateA_encStateList
+#print axioms CordialMiners.Runtime.decodeStateA_cons_encodeFactA
+#print axioms CordialMiners.Runtime.decodeStateA_cons_comm
+#print axioms CordialMiners.Runtime.decodeStateA_cons_assoc
+#print axioms CordialMiners.Runtime.astToState_inbox_irrelevant
+#print axioms CordialMiners.Runtime.astToState_cons_comm
+#print axioms CordialMiners.Runtime.astToState_cons_assoc
+#print axioms CordialMiners.Runtime.decodeStateA_cons_encodeFactA_stutter
+#print axioms CordialMiners.Runtime.astToState_cons_encodeFactA_stutter
+#print axioms CordialMiners.Runtime.NoEmbeddedConfig
+#print axioms CordialMiners.Runtime.RuntimeConfigShape
+#print axioms CordialMiners.Runtime.noEmbeddedConfig_encodeFactA
+#print axioms CordialMiners.Runtime.noEmbeddedConfig_encodeEventA
+#print axioms CordialMiners.Runtime.runtimeConfigShape_encConfigList
+#print axioms CordialMiners.Runtime.runtimeConfigShape_encConfig
+#print axioms CordialMiners.Runtime.astToState_encConfigList
+#print axioms CordialMiners.Runtime.astToState_encConfig
+#print axioms CordialMiners.Runtime.acOpCM_state
+#print axioms CordialMiners.Runtime.acOpCM_inbox
+#print axioms CordialMiners.Runtime.acOpCM_true_ne_cmOp
+#print axioms CordialMiners.Runtime.acOpCM_eq_state_or_inbox
+#print axioms CordialMiners.Runtime.noEmbeddedConfig_acEq_iff
+#print axioms CordialMiners.Runtime.runtimeConfigShape_acEq_iff
+#print axioms CordialMiners.Runtime.runtimeConfigShape_of_acEq
+#print axioms CordialMiners.Runtime.noEmbeddedConfig_not_rewStep
+#print axioms CordialMiners.Runtime.noEmbeddedConfig_not_rewStepModAC
+#print axioms CordialMiners.Runtime.runtimeConfigShape_rewStep_top
+#print axioms CordialMiners.Runtime.runtimeConfigShape_rewStepModAC_top
+#print axioms CordialMiners.Runtime.propose_head_modAC
+#print axioms CordialMiners.Runtime.order_head_modAC
+#print axioms CordialMiners.Runtime.qapprove_head_modAC
+#print axioms CordialMiners.Runtime.certify_head_modAC
+#print axioms CordialMiners.Runtime.finalize_head_modAC
+#print axioms CordialMiners.Runtime.finalLead_head_modAC
+#print axioms CordialMiners.Runtime.derivedKind_head_decodes
+#print axioms CordialMiners.Runtime.derived_step_of_decode
+#print axioms CordialMiners.Runtime.propose_head_decodes
+#print axioms CordialMiners.Runtime.order_head_decodes
+#print axioms CordialMiners.Runtime.qapprove_head_decodes
+#print axioms CordialMiners.Runtime.certify_head_decodes
+#print axioms CordialMiners.Runtime.finalize_head_decodes
+#print axioms CordialMiners.Runtime.finalLead_head_decodes
+#print axioms CordialMiners.Runtime.decodeStateA_stateA_none
+#print axioms CordialMiners.Runtime.propose_head_backward
+#print axioms CordialMiners.Runtime.order_head_backward
+#print axioms CordialMiners.Runtime.derivedKind_head_backward
+#print axioms CordialMiners.Runtime.qapprove_head_backward
+#print axioms CordialMiners.Runtime.certify_head_backward
+#print axioms CordialMiners.Runtime.finalize_head_backward
+#print axioms CordialMiners.Runtime.finalLead_head_backward
+#print axioms CordialMiners.Runtime.runtime_root_step_backward
+#print axioms CordialMiners.Runtime.runtime_step_direct
+#print axioms CordialMiners.Runtime.runtime_step_backward_of_astToState_acEq
+#print axioms CordialMiners.Runtime.decodeListA_acEq_of_decoder_acEq
+#print axioms CordialMiners.Runtime.decodeFactA_acEq_of_decoders_acEq
+#print axioms CordialMiners.Runtime.decodeStateA_acEq_of_decoders_acEq
+#print axioms CordialMiners.Runtime.astToState_acEq_of_decoders_acEq
+#print axioms CordialMiners.Runtime.runtime_step_backward_of_decoders_acEq
+#print axioms CordialMiners.Runtime.dNat_acEq
+#print axioms CordialMiners.Runtime.decodeListA_dNat_acEq
+#print axioms CordialMiners.Runtime.decodeFactA_dNat_acEq
+#print axioms CordialMiners.Runtime.decodeStateA_dNat_acEq
+#print axioms CordialMiners.Runtime.astToState_dNat_acEq
+#print axioms CordialMiners.Runtime.runtime_step_backward_nat
+#print axioms CordialMiners.Runtime.encStateList_mem_head
+#print axioms CordialMiners.Runtime.decodeStateA_stateA_encodeFactA
+#print axioms CordialMiners.Runtime.encStateList_mem_head_decodes
+#print axioms CordialMiners.Runtime.encInbox_mem_head
+#print axioms CordialMiners.Runtime.derivedKind_head_modAC
+#print axioms CordialMiners.Runtime.event_head_modAC
+#print axioms CordialMiners.Runtime.event_step_of_decode
+#print axioms CordialMiners.Runtime.event_inbox_mem_modAC
+#print axioms CordialMiners.Runtime.event_inbox_mem_forward_decode
+#print axioms CordialMiners.Runtime.event_inbox_mem_forward_step
+#print axioms CordialMiners.Runtime.runtime_step_stutter_of_inserted_fact_mem
+#print axioms CordialMiners.Runtime.event_inbox_mem_forward_stutter
+#print axioms CordialMiners.Runtime.derived_state_mem_modAC
+#print axioms CordialMiners.Runtime.derived_state_mem_forward_decode
+#print axioms CordialMiners.Runtime.derived_state_mem_forward_step
+#print axioms CordialMiners.Runtime.derived_state_mem_forward_stutter
+#print axioms CordialMiners.Runtime.event_forward_decode
+#print axioms CordialMiners.Runtime.event_forward_step
+#print axioms CordialMiners.Runtime.event_forward_stutter
+#print axioms CordialMiners.Runtime.derived_step_forward_decode
+#print axioms CordialMiners.Runtime.derived_step_forward_step
+#print axioms CordialMiners.Runtime.derived_step_forward_stutter
+#print axioms CordialMiners.Runtime.RuntimeEventStutterSound
+#print axioms CordialMiners.Runtime.RuntimeDerivedStutterSound
+#print axioms CordialMiners.Runtime.trec_step_forward_decode
+#print axioms CordialMiners.Runtime.trec_step_forward_reachable
+#print axioms CordialMiners.Runtime.trec_step_forward_wf
+#print axioms CordialMiners.Runtime.scoped_runtime_bridge
+#print axioms CordialMiners.Runtime.propose_second_inbox_modAC
+#print axioms CordialMiners.Runtime.buriedProposal_modAC
+#print axioms CordialMiners.Runtime.buriedProposal_eval_modAC
+#print axioms CordialMiners.Runtime.order_modAC
+#print axioms CordialMiners.Runtime.order_eval_modAC
+#print axioms CordialMiners.Runtime.finality_run_modAC
+#print axioms CordialMiners.Runtime.finality_eval_run_modAC
+#print axioms CordialMiners.Runtime.finality_runtime_state_decodes
+#print axioms CordialMiners.Runtime.finality_trec_reachable
+#print axioms CordialMiners.Runtime.finality_runtime_trec_reachable
+#print axioms CordialMiners.Runtime.finality_runtime_wf
+#print axioms CordialMiners.Runtime.finality_runtime_final_needs_propose

@@ -21,16 +21,22 @@ tag := "sec-appendices"
 %%%
 /- jscpd:ignore-end -/
 
-This appendix collects the reference material that used to live in separate files at the repository root. You will find exactly what is machine-checked, where each MeTTa and Hyperon topic is formalized, and how the development compares with Hyperon's current implementation.
+This appendix collects the reference material that used to live in separate files at the repository root.
+It states what is machine-checked, where each MeTTa and Hyperon topic is formalized, and how the
+development compares with Hyperon's current implementation.
 
 # Proof Status
 
-The development separates three things that are easy to conflate: results checked by Lean in the active build, earlier exploration kept under `archive/` but not compiled, and work that is planned but not yet formalized.
+The development separates three things that are easy to conflate:
+
+ * results checked by Lean in the active build;
+ * earlier exploration kept under `archive/` but not compiled;
+ * work that is planned but not yet formalized.
 
 ## Machine-checked in the active build
 
-Every theorem named here is checked by Lean's kernel in the active libraries, with no `sorry`,
-`admit`, `native_decide`, `partial`, or `unsafe`.
+Every theorem named here is checked by Lean's kernel in `MettaHyperonFull/Proofs/` or
+`MettaHyperonFull/Operational/`, with no `sorry`, `admit`, `native_decide`, `partial`, or `unsafe`.
 
  * *Determinism.* The abstract machine is a function; all nondeterminism is reified in the result
    list, not the transition relation: `interpretStack1_deterministic`, `interpretFuel_deterministic`,
@@ -53,26 +59,12 @@ Every theorem named here is checked by Lean's kernel in the active libraries, wi
    gas non-creation (`Operational/Properties.lean`), with a bisimulation tying the indexed kernel to
    the published semantics at the level of rule firing: `kernel_mops_bisim`
    (`Proofs/Correspondence.lean`).
- * *MeTTaIL runtime path.* The generic MeTTaIL reducer is sound for the presentation-induced relation:
-   `oneStep_sound`, `eval_sound`, and `run_sound` (`MeTTaIL/Semantics/Eval.lean`,
-   `MeTTaIL/Runtime/Generic.lean`). The monomorphized runtime agrees with the direct runtime:
-   `runInstMono_eq_runInst` (`MeTTaIL/Runtime/Generic.lean`).
- * *MeTTaIL type and confluence results.* The all-subterms sort system is preserved by contraction and
-   many-step reduction (`subjectReduction_base`, `rewStepMany_preserves_wellSorted`), the first-order
-   critical-pair theorem is formalized (`localConfluent_of_CPJ`, `confluent_of_CPJ`), and the
-   conditional runtime bridge transports confluence through runtime congruence extensions
-   (`c_confluent_of_joins`, `cong_RewStep_confluent_on_emb`).
- * *MeTTaIL algebra and logic.* The presentation algebra has set-like laws over its components, the
-   OSLF recurrence proofs cover the safety and confinement modalities, and
-   `MeTTaIL.Beck.DistributiveLaw.composeMonad` formalizes the composite-monad result used by the
-   categorical account.
- * *Cordial Miners.* The PoR-weighted Cordial Miners model proves end-to-end safety from the expected
-   Byzantine-weight, non-equivocation, and finality assumptions, with a verified deterministic ordering
-   and a forward simulation between the coarse and fine models (`CordialMiners/Proofs/EndToEndSafety.lean`).
 
 ## Archived exploration, not part of the verified build
 
-The following were modelled in an earlier, approximate form. They live under `archive/`, are not compiled by the build, and must not be read as part of the verified development (see `archive/README.md`). They are listed so the proof status is not mistaken for covering them.
+The following were modelled in an earlier, approximate form. They live under `archive/`, are not compiled
+by the build, and must not be read as part of the verified development. See `archive/README.md`. They
+are listed so the proof status is not mistaken for covering them.
 
  * Single-pushout and double-pushout graph rewriting, metagraph homomorphism, and the
    expression-to-DAG encoding (`archive/Metagraph/`).
@@ -93,7 +85,9 @@ The following were modelled in an earlier, approximate form. They live under `ar
 
 # Coverage
 
-This section maps MeTTa and Hyperon topics to the files that formalize them. The runtime is a formal reference: small enough to inspect and explicit about every host contract. It is not a drop-in replacement for the Rust Hyperon runtime and does not cover the full Hyperon feature surface.
+This section maps MeTTa and Hyperon topics to the files that formalize them. The runtime is a formal
+reference: small enough to inspect and explicit about every host contract. It is not a drop-in replacement
+for the Rust Hyperon runtime and does not cover the full Hyperon feature surface.
 
 ## Object language and matching
 
@@ -139,34 +133,6 @@ This section maps MeTTa and Hyperon topics to the files that formalize them. The
    `Operational/ResourceBounded.lean`, `Operational/Trace.lean`.
  * The metatheory results listed under Proof Status above: `Proofs/`.
 
-## MeTTaIL
-
- * Presentation syntax and algebra: `MeTTaIL/Syntax.lean`, `MeTTaIL/Theory/Instance.lean`,
-   `MeTTaIL/Theory/Elaborate.lean`.
- * Tool-aligned transforms: `MeTTaIL/Transform/Desugar.lean`, `TypeLift.lean`,
-   `Monomorphize.lean`.
- * Runtime semantics: `MeTTaIL/Semantics/Context.lean`, `Eval.lean`, `Normal.lean`,
-   `Strategy.lean`, `Terminate.lean`.
- * Sort preservation and subject reduction: `MeTTaIL/Semantics/Sorts.lean`,
-   `WellSorted.lean`, `MeTTaILProofs/SubjectReduction.lean`, `SortSoundness.lean`.
- * Confluence and rewriting theory: `MeTTaILProofs/Newman.lean`, `CriticalPairs.lean`,
-   `ConditionalCP.lean`, `ConditionalCPRuntime.lean`, `AC.lean`, `ACEngine.lean`,
-   `ACNormal.lean`.
- * Runtime front ends: `MeTTaIL/Runtime/Sexpr.lean`, `Generic.lean`, `LanguageFile.lean`.
- * Checked examples: `MeTTaILTests/Runtime.lean`, `MeTTaILTests/LanguageFile.lean`, and the CLI
-   fixture `tests/mettail/bool.mettail`.
-
-## Cordial Miners
-
- * Weighted-overlap safety and threshold finality: `CordialMiners/Foundation/FinsetWeight.lean`,
-   `CordialMiners/Spec/ThresholdFinality.lean`.
- * Blocklace, equivocation, and final-leader reasoning: `CordialMiners/Spec/Blocklace.lean`,
-   `CordialMiners/Spec/Equivocation.lean`, `CordialMiners/Spec/FinalLeader.lean`.
- * Deterministic ordering and simulation: `CordialMiners/Ref/TauOrder.lean`,
-   `CordialMiners/Ref/BlockOrder.lean`, `CordialMiners/Tfine/Abstraction.lean`.
- * Extraction and runnable examples: `CordialMiners/Extract/MettaIL.lean`,
-   `CordialMiners/Sim/Run.lean`, `CordialMiners/Tests/Examples.lean`.
-
 ## Runtime spine
 
 The executable runtime parses atoms, stores ordinary atoms in the knowledge base, treats `!` forms
@@ -179,15 +145,29 @@ instruction of the executable interpreter, whose `match` is implemented by `matc
 
 # Improvements over Hyperon
 
-Hyperon's minimal MeTTa interpreter (`hyperon-experimental/lib/src/metta/interpreter.rs`) is, by its authors' description, in an alpha state. Its source carries a self-described "hack" and several `TODO` notes at the points that decide evaluation, and the written semantics is prose and pseudocode without proofs. This development is a companion to that work: a total, machine-checked semantics that agrees with Hyperon's own test oracle (270 of 270), replaces the mutable and ad-hoc machinery with declarative constructs, and proves the properties the implementation only asserts.
+Hyperon's minimal MeTTa interpreter (`hyperon-experimental/lib/src/metta/interpreter.rs`) is, by its
+authors' description, in an alpha state. Its source carries a self-described "hack" and several `TODO`
+notes at the points that decide evaluation. The written semantics is prose and pseudocode without proofs.
+
+This development is a companion to that work: a total, machine-checked semantics that agrees with
+Hyperon's own test oracle (270 of 270), replaces mutable and ad-hoc machinery with declarative
+constructs, and proves properties the implementation only asserts.
 
 ## What is proved
 
-The metatheory proves what the implementation asserts in comments. The full list with theorem names is under Proof Status above; in short: determinism, confluence of the deterministic fragment, sound and complete first-argument indexing, gradual-type permissiveness and faithful errors, alpha-equivalence, and the kernel-to-specification bisimulation. One foundational choice worth noting: `Atom`'s `BEq` is hand-written and structural rather than derived, so it is kernel-reducible and the indexing and type proofs go through. The derived instance compiles to opaque well-founded recursion that blocks equational reasoning.
+The metatheory proves what the implementation asserts in comments. The full list with theorem names is
+under Proof Status above. In short, the proved surface covers determinism, confluence of the deterministic
+fragment, sound and complete first-argument indexing, gradual-type permissiveness and faithful errors,
+alpha-equivalence, and the kernel-to-specification bisimulation.
+
+One foundational choice matters for the proofs. `Atom`'s `BEq` is hand-written and structural rather than
+derived, so it is kernel-reducible and the indexing and type proofs go through. The derived instance
+compiles to opaque well-founded recursion that blocks equational reasoning.
 
 ## Hyperon source markers and their treatment
 
-The Hyperon sources carry explicit markers (`TODO`, hotfix, and "hack" comments) at points that decide evaluation. Each is matched here by a declarative construct.
+The Hyperon sources carry explicit markers (`TODO`, hotfix, and "hack" comments) at points that decide
+evaluation. Each is matched here by a declarative construct.
 
  * *The `is_evaluated()` mutable bit* (`interpreter.rs:1142`, commented "a hack") becomes static
    return-type gating: a function's result is inert iff its declared return type is `Atom`. No
@@ -215,9 +195,20 @@ The Hyperon sources carry explicit markers (`TODO`, hotfix, and "hack" comments)
 
 ## Status against the oracle
 
-Hyperon's own unmodified tests run through this interpreter (`scripts/run-oracle.sh`) and pass 270 of 270 across 22 files, on the minimal interpreter rather than a curated subset. The passing set includes the full dependent-type tier (`d1` through `d5`): GADTs, higher-order functions, dependent length arithmetic, types as propositions, and auto type-checking with `BadArgType`, along with the documentation operators `get-doc` and `help!`.
+Hyperon's own unmodified tests run through this interpreter (`scripts/run-oracle.sh`) and pass 270 of 270
+across 22 files, on the minimal interpreter rather than a curated subset. The passing set includes the
+full dependent-type tier (`d1` through `d5`): GADTs, higher-order functions, dependent length arithmetic,
+types as propositions, and auto type-checking with `BadArgType`, along with the documentation operators
+`get-doc` and `help!`.
 
-One file is left out: `f1_imports.metta`. Its authors mark it Python-mode-only, because it assumes `&self` starts nearly empty with `corelib` and `stdlib` as separate importable modules, while this build ships the prelude inside `&self`. The module machinery it would exercise, `import!` into named spaces and diamond-dependency deduplication, is covered by `c2_spaces` (25/25) and `g1_docs` (10/10). The corpus is vendored under `tests/corpus/` (MIT, commit `3f76dc4`), so the oracle reproduces 270/270 from a clean clone and fails the build on any divergence.
+One file is left out: `f1_imports.metta`. Its authors mark it Python-mode-only, because it assumes
+`&self` starts nearly empty with `corelib` and `stdlib` as separate importable modules, while this build
+ships the prelude inside `&self`.
+
+The module machinery it would exercise, `import!` into named spaces and diamond-dependency deduplication,
+is covered by `c2_spaces` (25/25) and `g1_docs` (10/10). The corpus is vendored under `tests/corpus/`
+(MIT, commit `3f76dc4`), so the oracle reproduces 270/270 from a clean clone and fails the build on any
+divergence.
 
 # Sources and Alignment
 
@@ -261,17 +252,17 @@ The map below states what each source supports in the Lean development, and what
    the minimal interpreter are the same artifact; the theorem states their reduct-level correspondence.
  * The MeTTaIL runtime modules set the spec-to-runtime contract: derive a reducer from a presentation
    and prove each executable step sound against the induced relation. The Lean surface is
-   `MeTTaIL/Semantics/Context.lean`, `Eval.lean`, `Normal.lean`, `Terminate.lean`, `Strategy.lean`,
-   `WellSorted.lean`, `Runtime/Generic.lean`, and `Runtime/LanguageFile.lean`. The checked claims
-   include `oneStep_sound`, `eval_sound`, `eval_reaches_normal`, and `subjectReduction_base`. The claim
-   is conditional where rewriting theory is conditional: unique normal forms require termination and
-   confluence hypotheses.
+   `MeTTaIL/Semantics/Context.lean`,
+   `Eval.lean`, `Normal.lean`, `Terminate.lean`, `Strategy.lean`, `WellSorted.lean`, and
+   `Runtime/Generic.lean`. The checked claims include `oneStep_sound`, `eval_sound`,
+   `eval_reaches_normal`, and `subjectReduction_base`. The claim is conditional where rewriting theory
+   is conditional: unique normal forms require termination and confluence hypotheses.
  * The rewriting-theory route uses Newman's lemma and the Knuth-Bendix-Huet critical-pair criterion.
-   The Lean surface is `MeTTaILProofs/Newman.lean`, `CriticalPairs.lean`, `ConditionalCP.lean`, and
-   `ConditionalCPRuntime.lean`. The checked claims include `confluent_of_CPJ`, `c_confluent_of_joins`,
-   `RuntimeCongruenceStep.reachable`, and `cong_RewStep_confluent_on_emb`. The runtime bridge covers
-   runtime congruence schemas; genuinely non-congruence multi-step side conditions remain in the
-   abstract conditional-rewriting layer.
+   The Lean surface is `MeTTaILProofs/Newman.lean`,
+   `CriticalPairs.lean`, `ConditionalCP.lean`, and `ConditionalCPRuntime.lean`. The checked claims
+   include `confluent_of_CPJ`, `c_confluent_of_joins`, `RuntimeCongruenceStep.reachable`, and
+   `cong_RewStep_confluent_on_emb`. The runtime bridge covers runtime congruence schemas; genuinely
+   non-congruence multi-step side conditions remain in the abstract conditional-rewriting layer.
  * Stay and Meredith's OSLF papers {citep stayMeredithLogic}[] {citep enrichedLawvereSemantics}[]
    support the spatial and behavioral modalities. The Lean surface is `MeTTaIL/Semantics/OSLF.lean`,
    `MeTTaILProofs/OSLFRec.lean`, and `MeTTaILProofs/OSLFCat.lean`. The checked claims include

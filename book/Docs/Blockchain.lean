@@ -18,7 +18,14 @@ set_option verso.code.warnLineLength 100
 tag := "sec-blockchain"
 %%%
 
-MeTTa is designed to run as an on-chain, smart-contract language. A contract runtime has three hard requirements: every validator must arrive at the same result from the same inputs, gas must be metered in a way that cannot be cheated, and an optimised production evaluator must be provably faithful to the published semantics. This chapter walks through the LeaTTa theorems that address each of those requirements directly.
+MeTTa is designed to run as an on-chain, smart-contract language. A contract runtime has three hard
+requirements:
+
+ * every validator must arrive at the same result from the same inputs;
+ * gas must be metered in a way that cannot be cheated;
+ * an optimised evaluator must stay faithful to the published semantics.
+
+This chapter walks through the LeaTTa theorems that address those requirements.
 
 # The Five Guarantees a Contract VM Needs
 
@@ -42,8 +49,20 @@ MeTTa is designed to run as an on-chain, smart-contract language. A contract run
 
 # Type Safety as Contract Safety
 
-On-chain, a type error must be caught deterministically and reported faithfully: never fabricated, never spuriously rejecting a valid contract. LeaTTa's gradual type-soundness results ({ref "sec-types"}[the type system]) give you this: a `BadArgType` is emitted *iff* the checker genuinely rejects an application, and the reported actual type is a real type of the offending argument. The `%Undefined%`/`Atom` wildcards let contracts mix typed and untyped code while keeping the typed parts checked soundly.
+On-chain, a type error must be caught deterministically and reported faithfully. The runtime must not
+fabricate an error, and it must not reject a valid contract spuriously.
+
+LeaTTa's gradual type-soundness results ({ref "sec-types"}[the type system]) give this property:
+`BadArgType` is emitted exactly when the checker rejects an application, and the reported actual type is
+a real type of the offending argument. The `%Undefined%`/`Atom` wildcards let contracts mix typed and
+untyped code while keeping the typed parts checked soundly.
 
 # Why a Machine-Checked Spec Matters Here
 
-The MeTTa operational-semantics paper {citep mops}[] and the Hyperon whitepaper both call for an independent specification comparable to the Ethereum Yellow Paper, against which multiple implementations can be certified, with a resource-bounded (gas) model for the chain setting. LeaTTa is a step toward that document being not merely written but *machine-checked*: the spec (MOPS), the running interpreter, and their correspondence all live in one Lean development with no `sorry`, re-checked on every build.
+The MeTTa operational-semantics paper {citep mops}[] and the Hyperon whitepaper both call for an
+independent specification comparable to the Ethereum Yellow Paper. Such a specification should be strong
+enough to certify multiple implementations, and it should include a resource-bounded gas model for the
+chain setting.
+
+LeaTTa is a step toward that document being machine-checked. The spec (MOPS), the running interpreter,
+and their correspondence live in one Lean development with no `sorry`, re-checked on every build.

@@ -1,121 +1,282 @@
 # PoR-weighted Cordial Miners, formalized in Lean 4
 
-A machine-checked formalization of PoR-weighted Cordial Miners, a leaderless DAG-based BFT consensus
-protocol. This is the next LeaTTa iteration, after the MeTTaIL formalization. It follows the blueprint
-"LLM + Lean Guided Synthesis and Verification of PoR-Weighted Cordial Miners" (Goertzel), and takes the
-formal content of that blueprint as the specification, not its process.
+This directory contains the Lean formalization of PoR-weighted Cordial Miners, a leaderless DAG-based
+BFT consensus protocol. The protocol source is Cordial Miners by Keidar, Naor, Poupko, and Shapiro. The
+weighted Proof-of-Reputation variant follows Goertzel's blueprint. The blueprint supplies the target
+specification, not the proof process.
 
-Everything here is held to the LeaTTa bar: no `sorry`, no `admit`, no `native_decide`, no `partial`, no
-`unsafe`. Every headline theorem is axiom-clean (it depends only on Lean's standard `propext`,
-`Classical.choice`, and `Quot.sound`, never on `sorryAx`).
+The development is checked under the same bar as the rest of LeaTTa: no `sorry`, no `admit`, no
+`native_decide`, no `partial`, and no `unsafe`. The public theorem audits print only Lean's standard
+classical axioms, `propext`, `Classical.choice`, and `Quot.sound`. They never print `sorryAx`.
 
-## What it proves, in one sentence
+## What the top theorem says
 
-Under three named assumptions (a Byzantine-weight bound, honest non-equivocation, and finality
-permanence), PoR-weighted Cordial Miners is safe: no two conflicting values are ever finalized, correct
-miners never publish conflicting positions, and the blocklace stays well formed.
+Under three named assumptions, PoR-weighted Cordial Miners is safe. The assumptions are:
 
-The headline theorem is `cm_end_to_end_safety_permanent` in `Proofs/EndToEndSafety.lean`.
+- the adversary is below the Byzantine-weight bound;
+- honest participants do not equivocate;
+- finality is permanent as the blocklace grows.
 
-## The headline result, built up in layers
+The conclusion is `EndToEndSafety`: no two conflicting values are finalized, correct miners do not
+publish conflicting positions, and the blocklace remains well formed. The shared assumption bundle is
+`EndToEndAssumptions`. The main theorem is:
 
-The ordering's prefix-monotonicity (the property that lets all correct miners agree on one growing
-order) is the hard part of consensus safety. We do not assume it. We derive it, in stages, from a single
-primitive fact. Each `cm_end_to_end_safety_*` variant lets you enter at a different level:
-
-```
-cm_end_to_end_safety            takes abstract OutputMonotone as a hypothesis
-        ⇑  tau_08_anchored_output_monotone        (Ref/AnchoredOrder)
-cm_end_to_end_safety_anchored   assumes AnchorPrefixMonotone (the anchor sequence grows as a prefix)
-        ⇑  finalizedAnchors_prefixMonotone        (Ref/FinalizedAnchors)
-cm_end_to_end_safety_finalized  assumes the finalized-wave count is monotone (one scalar fact)
-        ⇑  finalCountOf_monotone                  (Ref/FinalityPermanence)
-cm_end_to_end_safety_permanent  assumes only finality permanence (a finalized wave stays finalized)
+```lean
+end_to_end_safety_of_finality_permanence
 ```
 
-At the bottom, the whole safety story rests on three facts a BFT engineer already expects: the
-Byzantine-weight bound, honest non-equivocation, and finality permanence.
+The theorem lives in `Proofs/EndToEndSafety.lean`.
+
+## How the proof is built
+
+The ordering's prefix-monotonicity is not assumed. It is derived through the reduction chain below.
+
+```text
+end_to_end_safety_of_output_monotone          assumes OutputMonotone
+        ^
+tau_08_anchored_output_monotone               proves OutputMonotone from anchored leader safety
+        ^
+finalizedAnchors_prefixMonotone               proves anchored prefix monotonicity
+        ^
+finalCountOf_monotone                         proves monotone finalized-wave count
+        ^
+end_to_end_safety_of_finality_permanence      assumes finality permanence
+```
+
+The bottom of the chain is the part a BFT reader expects: threshold overlap from the Byzantine-weight
+bound, honest non-equivocation, and finality permanence.
 
 ## Layer map
 
-The library is built in dependency order. A later layer may import an earlier one, never the reverse.
+The library is ordered so later layers may import earlier layers, but not the reverse.
 
+```text
+Foundation -> Spec -> Ref -> Trec -> Tfine -> CMIR -> Extract -> Sim -> Runtime -> Tests -> Proofs
 ```
-Foundation -> Spec -> Ref -> Trec -> Tfine -> CMIR -> Extract -> Sim -> Tests -> Proofs
+
+`Foundation` proves the weighted-overlap arithmetic and prefix-order facts. The key theorem is
+`found_05_weighted_overlap`: two heavy signer sets overlap above the adversary bound.
+
+`Spec` defines the abstract protocol contracts: threshold finality, blocklace closure, equivocation,
+final-leader ratification, ordering consistency, dissemination, and scheduling. Examples include
+`cert_06_no_conflicting_threshold_finals`, `bl_02_insert_parentClosed`, `bl_06_equiv_sound`,
+`fl_07_no_conflicting_ratifications`, and `tau_09_output_consistent`.
+
+`Ref` contains executable references. The certificate collector has invariants around `collectorStep`.
+The concrete `topoSort` is deterministic, duplicate-free, output-valid, topologically sorted, and
+complete under a strict-rank acyclicity hypothesis. `BlockOrder`, `AnchoredOrder`,
+`FinalizedAnchors`, and `FinalityPermanence` form the leader-safety reduction chain.
+
+`Trec` and `Tfine` define the coarse rewrite theory and the evidence-carrying fine theory. The coarse
+theorem `trec_reachable_wf` preserves the dependency chain. The fine theorem `tfine_refines_trec` is a
+forward simulation that lets coarse safety lift to the operational layer.
+
+`CMIR` and `Extract` define a small MeTTa-IL atom IR and prove lossless extraction. `extract_decode_encode`
+recovers an encoded fact exactly. The runtime bridge adds `encodeFactA` and `decodeFactA` for the real
+`MeTTaIL.AST`.
+
+`Sim` and `Tests` contain executable examples checked during the build. `Runtime` hosts the coarse
+protocol as a MeTTaIL presentation. `Proofs` assembles the top-level safety theorem.
+
+## Runtime bridge
+
+The runtime bridge hosts the coarse protocol as a MeTTaIL dialect. A configuration is:
+
+```text
+(cm inbox state)
 ```
 
-- **Foundation**: weight and threshold arithmetic. The weighted-overlap lemma (`found_05_weighted_overlap`)
-  is the safety keystone: two heavy signer sets overlap in more than the adversary's weight. Plus the
-  prefix order for output discipline (`found_08_prefix_*`).
-- **Spec**: the abstract protocol. Threshold finality and its self-enforcing safety
-  (`cert_06_no_conflicting_threshold_finals`), the blocklace and equivocation
-  (`bl_02_insert_parentClosed`, `bl_03_observes_*`, `bl_06_equiv_sound`), final-leader ratification
-  (`fl_07_no_conflicting_ratifications`), the ordering contract and output consistency
-  (`tau_09_output_consistent`), and the dissemination and scheduler safety specs.
-- **Ref**: executable references. The weighted certificate collector (`collectorStep`, with its
-  invariants), and a verified concrete topological-sort ordering (`topoSort`): deterministic,
-  duplicate-free, output-valid, topologically sorted, and complete under a strict-rank acyclicity
-  hypothesis. `BlockOrder` wires `topoSort` to the actual blocklace; `AnchoredOrder`, `FinalizedAnchors`,
-  and `FinalityPermanence` are the leader-safety reduction chain.
-- **Trec / Tfine**: the coarse rewrite theory with causal well-formedness (`trec_reachable_wf`), and the
-  fine evidence-carrying theory with the abstraction map and forward simulation (`tfine_refines_trec`)
-  that lifts coarse safety to the operational layer.
-- **CMIR / Extract**: a MeTTa-IL atom IR and a lossless extraction. `extract_decode_encode` proves that
-  decoding an encoded fact recovers it exactly.
-- **Sim / Tests**: an executable end-to-end protocol run (`simulate`), and worked examples checked at
-  build time with `decide`.
-- **Proofs**: the top-level safety aggregate (`cm_end_to_end_safety` and its discharged variants).
+The `inbox` and `state` children are AC collections with a `nil` sentinel. Proposal and ordering steps
+are driven by input events:
 
-## Theorem registry (selected)
+```text
+(ev-propose w h)  ->  (propose w h)
+(ev-order hs)     ->  (ordered-prefix hs)
+```
 
-| ID | Name | Meaning |
-| --- | --- | --- |
-| FOUND-05 | `found_05_weighted_overlap` | two heavy signer sets overlap above the adversary bound |
-| CERT-06 | `cert_06_no_conflicting_threshold_finals` | no two valid threshold certificates carry conflicting values |
-| BL-02 | `bl_02_insert_parentClosed` | extending with a parent-resolved block preserves closure |
-| FL-07 | `fl_07_no_conflicting_ratifications` | no two valid ratification certificates ratify conflicting blocks |
-| TAU-09 | `tau_09_output_consistent` | correct miners under a common limit produce prefix-comparable orders |
-| TAU-08 | `tau_08_anchored_output_monotone` | the anchored ordering is output-monotone, from leader safety |
-| (Trec) | `trec_reachable_wf` | every reachable coarse state respects the dependency chain |
-| (Tfine) | `tfine_refines_trec` | the abstraction is a forward simulation, lifting coarse safety |
-| (Extract) | `extract_decode_encode` | extraction to MeTTa-IL atoms is lossless |
-| (top) | `cm_end_to_end_safety_permanent` | full safety from the three named primitives |
+The derived rules add facts along this chain:
 
-## Trusted boundaries (honest accounting)
+```text
+propose -> q-approve -> cert-threshold -> final -> final-leader
+```
 
-These are stated as explicit hypotheses, faithful to the blueprint's design. They are assumptions, not
-gaps in the proofs.
+Run the runtime examples with:
 
-- **Finality permanence** enters the top theorem as a hypothesis: a finalized wave stays finalized as the
-  blocklace grows. It is the blocklace-only-grows discipline applied to finality certificates.
-- **Liveness** (dissemination completeness, scheduler non-starvation) is conditional on the network and
-  scheduler fairness assumptions stated in `Spec/DisseminationSpec.lean` and `Spec/SchedulerSpec.lean`.
-  The structural cores (FIFO fair-lane progress, bounded-service credit) are proved.
-- Certificate persistence under blocklace extension (the approval relation is non-monotone) is future
-  work, noted in `Spec/FinalLeader.lean`.
-- Extraction targets MeTTa-IL atoms; a RholangCore target would follow the same encode/decode pattern.
+```bash
+lake build CordialMiners.Runtime.Run
+```
+
+Expected checks:
+
+```text
+info: CordialMiners/Runtime/Run.lean:88:0: true
+info: CordialMiners/Runtime/Run.lean:121:0: true
+info: CordialMiners/Runtime/Run.lean:223:0: true
+```
+
+Those checks cover a buried proposal event, an ordered-prefix event with an encoded list payload, and a
+five-step path from one proposal event to `final-leader`. The file also proves relation witnesses:
+`buriedProposal_eval_modAC`, `order_eval_modAC`, and `finality_eval_run_modAC`.
+
+The forward theorem says every coarse `TrecState.Step` has a runtime witness:
+
+```lean
+trec_step_forward_decode :
+  TrecState.Step s s' ->
+  ∃ events target,
+    RewStepModAC acOpCM cmPresentation (encConfig eW eH events s) target ∧
+    astToState dW dH target = s'
+```
+
+The backward theorem says every shaped runtime step, modulo AC, decodes to a coarse step or a decoded
+stutter, provided the field decoders respect runtime AC-equivalence:
+
+```lean
+runtime_step_backward_of_decoders_acEq :
+  (∀ {a b}, ACEq acOpCM a b -> dW a = dW b) ->
+  (∀ {a b}, ACEq acOpCM a b -> dH a = dH b) ->
+  RuntimeConfigShape source ->
+  RewStepModAC acOpCM cmPresentation source target ->
+  TrecState.Step (astToState dW dH source) (astToState dW dH target) ∨
+    astToState dW dH source = astToState dW dH target
+```
+
+The executable Nat/Nat instance proves the decoder condition as `dNat_acEq` and instantiates the theorem
+as `runtime_step_backward_nat`. A theorem for arbitrary raw decoders is not claimed. Such decoders can
+distinguish AC-equivalent payloads.
+
+The transfer theorems `trec_step_forward_reachable` and `trec_step_forward_wf` show that the runtime
+witness produced by the forward theorem decodes to a reachable, well-formed coarse state when the source
+is reachable. The concrete finality run has `finality_runtime_trec_reachable`, `finality_runtime_wf`, and
+`finality_runtime_final_needs_propose`.
+
+Read `Runtime/README.md` for the proof shape, file map, exact checks, and source notes.
+
+## Selected theorem names
+
+The names below are the usual entry points when checking the development.
+
+```text
+Foundation
+  found_05_weighted_overlap
+  found_08_prefix_refl
+  found_08_prefix_trans
+
+Spec
+  cert_06_no_conflicting_threshold_finals
+  bl_02_insert_parentClosed
+  bl_06_equiv_sound
+  fl_07_no_conflicting_ratifications
+  tau_09_output_consistent
+
+Ref
+  tau_08_anchored_output_monotone
+  finalizedAnchors_prefixMonotone
+  finalCountOf_monotone
+  topoSort_valid
+
+Trec and Tfine
+  trec_reachable_wf
+  tfine_refines_trec
+
+Extraction
+  extract_decode_encode
+  decodeFactA_encodeFactA
+  astToState_encConfig
+
+Runtime
+  runtimeConfigShape_encConfig
+  runtimeConfigShape_acEq_iff
+  noEmbeddedConfig_not_rewStepModAC
+  runtimeConfigShape_rewStepModAC_top
+  astToState_acEq_of_decoders_acEq
+  runtime_step_backward_of_decoders_acEq
+  runtime_step_backward_nat
+  trec_step_forward_decode
+  trec_step_forward_reachable
+  trec_step_forward_wf
+  scoped_runtime_bridge
+
+Executable runtime checks
+  buriedProposal_eval_modAC
+  order_eval_modAC
+  finality_eval_run_modAC
+  finality_runtime_wf
+  finality_runtime_final_needs_propose
+
+Top result
+  end_to_end_safety_of_finality_permanence
+```
+
+## Scope boundaries
+
+The assumptions are explicit.
+
+Finality permanence enters the top theorem as a hypothesis. It is the blocklace-only-grows discipline
+applied to finality certificates.
+
+Liveness depends on network and scheduler fairness assumptions stated in `Spec/DisseminationSpec.lean`
+and `Spec/SchedulerSpec.lean`. The structural pieces, FIFO fair-lane progress and bounded-service credit,
+are proved.
+
+Certificate persistence under blocklace extension remains future work because the approval relation is
+non-monotone. The note is in `Spec/FinalLeader.lean`.
+
+The runtime bridge covers encoded redexes, executable demos, the decoded forward theorem, head-rule and
+direct-step backward classifiers, the generic AC-stable decoder theorem, the executable Nat/Nat theorem,
+and the named stutter fragments. More field codecs need their own AC-stability proofs, or a stronger
+shape invariant.
+
+Extraction targets MeTTa-IL atoms and the real MeTTaIL AST. A RholangCore target would follow the same
+encode/decode pattern.
 
 ## Build and verify
 
-```
+Build the whole Cordial Miners layer:
+
+```bash
 export PATH="$HOME/.elan/bin:$PATH"
 lake build CordialMiners
 ```
 
-The forbidden-token guard checks the bar:
+Run the forbidden-token guard:
 
-```
+```bash
 bash scripts/ci/check-no-forbidden.sh
 ```
 
-To check that a theorem is axiom-clean, print its axiom dependencies (you want to see only `propext`,
-`Classical.choice`, `Quot.sound`, and never `sorryAx`):
+Check the public axiom surface:
 
-```lean
-import CordialMiners
-open CordialMiners
-#print axioms cm_end_to_end_safety_permanent
+```bash
+lake build CordialMiners.AxiomAudit
+lake build CordialMiners.Runtime.AxiomAudit
 ```
 
-The executable parts run. For instance `#eval simulate demo` (in `Sim/Run.lean`) drives approvals
-through the collector and orders the finalized blocks, printing `[1, 2, 3]`.
+The audit output should list only `propext`, `Classical.choice`, and `Quot.sound`.
+
+The older executable protocol demo is still present:
+
+```lean
+#eval simulate demo
+```
+
+`Sim/Run.lean` prints:
+
+```text
+[1, 2, 3]
+```
+
+## Sources
+
+The consensus side follows:
+
+- Keidar, Naor, Poupko, and Shapiro, Cordial Miners.
+- Goertzel's PoR-weighted Cordial Miners blueprint.
+
+The runtime bridge follows:
+
+- Meseguer's rewriting logic;
+- the Maude account of rewriting modulo equations;
+- the Chemical Abstract Machine multiset model;
+- Lamport's stuttering-insensitive account of TLA behavior;
+- the AC-matching literature cited in the Verso book.

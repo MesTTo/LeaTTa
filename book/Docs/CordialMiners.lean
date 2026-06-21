@@ -128,9 +128,15 @@ consecutively finalized waves only grows. That count only grows when finality is
 finalized wave stays finalized as the blocklace grows, which is the blocklace-only-grows discipline
 applied to finality certificates.
 
-So the whole edifice comes to rest on three facts a BFT engineer already expects: the Byzantine-weight
-bound, honest non-equivocation, and finality permanence. The development exposes the theorem at each
-level of this reduction, so you can enter it wherever you are willing to assume.
+The safety chain rests on three facts a BFT engineer already expects: the Byzantine-weight bound,
+honest non-equivocation, and finality permanence. The development names the shared assumptions
+`EndToEndAssumptions` and the shared conclusion `EndToEndSafety`, then exposes the theorem at each
+level of this reduction, so you can enter it wherever you are willing to assume. The Lean names follow
+that reduction:
+`end_to_end_safety_of_output_monotone`,
+`end_to_end_safety_of_anchor_prefix_monotone`,
+`end_to_end_safety_of_finalized_count_monotone`, and
+`end_to_end_safety_of_finality_permanence`.
 
 # Extraction, and Running It
 
@@ -141,13 +147,130 @@ folds approvals through the weighted certificate collector to decide finality, k
 blocks, and orders them with the verified topological sort, and a build-time check confirms the published
 order on a small example.
 
-# What Is Left Open, Honestly
+# Hosting the Protocol on the MeTTaIL Runtime
 
-The boundaries are stated as explicit hypotheses, faithful to the blueprint, not papered over. Finality
-permanence enters the top theorem as a hypothesis, which is the canonical safety primitive the residual
-rests on. Liveness, that dissemination eventually delivers and that the scheduler does not starve a
-runnable wave, is conditional on network and scheduler fairness, and we prove the structural cores
-(FIFO fair-lane progress and bounded-service credit) while leaving the temporal argument to its
-assumptions. Certificate persistence under blocklace extension, where the approval relation is
-non-monotone, is future work. Extraction targets MeTTa-IL atoms here, and a RholangCore target would
+The runtime bridge is the place where the dialect story becomes concrete. The coarse Cordial Miners rules
+are encoded as a MeTTaIL presentation. The verified runtime executes that presentation directly.
+
+A runtime configuration is the AST node:
+
+```
+(cm inbox state)
+```
+
+The `inbox` and `state` fields are binary collections. Their labels are flagged as associative and
+commutative, and both collections end in a `nil` sentinel. This follows the rewriting-logic view of a
+system as equations plus rules
+{citep meseguerRewritingLogic}[] and the Maude execution pattern for rewriting modulo structural
+equations {citep maudeBook}[]. It also follows the Chemical Abstract Machine's multiset picture
+{citep chemicalAbstractMachine}[]: the facts form a soup, and a rule fires when the soup contains the
+pieces it needs.
+
+The two spontaneous coarse rules become executable through the inbox. A proposal event `(ev-propose w h)`
+is consumed and the state gains `(propose w h)`. An ordering event `(ev-order hs)` is consumed and the
+state gains `(ordered-prefix hs)`. The remaining rules extend the state along this chain:
+
+```
+propose -> q-approve -> cert-threshold -> final -> final-leader
+```
+
+The codecs are lossless on the encoded fragment. `decodeEventA_encodeEventA` recovers one encoded event.
+`decodeInboxA_encInbox` recovers an encoded inbox. `astToInbox_encConfig` recovers the inbox part of a
+configuration. `astToState_encConfig` recovers the finite coarse state.
+
+The file `CordialMiners/Runtime/Run.lean` gives three build-checked examples:
+
+```
+#eval oneStepAC' acOpCM cmPresentation buriedProposalStart == some afterBuriedProposal
+#eval evalAC' acOpCM cmPresentation 1 orderStart == afterOrder
+#eval evalAC' acOpCM cmPresentation 5 finalityStart == finalityExpectedConfig
+```
+
+All three evaluate to `true` during the build. The buried-proposal example checks that the matcher can
+find an event that is not at the head of the inbox. The ordering example checks the explicit AST-list
+payload. The finality example consumes one proposal and reaches `final-leader` in five runtime steps.
+Theorems `buriedProposal_eval_modAC`, `order_eval_modAC`, and `finality_eval_run_modAC` give relation
+witnesses for those computed results.
+
+The AC matcher is intentionally scoped. Full AC matching has hard cases even in restricted elementary
+forms {citep ekerSingleACMatching}[], and variadic matching with sequence variables needs a larger theory
+{citep variadicACMatching}[]. The runtime rules need a smaller fragment: one fixed subpattern and one
+rest variable under a binary AC collection. That is the fragment proved in `MeTTaILProofs/ACMatch.lean`.
+
+The theorem `matchPatAC_acRest_sound` says that a successful fragment match has an AC-equivalent
+representative accepted by ordinary matching. `matchPatAC_acRest_complete_of_flat_split` proves
+completeness for a chosen flattened split. `matchPatAC_acRest_complete_of_fresh_split` packages the
+protocol rule shape: the fixed leaf matches, and a fresh rest variable binds to the rebuilt complement.
+`matchPatAC_sound`, `oneStepAC'_sound`, and `evalAC'_sound` lift the soundness result to the executable
+matcher, stepper, and evaluator. Full relation completeness beyond this linear fragment is not claimed.
+
+The main relation theorem is forward completeness up to decoding. From a coarse step,
+`trec_step_forward_decode` produces an inbox and a runtime target:
+
+```
+TrecState.Step s s' ->
+∃ events target,
+  RewStepModAC acOpCM cmPresentation (encConfig eW eH events s) target ∧
+  astToState dW dH target = s'
+```
+
+The target is compared through `astToState`, not by literal AST equality. The runtime state is an AC
+multiset with a `nil` sentinel. The protocol state is a `Finset`. Re-firing a rule can add a duplicate AST
+fact, while the decoded finite set is unchanged. This is the stuttering abstraction used in TLA-style
+refinement arguments {citep lamportTLA}[].
+
+The duplicate cases are explicit. `decodeStateA_cons_encodeFactA_stutter` and
+`astToState_cons_encodeFactA_stutter` state the basic fact-insertion stutter. `event_forward_stutter` and
+`derived_step_forward_stutter` lift it to input and derived runtime steps. The list-level versions are
+`event_inbox_mem_forward_stutter` and `derived_state_mem_forward_stutter`. The theorem
+`decodeStateA_stateA_none` covers inserted leaves that are invisible to the selected decoder.
+
+The backward theorem is the local step refinement in the other direction. It is phrased for field decoders
+that respect `ACEq acOpCM`:
+
+```
+runtime_step_backward_of_decoders_acEq :
+  RuntimeConfigShape source ->
+  RewStepModAC acOpCM cmPresentation source target ->
+  TrecState.Step (astToState dW dH source) (astToState dW dH target) ∨
+    astToState dW dH source = astToState dW dH target
+```
+
+The omitted hypotheses in that display are the two field-decoder AC-stability assumptions. A theorem for
+arbitrary raw decoders is not stated. Such a decoder can distinguish two AC-equivalent payloads, so the
+statement would be false.
+
+The proof first moves to the representative chosen by `RewStepModAC`.
+`runtimeConfigShape_acEq_iff` transports the shape invariant to that representative.
+`noEmbeddedConfig_not_rewStepModAC` rules out hidden runtime steps inside clean payloads.
+`runtimeConfigShape_rewStepModAC_top` reduces the step to a top-level `cm` redex, and
+`runtime_root_step_backward` classifies the six rules. The generic transport lemma
+`astToState_acEq_of_decoders_acEq` supplies the final AC-invariance step.
+
+For the executable Nat/Nat instance, the field decoder proof is `dNat_acEq`. It gives
+`astToState_dNat_acEq` and the concrete theorem `runtime_step_backward_nat`. That theorem is the runtime
+claim most directly tied to the build-checked examples.
+
+The forward witness also carries transfer results. If the source coarse state is reachable,
+`trec_step_forward_reachable` proves that the decoded runtime target is reachable. `trec_step_forward_wf`
+then applies `trec_reachable_wf` to that decoded target. The executable finality run has matching
+corollaries: `finality_runtime_trec_reachable`, `finality_runtime_wf`, and
+`finality_runtime_final_needs_propose`.
+
+# What Remains Open
+
+The boundaries are stated as explicit hypotheses. Finality permanence enters the top theorem as a
+hypothesis. It is the blocklace-only-grows discipline applied to finality certificates.
+
+Liveness remains conditional on network and scheduler fairness. The development proves the structural
+cores, FIFO fair-lane progress and bounded-service credit, but it does not prove a temporal dissemination
+theorem.
+
+Certificate persistence under blocklace extension remains future work because the approval relation is
+non-monotone. Extraction targets MeTTa-IL atoms and the real MeTTaIL AST here. A RholangCore target would
 follow the same lossless encode-and-decode pattern.
+
+The MeTTaIL runtime bridge proves the encoded redexes, executable demos, decoded forward theorem,
+head-rule and direct-step backward classifiers, the generic AC-stable decoder backward theorem, the
+executable Nat/Nat modulo-AC theorem, and named stutter fragments above. More field codecs need their own
+AC-stability proofs, or a stronger shape invariant.

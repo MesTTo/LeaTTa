@@ -140,7 +140,7 @@ that reduction:
 
 # Extraction, and Running It
 
-The coarse facts extract to MeTTa-IL atoms, the same intermediate language as {ref "sec-mettail"}[the
+The coarse facts extract to MeTTaIL atoms, the same intermediate language as {ref "sec-mettail"}[the
 MeTTaIL chapter]. We prove the extraction is lossless: decoding an encoded fact recovers it exactly,
 including the variable-length ordered-prefix list. The executable parts run, too. A worked simulation
 folds approvals through the weighted certificate collector to decide finality, keeps the finalized
@@ -267,7 +267,7 @@ cores, FIFO fair-lane progress and bounded-service credit, but it does not prove
 theorem.
 
 Certificate persistence under blocklace extension remains future work because the approval relation is
-non-monotone. Extraction targets MeTTa-IL atoms and the real MeTTaIL AST here. A RholangCore target would
+non-monotone. Extraction targets MeTTaIL atoms and the real MeTTaIL AST here. A RholangCore target would
 follow the same lossless encode-and-decode pattern.
 
 The MeTTaIL runtime bridge proves the encoded redexes, executable demos, decoded forward theorem,

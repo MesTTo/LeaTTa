@@ -168,12 +168,12 @@ component).
 # What Remains Open
 
 The source itself leaves its deepest layer open. MeTTaIL's modal type system (the possibility
-modalities and the recovery of arrow types in the design notes) is admitted there to be intuited
-rather than finished, and the rho-calculus full-abstraction result it points at is work in progress.
-We formalize the determinate fragments and mark the open parts in place. The Scala tool's own
-`--hypercube` pass omits the modal types too, and our type-lift matches the tool, not the unfinished
-note. The per-variable category-consistency check of the elaborator's type checker remains future work;
-the category-match and bound-variable checks are in place.
+modalities and the recovery of arrow types in the design notes) is sketched in the source, but the
+release does not claim that typing theorem. The rho-calculus full-abstraction result it points at is
+also outside the checked surface. We formalize the determinate fragments and mark the open parts in
+place. The Scala tool's own `--hypercube` pass omits the modal types too, and our type-lift matches the
+tool, not the unfinished note. The per-variable category-consistency check of the elaborator's type
+checker remains future work; the category-match and bound-variable checks are in place.
 
 Building a faithful model is also a good way to find bugs in the thing you are modeling, and we found a
 few in the tool's rename and checking code. Where the Scala does something wrong, an export rename that

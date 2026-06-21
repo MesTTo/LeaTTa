@@ -76,7 +76,7 @@ example :
     decodeFact numDec numDec (encodeFact Sexpr.num Sexpr.num (TrecFact.final 3 7))
       = some (TrecFact.final (Wave := Nat) (Hash := Nat) 3 7) := by decide
 
-/-- The variable-length ordered-prefix fact also round-trips through MeTTa-IL. -/
+/-- The variable-length ordered-prefix fact also round-trips through MeTTaIL. -/
 example :
     decodeFact numDec numDec (encodeFact Sexpr.num Sexpr.num (TrecFact.orderedPrefix [1, 2, 3]))
       = some (TrecFact.orderedPrefix (Wave := Nat) (Hash := Nat) [1, 2, 3]) := by decide

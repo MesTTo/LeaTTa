@@ -3,7 +3,7 @@ Module: CordialMiners.Foundation.Basic
 Layer: Foundation
 Purpose: Shared foundations for the PoR-weighted Cordial Miners formalization: the participant
   weight type and the rational-threshold type, used by every later layer. Generic, with no protocol
-  rules, no Rholang, no MeTTa-IL, and no simulation.
+  rules, no Rholang, no MeTTaIL, and no simulation.
 Imports: Mathlib
 Trusted boundary: none
 Main exports: Weight, Ratio

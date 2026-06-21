@@ -18,7 +18,7 @@ What each layer holds:
     concrete topological-sort ordering (deterministic, dup-free, topologically sorted, complete).
   Trec / Tfine: the coarse rewrite theory with causal well-formedness, and the fine evidence-carrying
     theory with the abstraction map and forward simulation that lifts coarse safety to it.
-  CMIR / Extract: a MeTTa-IL atom IR and a lossless extraction (decode of encode is the original).
+  CMIR / Extract: a MeTTaIL atom IR and a lossless extraction (decode of encode is the original).
   Sim: an executable end-to-end protocol run.
   Runtime: the bridge from Cordial Miners facts and steps into the verified MeTTaIL runtime.
   Tests: kernel-checked worked examples.

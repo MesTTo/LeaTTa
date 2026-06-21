@@ -71,7 +71,7 @@ complete under a strict-rank acyclicity hypothesis. `BlockOrder`, `AnchoredOrder
 theorem `trec_reachable_wf` preserves the dependency chain. The fine theorem `tfine_refines_trec` is a
 forward simulation that lets coarse safety lift to the operational layer.
 
-`CMIR` and `Extract` define a small MeTTa-IL atom IR and prove lossless extraction. `extract_decode_encode`
+`CMIR` and `Extract` define a small MeTTaIL atom IR and prove lossless extraction. `extract_decode_encode`
 recovers an encoded fact exactly. The runtime bridge adds `encodeFactA` and `decodeFactA` for the real
 `MeTTaIL.AST`.
 
@@ -227,7 +227,7 @@ direct-step backward classifiers, the generic AC-stable decoder theorem, the exe
 and the named stutter fragments. More field codecs need their own AC-stability proofs, or a stronger
 shape invariant.
 
-Extraction targets MeTTa-IL atoms and the real MeTTaIL AST. A RholangCore target would follow the same
+Extraction targets MeTTaIL atoms and the real MeTTaIL AST. A RholangCore target would follow the same
 encode/decode pattern.
 
 ## Build and verify

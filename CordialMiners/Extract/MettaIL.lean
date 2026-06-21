@@ -1,11 +1,11 @@
 /-
 Module: CordialMiners.Extract.MettaIL
 Layer: Extract
-Purpose: Extraction of the coarse protocol facts to MeTTa-IL atoms, and the proof that it loses nothing.
+Purpose: Extraction of the coarse protocol facts to MeTTaIL atoms, and the proof that it loses nothing.
   encodeFact compiles each fact to an S-expression (a head symbol plus its encoded fields); decodeFact
   parses one back. The round-trip theorem extract_decode_encode shows that decoding an encoded fact
   recovers it exactly, given left-inverse field codecs. Extraction is therefore lossless: every coarse
-  fact has a faithful MeTTa-IL image that the parser maps back to the original.
+  fact has a faithful MeTTaIL image that the parser maps back to the original.
 Imports: CordialMiners.CMIR.Atom, CordialMiners.Trec.Syntax
 Trusted boundary: none (fully proved)
 Main exports: encodeFact, decodeFact, extract_decode_encode
@@ -18,7 +18,7 @@ namespace CordialMiners
 
 variable {Wave Hash : Type*}
 
-/-- Encode a coarse fact as a MeTTa-IL atom: a head symbol naming the fact, followed by its encoded
+/-- Encode a coarse fact as a MeTTaIL atom: a head symbol naming the fact, followed by its encoded
     fields. The ordered prefix is encoded as the head symbol consed onto the encoded hash list. -/
 def encodeFact (eW : Wave → Sexpr) (eH : Hash → Sexpr) : TrecFact Wave Hash → Sexpr
   | .propose w h => .app [.sym "propose", eW w, eH h]
@@ -28,7 +28,7 @@ def encodeFact (eW : Wave → Sexpr) (eH : Hash → Sexpr) : TrecFact Wave Hash 
   | .finalLeader w h => .app [.sym "final-leader", eW w, eH h]
   | .orderedPrefix hs => .app (.sym "ordered-prefix" :: hs.map eH)
 
-/-- Parse a MeTTa-IL atom back into a coarse fact, matching on the head symbol and field arity. Anything
+/-- Parse a MeTTaIL atom back into a coarse fact, matching on the head symbol and field arity. Anything
     that does not match a known shape decodes to `none`. -/
 def decodeFact (dW : Sexpr → Option Wave) (dH : Sexpr → Option Hash) :
     Sexpr → Option (TrecFact Wave Hash)
@@ -66,7 +66,7 @@ theorem mapM_map_leftInv (e : Hash → Sexpr) (d : Sexpr → Option Hash)
 
 /-- Extraction is lossless: decoding an encoded fact recovers it exactly, provided the field codecs are
     left inverses (`dW (eW w) = some w` and `dH (eH h) = some h`). Every coarse fact therefore has a
-    faithful MeTTa-IL image. -/
+    faithful MeTTaIL image. -/
 theorem extract_decode_encode (eW : Wave → Sexpr) (eH : Hash → Sexpr)
     (dW : Sexpr → Option Wave) (dH : Sexpr → Option Hash)
     (hW : ∀ w, dW (eW w) = some w) (hH : ∀ h, dH (eH h) = some h) :

@@ -1,30 +1,28 @@
-# MeTTa minimal interpreter: a machine-checked reference semantics in Lean 4
+# LeaTTa: machine-checked MeTTa semantics in Lean 4
 
-> **Alpha.** LeaTTa is an early, alpha-stage release and a starting foundation. It will be improved
-> substantially in upcoming iterations as MeTTa is more fully formalised. It formalizes Hyperon
-> Experimental's minimal interpreter and standard library, and now adds a first, still-incomplete
-> formalization of MeTTa-IL, the MeTTa intermediate language, built from F1R3FLY's MeTTaIL repository
-> (<https://github.com/F1R3FLY-io/MeTTaIL>). That MeTTa-IL layer is work in progress: it models the
-> determinate core, cross-checks it against the real tool, and flags the parts that are still open (see
-> the MeTTaIL section below). This release also adds a formalization of PoR-weighted Cordial Miners, a
-> leaderless DAG consensus protocol, with a machine-checked end-to-end safety result (see the Cordial
-> Miners section below). MeTTa on Rholang is still planned.
-
-This is a Lean 4 formalization of Hyperon's minimal MeTTa interpreter, the small "assembly language"
+LeaTTa is a Lean 4 formalization of Hyperon's minimal MeTTa interpreter, the small "assembly language"
 that the rest of MeTTa is built on. The standard library is written in MeTTa on top of those
-instructions, the same way `hyperon-experimental` does it. The kernel is total and has no
-dependencies: no Mathlib, no Batteries.
+instructions, following `hyperon-experimental`. The executable kernel is total and has no Mathlib or
+Batteries dependency.
 
-The aim is simple. This should be a reference the Hyperon developers can actually use. It runs
-Hyperon's own test files and agrees with them, every function is total (no `partial`, no `sorry`, no
-`unsafe`), and wherever it differs from the current implementation, it differs by being cleaner. The
-full comparison is in the book's Improvements over Hyperon appendix at
-[mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/).
+The current release has three active layers.
+
+- The minimal interpreter and standard library run Hyperon's own oracle corpus: 270 passing assertions
+  across 22 files.
+- The MeTTaIL layer formalizes the determinate presentation pipeline and ships a small editable dialect
+  format that runs through the checked reducer.
+- The Cordial Miners layer formalizes the PoR-weighted coarse protocol, proves the top-level safety
+  theorem, and hosts the protocol as a MeTTaIL runtime presentation.
+
+This is still an alpha release. The remaining MeTTaIL research targets, the full module system, and
+MeTTa on Rholang are not claimed here. The stated theorems are kernel-checked with no `sorry`, no
+`admit`, no `native_decide`, no `partial`, and no `unsafe`. The full comparison with Hyperon is in the
+book's Improvements over Hyperon appendix at [mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/).
 
 ## Quick test: editable MeTTaIL runtime
 
-The fastest way to check the "tweak the LanguageDef, get a runtime" path is the external MeTTaIL
-fixture. It declares a tiny boolean dialect:
+The fastest way to check the MeTTaIL runtime path is the external dialect fixture. It declares a tiny
+boolean language:
 
 ```text
 sort Tm
@@ -145,7 +143,7 @@ The kernel lives in `MettaHyperonFull/Minimal/`:
   `let`, `let*`, `switch`, `case`, `map-atom`, `filter-atom`, `foldl-atom`, the set operations, the
   `assert*` family, `match`, and so on, together with the grounded operations.
 
-The whole library builds in 36 jobs, with 0 `sorry`, 0 `partial`, and 0 `unsafe`.
+The whole library builds with 0 `sorry`, 0 `partial`, and 0 `unsafe`.
 
 ## How it is validated
 
@@ -175,7 +173,7 @@ lake exe LeaTTa --oracle tests/corpus/test_stdlib.metta   # or a single file
 | `g1_docs.metta` (`get-doc`, `help!`) | 10 / 10 |
 
 These are Hyperon's tests, run unmodified. Passing tests include the full dependent-type tier
-(`d1`–`d5`): GADTs, higher-order functions, dependent length arithmetic, types as propositions, and
+(`d1`-`d5`): GADTs, higher-order functions, dependent length arithmetic, types as propositions, and
 auto type-checking, along with the documentation operators `get-doc` and `help!`.
 
 One file is excluded: `f1_imports.metta`. Hyperon marks it Python-mode-only (its header says it
@@ -220,26 +218,35 @@ bisimulation, and a resource-bounded (gas) extension. The bridge between the ind
 specification is in `Proofs/Correspondence.lean`, covered in the book's operational-semantics and
 correspondence chapters at [mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/).
 
-## MeTTaIL (work in progress)
+## MeTTaIL and the checked runtime
 
 `MeTTaIL/` is a first machine-checked formalization of F1R3FLY's MeTTaIL, the meta-language that turns a
 presentation of a graph-structured lambda theory into a calculus's grammar, equations, and rewrites. It
-is built from the F1R3FLY MeTTaIL repository (<https://github.com/F1R3FLY-io/MeTTaIL>) and it is not
-finished. It models the determinate core and is honest about what is still open.
+is built from the F1R3FLY MeTTaIL repository (<https://github.com/F1R3FLY-io/MeTTaIL>). The release
+covers the determinate core, the presentation-to-runtime path, and the proof surface needed to audit the
+runtime steps it executes.
 
-What is checked: the elaborate, desugar, type-lift, and monomorphize pipeline, pinned by kernel
-`decide` against output captured from the real Scala tool on `Rholang.module`; the GSLT reduction
-relation (soundness); subject reduction and confluence for SKI and the simply-typed lambda calculus;
-the semantic cores of the two papers' calculi (the spice bounded-reachability rule and the mq-calculus
-Born-rule probability conservation); the MeTTa-to-GSLT bridge; and the presentation lattice laws with
-decidable equality. It builds with 0 `sorry`/`admit`/`native_decide`/`partial`/`unsafe`, and the axiom
-audit shows only the three standard axioms.
+The checked surface includes:
 
-What is open: the modal hypercube typing for binder calculi (open in the source itself), the
-rho-calculus full-abstraction result, the spice and mq calculi as full reduction theories, a standalone
-rho-calculus reduction development, the per-variable category-consistency check in the elaborator, and
-an operational bisimulation against the four-register machine. The module headers and the book state
-these boundaries directly.
+- the elaborate, desugar, type-lift, and monomorphize pipeline, pinned by kernel `decide` against
+  output captured from the real Scala tool on `Rholang.module`;
+- the GSLT reduction relation and its soundness theorem;
+- subject reduction and confluence for SKI and the simply-typed lambda calculus;
+- the semantic cores of the two paper calculi: spice bounded reachability and mq-calculus Born-rule
+  probability conservation;
+- the MeTTa-to-GSLT bridge and the presentation lattice laws;
+- the executable reducer generated from a presentation;
+- the AC-aware runtime fragment used by Cordial Miners;
+- the axiom-audited theorem surface for those claims.
+
+The MeTTaIL layer builds with 0 `sorry`, 0 `admit`, 0 `native_decide`, 0 `partial`, and 0 `unsafe`. The
+axiom audit shows only the three standard axioms: `propext`, `Classical.choice`, and `Quot.sound`.
+
+The open surface is also explicit. The release does not claim the modal hypercube typing theorem for
+binder calculi, the rho-calculus full-abstraction result, spice and mq as full reduction theories, a
+standalone rho-calculus reduction development, the per-variable category-consistency check in the
+elaborator, or an operational bisimulation against the four-register machine. The module headers and
+the book state these boundaries directly.
 
 Formalizing the tool also turned up several bugs in it. They are written up for the F1R3FLY team in
 [`MeTTaIL/HYPERON_IMPROVEMENTS.md`](MeTTaIL/HYPERON_IMPROVEMENTS.md). The full treatment is the MeTTaIL
@@ -252,39 +259,34 @@ lake build MeTTaIL MeTTaILProofs MeTTaILTests
 
 ### A verified spec-to-runtime
 
-On the `mettail-runtime` branch the formalization carries a presentation all the way to a running,
-verified reducer: tweak the LanguageDef and you get a runtime whose every step is checked against the
-presentation's own semantics. The one-step engine is sound and, for base rewriting, complete; it
-terminates under a measure and is confluent by Newman's lemma, with unique normal forms (a deterministic
-system gets local confluence for free).
+The formalization carries a presentation all the way to a running reducer. Change the dialect
+declarations in the small release-facing format, and the `LeaTTa` binary parses the file, monomorphizes
+the presentation, and runs the term through the checked evaluator. The one-step engine is sound and, for
+base rewriting, complete. It terminates under a measure and is confluent by Newman's lemma, with unique
+normal forms when the usual termination and local-confluence hypotheses are supplied.
 
 The shipped binary now exposes the path directly for a small editable dialect format with `sort`,
 `term`, and `rewrite` declarations. The quick-test section near the top of this README shows the CLI
 fixture, expected output, malformed-input behavior, a temporary custom dialect, the shell regression
 gate, and the Lean test target.
 
-Rewriting modulo AC is done the full way for binary-curried operators like rho's parallel `|`. There is a
+AC equivalence is proved for binary-curried operators like rho's parallel `|`. The development gives a
 verified total order on terms (`Order`), a canonical form that is sound, complete, and idempotent and so
-decides AC-equivalence (`AC`), the modulo-AC engine sound for the `R/AC` relation (`ACEngine`), and
-Church-Rosser modulo AC: AC-equivalent terms normalize to the identical term (`ACNormal`). A worked check
-confirms the decision procedure collapses commutativity and associativity and keeps distinct terms apart.
-`ACMatch` adds the executable AC-aware matcher needed by Cordial Miners for the linear collection fragment
-with one fixed subpattern and one rest variable. The theorem `matchPatAC_acRest_witness` proves that a
-successful match in that fragment has a concrete syntactic representative accepted by the ordinary
-matcher, and `matchPatAC_acRest_sound` proves that representative is AC-equivalent to the subject.
-The theorem `matchPatAC_acRest_complete_of_flat_split` proves the matching completeness direction for a
-chosen flattened split: if one selected leaf matches the fixed subpattern and the rebuilt remainder binds
-to the rest variable, the AC-rest matcher succeeds. The corollary
-`matchPatAC_acRest_complete_of_fresh_split` covers the rule shape used by Cordial Miners: after the fixed
-leaf matches, a fresh rest variable can bind to the rebuilt complement of that leaf.
-The generic theorem `matchPatAC_sound` lifts the same witness statement to the whole executable matcher,
-and `oneStepAC'_sound` plus `evalAC'_sound` prove the AC-aware executable stepper and evaluator are sound
-for `RewStepModAC`.
-That scoped fragment is intentional. Full AC matching has hard cases even in small formulations, and
-variadic AC matching with sequence variables needs a larger algorithm than the protocol requires. The
-scope follows Steven Eker's "Single Elementary Associative-Commutative Matching" and Dundua, Kutsia,
-and Marin's "Variadic equational matching in associative and commutative theories."
-Full relation completeness for the whole matcher remains a separate proof layer.
+decides AC-equivalence (`AC`), a modulo-AC engine sound for the `R/AC` relation (`ACEngine`), and
+Church-Rosser modulo AC (`ACNormal`): AC-equivalent terms normalize to the identical term.
+
+`ACMatch` adds the executable AC-aware matcher used by Cordial Miners. Its proved fragment is the linear
+collection pattern with one fixed subpattern and one rest variable. That scope is intentional. Full AC
+matching has hard cases even in small formulations, and variadic AC matching with sequence variables
+needs a larger algorithm than the protocol uses. The scoped matcher follows Steven Eker's "Single
+Elementary Associative-Commutative Matching" and Dundua, Kutsia, and Marin's "Variadic equational
+matching in associative and commutative theories."
+
+The core matcher theorems are `matchPatAC_acRest_witness`, `matchPatAC_acRest_sound`,
+`matchPatAC_acRest_complete_of_flat_split`, `matchPatAC_acRest_complete_of_fresh_split`, and
+`matchPatAC_sound`. The executable theorems `oneStepAC'_sound` and `evalAC'_sound` prove that the
+AC-aware stepper and evaluator are sound for `RewStepModAC`. Full relation completeness for the whole
+matcher remains a separate proof layer.
 
 The type half has three layers. The grammar induces a head-sort discipline preserved by reduction
 (`Sorts`, discharged on a concrete presentation in `SortSoundness`). Deeper, a recursive all-subterms sort
@@ -335,7 +337,7 @@ honest non-equivocation, and finality permanence, the protocol never finalizes c
 correct miners never publish conflicting positions. The ordering's prefix-monotonicity is derived, not
 assumed. The proof goes through weighted-overlap arithmetic, threshold finality, blocklace closure,
 equivocation detection, final-leader ratification, verified topological sorting, a coarse/fine
-simulation, lossless extraction to MeTTa-IL atoms, executable demos, and the runtime bridge below.
+simulation, lossless extraction to MeTTaIL atoms, executable demos, and the runtime bridge below.
 
 The reader-facing overview is [`CordialMiners/README.md`](CordialMiners/README.md). The book chapter
 gives the source-backed explanation.
@@ -460,13 +462,14 @@ Improvements over Hyperon appendix at [mestto.github.io/LeaTTa](https://mestto.g
 
 - Active: `Core` (the object language), `Runtime.Parser`, `Minimal.Interpreter`, `Minimal.Stdlib`.
   `Proofs` and `Operational` are the metatheory and the published semantics. `MeTTaIL` (with
-  `MeTTaILProofs` and `MeTTaILTests`) is the work-in-progress MeTTa-IL formalization. `CordialMiners` is
-  the PoR-weighted Cordial Miners consensus formalization, with its safety metatheory.
+  `MeTTaILProofs` and `MeTTaILTests`) is the checked MeTTaIL formalization and runtime layer.
+  `CordialMiners` is the PoR-weighted Cordial Miners consensus formalization, with its safety
+  metatheory.
 - Archived and not built: earlier exploratory models, including a four-register runtime, categorical
   metagraph rewriting, a Ruliad sketch, and an earlier approximate standard library. They live under
   [archive/](archive/) with their own README, kept for reference and not part of the verified work.
 - In scope: the minimal interpreter, the standard library (computation, control, lists, sets,
   asserts), the runtime type system, mixed arithmetic, mutable spaces and state, conjunctive match,
   and the metatheory layer.
-- TODO: the full module system is not yet covered; the MeTTa-IL formalization is incomplete. Its open
-  parts are listed in the MeTTaIL section above and in the proof-status appendix.
+- Open: the full module system is not yet covered. The remaining MeTTaIL research targets are listed in
+  the MeTTaIL section above and in the proof-status appendix.

@@ -327,14 +327,15 @@ persistent send `!!`, persistent receive `for (... <= C) { Q }`, and the persist
 case. `MeTTaIL/Semantics/RhoKMachine.lean` now models the four one-channel COMM cases: ordinary input
 with ordinary output, ordinary input with persistent output, persistent input with ordinary output, and
 persistent input with persistent output. It defines K-style input and output cells with IDs, candidate
-sets, and the local `CandidatePair` guard from `<InData>` and `<OutData>`, then proves that each branch
+sets, and the local `ReadyPair` guard: `CandidatePair` from `<InData>` and `<OutData>`, plus `MatchedOne`
+for the result of `aritymatch["STDMATCH"]` on the one-message payload. It then proves that each branch
 reifies to rho COMM modulo parallel structure. It also models the one-pair creation rules that move a
 surface input or output into a K cell and record candidates from the current global ID lists; those
 creation steps preserve the reified rho process by `Rho.KMachine.creation_to_struct`. The named COMM
 branch theorems are `Rho.KMachine.ordinaryReceive_to_rho`, `Rho.KMachine.persistentOutput_to_rho`,
 `Rho.KMachine.persistentReceive_to_rho`, and `Rho.KMachine.persistentBoth_to_rho`. The file does not yet
-model full multi-cell ID maintenance, the K matcher, or the repeated scheduling discipline behind the
-persistent/persistent loop.
+model full multi-cell ID maintenance, the full K matcher, or the repeated scheduling discipline behind
+the persistent/persistent loop.
 
 `MeTTaIL/Semantics/RhoCompiler.lean` is the first checked compiler bridge. It follows the direct-rule
 shape in `/tmp/mettail-rust-GSLT2rho/gslt2rho/rho_compile/src/compile.rs`: a rule has a persistent
@@ -342,9 +343,10 @@ listener on a rule channel, and a matched contractum is sent as a packet. The th
 `Rho.Compiler.applyBaseRewrite_reduces_and_emits` says that a successful `applyBaseRewrite` result is a
 real MeTTaIL `Reduces` step and that the rho listener emits `encodeAST` of the contractum at the source
 term location. The same file now also proves `Rho.Compiler.contractum_kstep`: the contractum packet is
-a K-machine persistent-receive step, and `Rho.Compiler.contractum_kstep_to_rho`: that K step reifies
-back to rho reduction. It does not prove the full matcher/router, contextual channel compiler, binder
-freshness discipline, or two-direction operational correspondence.
+a K-machine persistent-receive step whose `ReadyPair` proof comes from the packet channel, and
+`Rho.Compiler.contractum_kstep_to_rho`: that K step reifies back to rho reduction. It does not prove the
+full matcher/router, contextual channel compiler, binder freshness discipline, or two-direction
+operational correspondence.
 
 Formalizing the tool also turned up several bugs in it. They are written up for the F1R3FLY team in
 [`MeTTaIL/HYPERON_IMPROVEMENTS.md`](MeTTaIL/HYPERON_IMPROVEMENTS.md). The full treatment is the MeTTaIL

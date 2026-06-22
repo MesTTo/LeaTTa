@@ -343,11 +343,12 @@ language.
 
 `MeTTaIL/Semantics/KnottedUniverse.lean` adds the checked red/black surface that the rset, rho, and
 knotted-topoi papers need. It defines the colours, the four visible sorts, the two quote/drop
-equivalences, a `TypeEndofunctor`, and the category of coalgebras for that functor. `FinalCoalgebra`
-produces `FinalCoalgebra.isTerminal`, a Mathlib `IsTerminal` witness for the terminal
-coalgebra in that category. `FinalBehaviourModel.toFullyAbstractModel` says that once the final
-behaviour map has the right kernel and context congruence proof, it is exactly the existing
-full-abstraction package. `FinalBehaviourModel.fullyAbstractFor` and
+equivalences, structure-preserving morphisms between reflective universes, a category of those
+universes, a `TypeEndofunctor`, and the category of coalgebras for that functor. `FinalCoalgebra`
+produces `FinalCoalgebra.isTerminal`, a Mathlib `IsTerminal` witness for the terminal coalgebra in
+that category. `FinalBehaviourModel.toFullyAbstractModel` says that once the final behaviour map has
+the right kernel and context congruence proof, it is exactly the existing full-abstraction package.
+`FinalBehaviourModel.fullyAbstractFor` and
 `FinalBehaviourModel.fullyAbstractForObservations` then apply the calibration layer, so a final
 behaviour model can be stated against the object language's observational equivalence. The file does not
 construct the knotted topos or prove that the real rho behaviour functor has a final coalgebra.

@@ -178,10 +178,11 @@ theorems are the part of the knotted-topoi story that can already be stated befo
 MeTTaIL-to-rho desugaring theorem is supplied.
 
 `MeTTaIL.Semantics.KnottedUniverse` adds the red/black surface that sits under that target. It defines
-the two colours, the four visible sorts, the red and black quote/drop equivalences, and the category of
-coalgebras for a `TypeEndofunctor`. A `FinalCoalgebra` gives a Mathlib `IsTerminal` witness in
-that category. `FinalBehaviourModel.toFullyAbstractModel` connects the coalgebraic reading to the
-existing full-abstraction package. `FinalBehaviourModel.fullyAbstractFor` and
+the two colours, the four visible sorts, the red and black quote/drop equivalences,
+structure-preserving morphisms between reflective universes, a category of those universes, and the
+category of coalgebras for a `TypeEndofunctor`. A `FinalCoalgebra` gives a Mathlib `IsTerminal`
+witness in that coalgebra category. `FinalBehaviourModel.toFullyAbstractModel` connects the
+coalgebraic reading to the existing full-abstraction package. `FinalBehaviourModel.fullyAbstractFor` and
 `FinalBehaviourModel.fullyAbstractForObservations` then apply the calibration layer, so a final
 behaviour model can be stated against the object language's observational equivalence. The module still
 does not construct the knotted topos or prove finality for the real rho behaviour functor.

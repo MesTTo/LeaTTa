@@ -72,6 +72,10 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.KnottedUniverse.ReflectiveUniverse.quoteRed_dropRed
 #print axioms MeTTaIL.KnottedUniverse.ReflectiveUniverse.dropBlack_quoteBlack
 #print axioms MeTTaIL.KnottedUniverse.ReflectiveUniverse.quoteBlack_dropBlack
+#print axioms MeTTaIL.KnottedUniverse.ReflectiveUniverseHom.id
+#print axioms MeTTaIL.KnottedUniverse.ReflectiveUniverseHom.comp
+#print axioms MeTTaIL.KnottedUniverse.ReflectiveUniverseHom.ext
+#print axioms MeTTaIL.KnottedUniverse.ReflectiveUniverse.category
 #print axioms MeTTaIL.KnottedUniverse.CoalgebraHom.id
 #print axioms MeTTaIL.KnottedUniverse.CoalgebraHom.comp
 #print axioms MeTTaIL.KnottedUniverse.CoalgebraHom.ext

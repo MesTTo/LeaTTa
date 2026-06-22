@@ -14,6 +14,7 @@ Trusted boundary: none
 Main exports: Colour, Colour.swap, Colour.swap_swap, ReflectiveUniverse,
   ReflectiveUniverse.dropRed_quoteRed, ReflectiveUniverse.quoteRed_dropRed,
   ReflectiveUniverse.dropBlack_quoteBlack, ReflectiveUniverse.quoteBlack_dropBlack,
+  ReflectiveUniverseHom, ReflectiveUniverse.category,
   TypeEndofunctor, Coalgebra, CoalgebraHom, Coalgebra.category, FinalCoalgebra,
   FinalCoalgebra.finalHom, FinalCoalgebra.finalHom_unique, FinalCoalgebra.isTerminal,
   FinalBehaviourModel, FinalBehaviourModel.fullyAbstractFor,
@@ -119,6 +120,153 @@ def constant (A : Type u) : ReflectiveUniverse.{u} where
   blackAtomsAsRedSets := Equiv.refl A
   redBlackSetSwap := Equiv.refl A
   redBlackAtomSwap := Equiv.refl A
+
+end ReflectiveUniverse
+
+/-- A structure-preserving map between red/black reflective universes. -/
+structure ReflectiveUniverseHom (U V : ReflectiveUniverse.{u}) where
+  redSet : U.RedSet → V.RedSet
+  redAtom : U.RedAtom → V.RedAtom
+  blackSet : U.BlackSet → V.BlackSet
+  blackAtom : U.BlackAtom → V.BlackAtom
+  quoteRed_comm : ∀ x, redAtom (U.quoteRed x) = V.quoteRed (blackSet x)
+  dropRed_comm : ∀ a, blackSet (U.dropRed a) = V.dropRed (redAtom a)
+  quoteBlack_comm : ∀ x, blackAtom (U.quoteBlack x) = V.quoteBlack (redSet x)
+  dropBlack_comm : ∀ a, redSet (U.dropBlack a) = V.dropBlack (blackAtom a)
+  redBlackSetSwap_comm : ∀ x, blackSet (U.redBlackSetSwap x) = V.redBlackSetSwap (redSet x)
+  blackRedSetSwap_comm : ∀ x, redSet (U.redBlackSetSwap.symm x) =
+    V.redBlackSetSwap.symm (blackSet x)
+  redBlackAtomSwap_comm : ∀ a, blackAtom (U.redBlackAtomSwap a) =
+    V.redBlackAtomSwap (redAtom a)
+  blackRedAtomSwap_comm : ∀ a, redAtom (U.redBlackAtomSwap.symm a) =
+    V.redBlackAtomSwap.symm (blackAtom a)
+
+namespace ReflectiveUniverseHom
+
+/-- The identity reflective-universe morphism. -/
+def id (U : ReflectiveUniverse.{u}) : ReflectiveUniverseHom U U where
+  redSet := fun x => x
+  redAtom := fun x => x
+  blackSet := fun x => x
+  blackAtom := fun x => x
+  quoteRed_comm _ := rfl
+  dropRed_comm _ := rfl
+  quoteBlack_comm _ := rfl
+  dropBlack_comm _ := rfl
+  redBlackSetSwap_comm _ := rfl
+  blackRedSetSwap_comm _ := rfl
+  redBlackAtomSwap_comm _ := rfl
+  blackRedAtomSwap_comm _ := rfl
+
+/-- Compose reflective-universe morphisms in diagram order. -/
+def comp {U V W : ReflectiveUniverse.{u}}
+    (g : ReflectiveUniverseHom V W) (f : ReflectiveUniverseHom U V) :
+    ReflectiveUniverseHom U W where
+  redSet := g.redSet ∘ f.redSet
+  redAtom := g.redAtom ∘ f.redAtom
+  blackSet := g.blackSet ∘ f.blackSet
+  blackAtom := g.blackAtom ∘ f.blackAtom
+  quoteRed_comm := by
+    intro x
+    calc
+      g.redAtom (f.redAtom (U.quoteRed x)) = g.redAtom (V.quoteRed (f.blackSet x)) := by
+        rw [f.quoteRed_comm x]
+      _ = W.quoteRed (g.blackSet (f.blackSet x)) := by
+        rw [g.quoteRed_comm (f.blackSet x)]
+  dropRed_comm := by
+    intro a
+    calc
+      g.blackSet (f.blackSet (U.dropRed a)) = g.blackSet (V.dropRed (f.redAtom a)) := by
+        rw [f.dropRed_comm a]
+      _ = W.dropRed (g.redAtom (f.redAtom a)) := by
+        rw [g.dropRed_comm (f.redAtom a)]
+  quoteBlack_comm := by
+    intro x
+    calc
+      g.blackAtom (f.blackAtom (U.quoteBlack x)) = g.blackAtom (V.quoteBlack (f.redSet x)) := by
+        rw [f.quoteBlack_comm x]
+      _ = W.quoteBlack (g.redSet (f.redSet x)) := by
+        rw [g.quoteBlack_comm (f.redSet x)]
+  dropBlack_comm := by
+    intro a
+    calc
+      g.redSet (f.redSet (U.dropBlack a)) = g.redSet (V.dropBlack (f.blackAtom a)) := by
+        rw [f.dropBlack_comm a]
+      _ = W.dropBlack (g.blackAtom (f.blackAtom a)) := by
+        rw [g.dropBlack_comm (f.blackAtom a)]
+  redBlackSetSwap_comm := by
+    intro x
+    calc
+      g.blackSet (f.blackSet (U.redBlackSetSwap x)) =
+          g.blackSet (V.redBlackSetSwap (f.redSet x)) := by
+        rw [f.redBlackSetSwap_comm x]
+      _ = W.redBlackSetSwap (g.redSet (f.redSet x)) := by
+        rw [g.redBlackSetSwap_comm (f.redSet x)]
+  blackRedSetSwap_comm := by
+    intro x
+    calc
+      g.redSet (f.redSet (U.redBlackSetSwap.symm x)) =
+          g.redSet (V.redBlackSetSwap.symm (f.blackSet x)) := by
+        rw [f.blackRedSetSwap_comm x]
+      _ = W.redBlackSetSwap.symm (g.blackSet (f.blackSet x)) := by
+        rw [g.blackRedSetSwap_comm (f.blackSet x)]
+  redBlackAtomSwap_comm := by
+    intro a
+    calc
+      g.blackAtom (f.blackAtom (U.redBlackAtomSwap a)) =
+          g.blackAtom (V.redBlackAtomSwap (f.redAtom a)) := by
+        rw [f.redBlackAtomSwap_comm a]
+      _ = W.redBlackAtomSwap (g.redAtom (f.redAtom a)) := by
+        rw [g.redBlackAtomSwap_comm (f.redAtom a)]
+  blackRedAtomSwap_comm := by
+    intro a
+    calc
+      g.redAtom (f.redAtom (U.redBlackAtomSwap.symm a)) =
+          g.redAtom (V.redBlackAtomSwap.symm (f.blackAtom a)) := by
+        rw [f.blackRedAtomSwap_comm a]
+      _ = W.redBlackAtomSwap.symm (g.blackAtom (f.blackAtom a)) := by
+        rw [g.blackRedAtomSwap_comm (f.blackAtom a)]
+
+/-- Reflective-universe morphisms are equal when their four component maps are pointwise equal. -/
+@[ext]
+theorem ext {U V : ReflectiveUniverse.{u}} {f g : ReflectiveUniverseHom U V}
+    (hRedSet : ∀ x, f.redSet x = g.redSet x)
+    (hRedAtom : ∀ x, f.redAtom x = g.redAtom x)
+    (hBlackSet : ∀ x, f.blackSet x = g.blackSet x)
+    (hBlackAtom : ∀ x, f.blackAtom x = g.blackAtom x) : f = g := by
+  cases f with
+  | mk frs fra fbs fba =>
+    cases g with
+    | mk grs gra gbs gba =>
+      dsimp at hRedSet hRedAtom hBlackSet hBlackAtom
+      have hrs : frs = grs := funext hRedSet
+      have hra : fra = gra := funext hRedAtom
+      have hbs : fbs = gbs := funext hBlackSet
+      have hba : fba = gba := funext hBlackAtom
+      cases hrs
+      cases hra
+      cases hbs
+      cases hba
+      rfl
+
+end ReflectiveUniverseHom
+
+namespace ReflectiveUniverse
+
+/-- Reflective universes and structure-preserving maps form a category. -/
+instance category : CategoryTheory.Category.{u} ReflectiveUniverse.{u} where
+  Hom U V := ReflectiveUniverseHom U V
+  id U := ReflectiveUniverseHom.id U
+  comp f g := ReflectiveUniverseHom.comp g f
+  id_comp := by
+    intro U V f
+    ext x <;> rfl
+  comp_id := by
+    intro U V f
+    ext x <;> rfl
+  assoc := by
+    intro U V W X f g h
+    ext x <;> rfl
 
 end ReflectiveUniverse
 

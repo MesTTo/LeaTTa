@@ -174,6 +174,12 @@ contexts under the translation, target congruence pulls back to source congruenc
 theorems are the part of the knotted-topoi story that can already be stated before the missing
 MeTTaIL-to-rho desugaring theorem is supplied.
 
+`MeTTaIL.Semantics.KnottedUniverse` adds the red/black surface that sits under that target. It defines
+the two colours, the four visible sorts, the red and black quote/drop equivalences, and the generic
+`FinalCoalgebra` universal property. `FinalBehaviourModel.toFullyAbstractModel` connects the coalgebraic
+reading to the existing full-abstraction package. The module still does not construct the knotted topos
+or prove finality for the real rho behaviour functor.
+
 `MeTTaIL.Semantics.InteractingTrieMap` is the first checked store-side object. The `ITMStep` layer
 records the six summands from the ITM sketch. `RITM` is the reflective specialization with
 `Option RITM` for `1 + RITM`. `RITM.stepEquiv` packages the roll and unroll laws.

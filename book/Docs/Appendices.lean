@@ -279,9 +279,10 @@ The map below states what each source supports in the Lean development, and what
    {citep knottedTopoi}[] support the denotational target. The ITM, CZ2, and Jetta repositories
    {citep itmScalaState}[] {citep cz2Repository}[] {citep jettaRuntime}[] support the store-facing
    interface. The Lean surface is
-   `MeTTaIL/Semantics/Denotational.lean`, `MeTTaIL/Semantics/Rho.lean`,
-   `MeTTaIL/Semantics/RhoKMachine.lean`, `MeTTaIL/Semantics/RhoCompiler.lean`, and
-   `MeTTaIL/Semantics/InteractingTrieMap.lean`. The checked claims include
+   `MeTTaIL/Semantics/Denotational.lean`, `MeTTaIL/Semantics/KnottedUniverse.lean`,
+   `MeTTaIL/Semantics/Rho.lean`, `MeTTaIL/Semantics/RhoKMachine.lean`,
+   `MeTTaIL/Semantics/RhoCompiler.lean`, and `MeTTaIL/Semantics/InteractingTrieMap.lean`.
+   The checked claims include
    `bisimilar_isBisimulation`, `fullyAbstract_of_kernel`, `FullyAbstractModel.eq_iff_bisimilar`,
    `PathRSpace.comparable_iff_nonempty_subspaceBranch`, `Costed.costedStep_forget`,
    `Costed.Trace.to_reflTransGen`, `eval_rewrite_trace`, `Rho.listener_step`,
@@ -292,6 +293,15 @@ The map below states what each source supports in the Lean development, and what
    `Rho.Compiler.contractumRun_kstep_to_rho`,
    `Rho.Compiler.applyBaseRewrite_reduces_and_emits`, and
    `Rho.Compiler.applyBaseRewrite_reduces_emits_and_reifies_kstep`,
+   `KnottedUniverse.Colour.swap_swap`,
+   `KnottedUniverse.ReflectiveUniverse.dropRed_quoteRed`,
+   `KnottedUniverse.ReflectiveUniverse.quoteRed_dropRed`,
+   `KnottedUniverse.ReflectiveUniverse.dropBlack_quoteBlack`,
+   `KnottedUniverse.ReflectiveUniverse.quoteBlack_dropBlack`,
+   `KnottedUniverse.FinalCoalgebra.lift_commutes`,
+   `KnottedUniverse.FinalCoalgebra.identity`,
+   `KnottedUniverse.FinalBehaviourModel.toFullyAbstractModel`,
+   `KnottedUniverse.FinalBehaviourModel.eq_iff_bisimilar`,
    `InteractingTrieMap.RITM.ofStep_toStep`, `InteractingTrieMap.RITM.toStep_ofStep`,
    `InteractingTrieMap.RITM.stepEquiv`,
    `InteractingTrieMap.PackedBinding.root_prefix_address`,
@@ -300,8 +310,9 @@ The map below states what each source supports in the Lean development, and what
    desugaring, trie store, cut distributive law, cost endofunctor, causal-set functor, or final
    coalgebra has been constructed in Lean. The checked modules state the proof interfaces, COMM
    kernels, the K one-pair creation and ready-pair guarded ordinary and persistent input/output cell
-   steps, the packet-level base-rewrite bridge, the ITM roll/unroll surface, and the packed-binding
-   prefix connector that those constructions must instantiate.
+   steps, the packet-level base-rewrite bridge, the red/black quote/drop and final-coalgebra
+   interfaces, the ITM roll/unroll surface, and the packed-binding prefix connector that those
+   constructions must instantiate.
  * The MeTTa-calculus, Turing-to-rho, and optimal-channel papers {citep mettaCalculus}[]
    {citep rhoViaTuring}[] {citep optimalChannels}[] support the compiler direction from MeTTaIL/GSLT
    presentations to rho/RSpace. The current release uses them as a roadmap, not as completed

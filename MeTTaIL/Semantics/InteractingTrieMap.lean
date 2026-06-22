@@ -10,7 +10,7 @@ Purpose: Checked algebraic surface for the interacting-trie-map equations used b
   separates the one-step polynomial shape from its reflective fixed point. The resulting equivalence
   is the checked part needed before building a trie store, red/black reflective universe, or final
   behaviour coalgebra.
-Imports: MeTTaIL.Semantics.Denotational
+Imports: MeTTaIL.Semantics.KnottedUniverse
 Trusted boundary: none
 Main exports: ITMStep, RITM, RITMStep, RollUnrollEquiv, RITM.toStep, RITM.ofStep, RITM.stepEquiv,
   RITM.ofStep_toStep, RITM.toStep_ofStep, PackedBinding, PackedBinding.root_prefix_address,
@@ -19,7 +19,7 @@ Open obligations: implement the prefix-compressed store, connect the store to pa
   build the red/black reflective universe as a categorical object, and prove the final behaviour
   coalgebra exists there.
 -/
-import MeTTaIL.Semantics.Denotational
+import MeTTaIL.Semantics.KnottedUniverse
 
 namespace MeTTaIL
 namespace InteractingTrieMap
@@ -133,22 +133,17 @@ theorem root_comparable_address (binding : PackedBinding) :
 
 end PackedBinding
 
-/-- The two colours used by the red/black reflective universe papers. -/
-inductive Colour where
-  | red
-  | black
-  deriving DecidableEq, Repr
+abbrev Colour := KnottedUniverse.Colour
 
 namespace Colour
 
 /-- Swap to the opposite colour. -/
-def swap : Colour → Colour
-  | red => black
-  | black => red
+def swap : Colour → Colour :=
+  KnottedUniverse.Colour.swap
 
 /-- Colour swap is an involution. -/
-theorem swap_swap (c : Colour) : swap (swap c) = c := by
-  cases c <;> rfl
+theorem swap_swap (c : Colour) : swap (swap c) = c :=
+  KnottedUniverse.Colour.swap_swap c
 
 end Colour
 

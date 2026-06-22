@@ -266,9 +266,10 @@ What is checked now:
 - the AC-aware runtime fragment used by Cordial Miners;
 - the denotational-semantics interface for labelled transition systems, bisimulation, context
   congruence, and full abstraction;
+- the red/black reflective-universe interface: four sorts, quote/drop round trips, a generic
+  final-coalgebra surface, and a bridge from final-behaviour models to `FullyAbstractModel`;
 - the interacting trie-map surface: the reflective `RITM ::= ITM[RITM, 1 + RITM, RITM]`
-  equation, the red/black colour-swap primitive, and Jetta-style packed binding addresses that fit
-  the path-key RSpace prefix interface;
+  equation and Jetta-style packed binding addresses that fit the path-key RSpace prefix interface;
 - a rho target fragment: names, quote/drop, ordinary and persistent send/receive COMM, structural
   congruence for `|`, and the one-channel RSpace produce/consume shape used by the local `f1r3node`
   runtime;
@@ -323,11 +324,18 @@ MeTTaIL-to-rho operational correspondence, formalize the trie store, prove the c
 construct the cost endofunctor, or calibrate context bisimilarity against each object language's
 observational equivalence.
 
+`MeTTaIL/Semantics/KnottedUniverse.lean` adds the checked red/black surface that the rset, rho, and
+knotted-topoi papers need. It defines the colours, the four visible sorts, the two quote/drop
+equivalences, a `TypeEndofunctor`, a `Coalgebra`, and a `FinalCoalgebra` universal property. It also
+defines `FinalBehaviourModel.toFullyAbstractModel`, which says that once the final behaviour map has the
+right kernel and context congruence proof, it is exactly the existing full-abstraction package. The file
+does not construct the knotted topos or prove that the real rho behaviour functor has a final coalgebra.
+
 `MeTTaIL/Semantics/InteractingTrieMap.lean` adds the checked ITM surface. It separates the ITM
 polynomial layer from the reflective fixed point, so Lean can state the equation without a
 same-universe nested-inductive problem. The audited theorems prove that `RITM` rolls and unrolls to one
-layer of `ITM[RITM, 1 + RITM, RITM]`, that colour swap is an involution, and that a Jetta-style packed
-binding address is comparable with its store root in the path-key RSpace prefix order. The file still
+layer of `ITM[RITM, 1 + RITM, RITM]` and that a Jetta-style packed binding address is comparable with
+its store root in the path-key RSpace prefix order. The file still
 does not implement the prefix-compressed trie store, the cut law, or the final behaviour coalgebra.
 
 `MeTTaIL/Semantics/Rho.lean` adds the first rho-side checked target. It defines the rho syntax, name

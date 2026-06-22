@@ -6,9 +6,9 @@ Purpose: Build-visible axiom audit for the headline theorem surfaces. This modul
   declarations. The output should contain only Lean/Mathlib's standard classical axioms where the imported
   theorem uses Mathlib's classical infrastructure, and no project axiom or placeholder.
 Imports: MettaHyperonFull.Operational.Properties, MeTTaIL.Semantics.Denotational,
-  MeTTaIL.Semantics.InteractingTrieMap, MeTTaIL.Semantics.Rho, MeTTaIL.Semantics.RhoKMachine,
-  MeTTaIL.Semantics.RhoCompiler, MeTTaILProofs.ConditionalCP, MeTTaILProofs.CPDemo,
-  MeTTaILProofs.ConditionalCPRuntime,
+  MeTTaIL.Semantics.KnottedUniverse, MeTTaIL.Semantics.InteractingTrieMap, MeTTaIL.Semantics.Rho,
+  MeTTaIL.Semantics.RhoKMachine, MeTTaIL.Semantics.RhoCompiler, MeTTaILProofs.ConditionalCP,
+  MeTTaILProofs.CPDemo, MeTTaILProofs.ConditionalCPRuntime,
   MeTTaILProofs.ACMatch, MeTTaILProofs.DistributiveLaw
 Trusted boundary: none
 Main exports: (audit output only)
@@ -16,6 +16,7 @@ Open obligations: keep this list aligned with the headline claims in the docs an
 -/
 import MettaHyperonFull.Operational.Properties
 import MeTTaIL.Semantics.Denotational
+import MeTTaIL.Semantics.KnottedUniverse
 import MeTTaIL.Semantics.InteractingTrieMap
 import MeTTaIL.Semantics.Rho
 import MeTTaIL.Semantics.RhoKMachine
@@ -61,6 +62,16 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.Denotational.Costed.costedStep_forget
 #print axioms MeTTaIL.Denotational.Costed.Trace.to_reflTransGen
 #print axioms MeTTaIL.Denotational.eval_rewrite_trace
+
+#print axioms MeTTaIL.KnottedUniverse.Colour.swap_swap
+#print axioms MeTTaIL.KnottedUniverse.ReflectiveUniverse.dropRed_quoteRed
+#print axioms MeTTaIL.KnottedUniverse.ReflectiveUniverse.quoteRed_dropRed
+#print axioms MeTTaIL.KnottedUniverse.ReflectiveUniverse.dropBlack_quoteBlack
+#print axioms MeTTaIL.KnottedUniverse.ReflectiveUniverse.quoteBlack_dropBlack
+#print axioms MeTTaIL.KnottedUniverse.FinalCoalgebra.lift_commutes
+#print axioms MeTTaIL.KnottedUniverse.FinalCoalgebra.identity
+#print axioms MeTTaIL.KnottedUniverse.FinalBehaviourModel.toFullyAbstractModel
+#print axioms MeTTaIL.KnottedUniverse.FinalBehaviourModel.eq_iff_bisimilar
 
 #print axioms MeTTaIL.InteractingTrieMap.RITM.ofStep_toStep
 #print axioms MeTTaIL.InteractingTrieMap.RITM.toStep_ofStep

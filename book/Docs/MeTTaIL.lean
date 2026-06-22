@@ -229,8 +229,10 @@ for one equation agrees with the all-valuations condition. `centerMember_iff` li
 equations. `mem_equationalCenter_iff`, `equationalCenter_sound`, and `equationalCenter_complete` say the
 computed center is exactly the raw hypercube filtered by those equation obligations. The same file also
 extracts `RewriteDecl.modalSites` from rewrite left-hand-side subterms and extracts `Rule.spatialHead`
-from term constructors. So the presentation-facing modal and spatial sites exist in Lean now. The
-remaining pass is to turn those sites into generated typing rules and concrete slot families.
+from term constructors. `ModalSite.slotFamily`, `SpatialHead.slotFamily`, and
+`Presentation.hypercubeSlots` then build the concrete slots. So the presentation-facing modal and
+spatial sites, and their slot families, exist in Lean now. The remaining pass is to turn those families
+into generated typing rules and sort-level equations.
 
 `MeTTaIL.Semantics.KnottedUniverse` adds the red/black surface that sits under that target. It defines
 the two colours, the four visible sorts, the red and black quote/drop equivalences,
@@ -387,12 +389,12 @@ component).
 
 The deepest layer is still a research target. MeTTaIL's generated modal type system, the possibility
 modalities, and the recovery of arrow types in the design notes are only partly covered here. The modal
-sites, spatial heads, and equational center of the hypercube are now checked, but the pass that turns
-those sites into generated typing rules is not yet implemented. The rho and knotted-topoi papers give
-the denotational route, and the new Lean interface states the theorem to prove, but the knotted topos and
-the MeTTaIL-to-rho desugaring are not yet formalized. We formalize the determinate fragments and mark
-the open parts in place. The Scala tool's own `--hypercube` pass omits the modal types too, and our
-type-lift matches the tool, not the unfinished note.
+sites, spatial heads, generated slot families, and equational center of the hypercube are now checked,
+but the pass that turns those families into generated typing rules is not yet implemented. The rho and
+knotted-topoi papers give the denotational route, and the new Lean interface states the theorem to prove,
+but the knotted topos and the MeTTaIL-to-rho desugaring are not yet formalized. We formalize the
+determinate fragments and mark the open parts in place. The Scala tool's own `--hypercube` pass omits
+the modal types too, and our type-lift matches the tool, not the unfinished note.
 The per-variable category-consistency check of the elaborator's type checker remains future work; the
 category-match and bound-variable checks are in place.
 

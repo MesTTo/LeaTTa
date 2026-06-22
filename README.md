@@ -293,8 +293,9 @@ What is still missing is also stated directly. The release does not claim the fu
 hypercube typing theorem for binder calculi, the rho-calculus full-abstraction theorem, spice and mq as
 full reduction theories, a full f1r3node/RSpace operational model, the per-variable
 category-consistency check in the elaborator, or an operational bisimulation against the four-register
-machine. The hypercube modal-site extractor and center checker are formalized, but the generated typing
-rules are still a future pass. The module headers and the book keep those boundaries visible.
+machine. The hypercube modal-site extractor, slot-family layer, and center checker are formalized, but
+the generated typing rules are still a future pass. The module headers and the book keep those
+boundaries visible.
 
 The denotational and compiler target comes from the F1R3FLY publication set. The core route uses the
 rset knotted-universe paper (<https://github.com/F1R3FLY-io/publications/tree/main/rset>), the rho
@@ -395,9 +396,10 @@ same sort under every finite valuation of the equation variables. The checker is
 proves `Equation.admissible_iff`, `centerMember_iff`, `mem_equationalCenter_iff`,
 `equationalCenter_sound`, and `equationalCenter_complete`. The same file also extracts
 `RewriteDecl.modalSites` from rewrite left-hand-side subterms and `Rule.spatialHead` values from term
-constructors, giving the presentation-facing objects that the paper uses for modal and spatial type
-families. The typing-rule generator is still future work. The checked part is the site extraction and
-equation filter that generated modal and spatial families must pass.
+constructors. `ModalSite.slotFamily`, `SpatialHead.slotFamily`, and `Presentation.hypercubeSlots`
+then build the concrete slot descriptors used by the generated hypercube. The typing-rule generator is
+still future work. The checked part is the site extraction, slot-family construction, and equation
+filter that generated modal and spatial families must pass.
 
 `MeTTaIL/Semantics/KnottedUniverse.lean` adds the checked red/black surface that the rset, rho, and
 knotted-topoi papers need. It defines the colours, the four visible sorts, the two quote/drop

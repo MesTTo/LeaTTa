@@ -10,11 +10,12 @@ Purpose: A K-shaped operational layer for the rho target. The local `f1r3node` K
 Imports: MeTTaIL.Semantics.Rho
 Trusted boundary: none
 Main exports: Rho.KMachine.InCell, Rho.KMachine.OutCell, Rho.KMachine.Config,
-  Rho.KMachine.CandidatePair, Rho.KMachine.Step, Rho.KMachine.step_to_rho,
+  Rho.KMachine.CreationStep, Rho.KMachine.CandidatePair, Rho.KMachine.Step,
+  Rho.KMachine.creation_to_struct, Rho.KMachine.step_to_rho,
   Rho.KMachine.ordinaryReceive_to_rho, Rho.KMachine.persistentOutput_to_rho,
   Rho.KMachine.persistentReceive_to_rho, Rho.KMachine.persistentBoth_to_rho
-Open obligations: add ID allocation/removal from the K creation rules, arity and pattern matching, and
-  the full correspondence with the K configuration rules.
+Open obligations: add full multi-cell ID maintenance, arity and pattern matching, and the full
+  correspondence with the K configuration rules.
 -/
 import MeTTaIL.Semantics.Rho
 
@@ -54,6 +55,14 @@ structure Config where
 def CandidatePair (input : InCell) (output : OutCell) : Prop :=
   input.id ∈ output.candidates ∨ output.id ∈ input.candidates
 
+/-- Replace the candidate set recorded in an input cell. -/
+def InCell.withCandidates (cell : InCell) (candidates : List CellId) : InCell :=
+  { cell with candidates := candidates }
+
+/-- Replace the candidate set recorded in an output cell. -/
+def OutCell.withCandidates (cell : OutCell) (candidates : List CellId) : OutCell :=
+  { cell with candidates := candidates }
+
 /-- Reify a receive cell as ordinary or persistent rho input. -/
 def InCell.toProc (cell : InCell) : Proc :=
   if cell.persistent then .input cell.chan cell.binder cell.body
@@ -66,6 +75,56 @@ def OutCell.toProc (cell : OutCell) : Proc :=
 /-- Reify a K-shaped configuration as a rho process by running all cells and threads in parallel. -/
 def Config.toProc (cfg : Config) : Proc :=
   parList (cfg.inputs.map InCell.toProc ++ cfg.outputs.map OutCell.toProc ++ cfg.threads)
+
+/-- Before K creates an `<In>` cell, the surface receive sits in the thread list. -/
+def createInputSource (input : InCell) (globalInIds globalOutIds : List CellId) : Config where
+  inputs := []
+  outputs := []
+  threads := [input.toProc]
+  globalInIds := globalInIds
+  globalOutIds := globalOutIds
+
+/-- Creating an `<In>` cell records all current output IDs as possible candidates. -/
+def createInputTarget (input : InCell) (globalInIds globalOutIds : List CellId) : Config where
+  inputs := [input.withCandidates globalOutIds]
+  outputs := []
+  threads := []
+  globalInIds := input.id :: globalInIds
+  globalOutIds := globalOutIds
+
+/-- Before K creates an `<Out>` cell, the surface send sits in the thread list. -/
+def createOutputSource (output : OutCell) (globalInIds globalOutIds : List CellId) : Config where
+  inputs := []
+  outputs := []
+  threads := [output.toProc]
+  globalInIds := globalInIds
+  globalOutIds := globalOutIds
+
+/-- Creating an `<Out>` cell records all current input IDs as possible candidates. -/
+def createOutputTarget (output : OutCell) (globalInIds globalOutIds : List CellId) : Config where
+  inputs := []
+  outputs := [output.withCandidates globalInIds]
+  threads := []
+  globalInIds := globalInIds
+  globalOutIds := output.id :: globalOutIds
+
+/-- K creation steps move a surface send or receive into a cell and update ID bookkeeping. -/
+inductive CreationStep : Config → Config → Prop where
+  | input (input : InCell) (globalInIds globalOutIds : List CellId) :
+      CreationStep (createInputSource input globalInIds globalOutIds)
+        (createInputTarget input globalInIds globalOutIds)
+  | output (output : OutCell) (globalInIds globalOutIds : List CellId) :
+      CreationStep (createOutputSource output globalInIds globalOutIds)
+        (createOutputTarget output globalInIds globalOutIds)
+
+/-- Cell creation is administrative: it preserves the rho process obtained from the configuration. -/
+theorem creation_to_struct {cfg cfg' : Config} (hstep : CreationStep cfg cfg') :
+    StructEq cfg.toProc cfg'.toProc := by
+  cases hstep <;>
+    simp [Config.toProc, createInputSource, createInputTarget, createOutputSource,
+      createOutputTarget, InCell.withCandidates, OutCell.withCandidates, InCell.toProc,
+      OutCell.toProc, parList] <;>
+    exact StructEq.refl
 
 /-- The one-cell source configuration for persistent receive firing. -/
 def receiveSource (input : InCell) (output : OutCell) : Config where

@@ -283,15 +283,15 @@ The map below states what each source supports in the Lean development, and what
    `bisimilar_isBisimulation`, `fullyAbstract_of_kernel`, `FullyAbstractModel.eq_iff_bisimilar`,
    `PathRSpace.comparable_iff_nonempty_subspaceBranch`, `Costed.costedStep_forget`,
    `Costed.Trace.to_reflTransGen`, `eval_rewrite_trace`, `Rho.listener_step`,
-   `Rho.RSpace.comm_to_step_one`, `Rho.KMachine.step_to_rho`,
+   `Rho.RSpace.comm_to_step_one`, `Rho.KMachine.creation_to_struct`, `Rho.KMachine.step_to_rho`,
    `Rho.KMachine.ordinaryReceive_to_rho`, `Rho.KMachine.persistentOutput_to_rho`,
    `Rho.KMachine.persistentReceive_to_rho`, `Rho.KMachine.persistentBoth_to_rho`,
    `Rho.Compiler.contractum_kstep_to_rho`, and
    `Rho.Compiler.applyBaseRewrite_reduces_and_emits`. The claim is not that the knotted topos, full rho
    desugaring, trie store, cut distributive law, cost endofunctor, causal-set functor, or final
    coalgebra has been constructed in Lean. The checked modules state the proof interfaces, small COMM
-   kernels, the K candidate-ID guarded ordinary and persistent input/output cell steps, and the
-   packet-level base-rewrite bridge that those constructions must instantiate.
+   kernels, the K one-pair creation and candidate-ID guarded ordinary and persistent input/output cell
+   steps, and the packet-level base-rewrite bridge that those constructions must instantiate.
  * The MeTTa-calculus, Turing-to-rho, and optimal-channel papers {citep mettaCalculus}[]
    {citep rhoViaTuring}[] {citep optimalChannels}[] support the compiler direction from MeTTaIL/GSLT
    presentations to rho/RSpace. The current release uses them as a roadmap, not as completed

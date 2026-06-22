@@ -20,15 +20,14 @@ Purpose: Operational semantics in logical form (OSLF): a spatial-behavioral logi
   closure of `box` along the relation, not preservation of a typing judgment. As far as we know this is
   the first machine-checked formalization of the first-order spatial-behavioral fragment of OSLF for a
   calculus presentation (the Boolean and binary-spatial connectives and the behavioral modalities); the
-  2-categorical distributive-law derivation, naturality, and the greatest-fixed-point modalities are not
-  formalized here.
+  2-categorical distributive-law derivation and naturality are not formalized here. The
+  greatest-fixed-point modalities live in `MeTTaILProofs.OSLFRec`.
 Imports: MeTTaIL.Semantics.Eval (RewStep, RewStepMany and its transitivity)
 Trusted boundary: none (fully proved)
 Main exports: Pred and its connectives, spatial, dia, box, poss, diaCtx, arrow, arrow_eq_diaCtx,
   sat_spatial, dia_pred, box_preserved, box_eq_neg_dia_neg, safe, safe_preserved
-Open obligations: the greatest-fixed-point modalities (recursive `mu X. P[X]` for confinement and
-  liveness) and the full 2-categorical distributive-law derivation are future work; here the
-  first-order spatial-behavioral fragment and its soundness are formalized.
+Open obligations: the full 2-categorical distributive-law derivation remains outside this module; here
+  the first-order spatial-behavioral fragment and its soundness are formalized.
 -/
 import MeTTaIL.Semantics.Eval
 

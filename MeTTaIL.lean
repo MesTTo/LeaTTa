@@ -8,9 +8,10 @@ Purpose: The root of the MeTTaIL formalization in Lean 4, a faithful model of F1
   lift it from an untyped calculus to a typed one. The root aggregates the layers: the object syntax,
   the theory-instance algebra and presentation operations, the elaborator, the desugar/type-lift/
   monomorphize transforms, the GSLT reduction core and relation, the executable runtime (the one-step
-  reducer, the fuel-bounded normalizer, and the S-expression front end), the operational bridge, and
-  the SKI and lambda calculus instances with the present-moment spice extension. The data model and
-  passes are computable and Mathlib-free; the proofs live in a separate Mathlib-backed layer.
+  reducer, the fuel-bounded normalizer, and the S-expression front end), the denotational-semantics
+  interface for full abstraction, the operational bridge, and the SKI and lambda calculus instances
+  with the present-moment spice extension. The data model and passes are computable and Mathlib-free;
+  the proofs live in a separate Mathlib-backed layer.
 Imports: the MeTTaIL.Syntax, MeTTaIL.Theory, MeTTaIL.Transform, MeTTaIL.Semantics, MeTTaIL.Runtime,
   MeTTaIL.Bridge, MeTTaIL.Calculi, and MeTTaIL.Extensions modules
 Trusted boundary: none
@@ -54,6 +55,8 @@ import MeTTaIL.Semantics.WellSorted
 -- Runtime: operational semantics in logical form (Stay-Meredith), the spatial-behavioral logic derived
 -- from a presentation, with the arrow type as a special case of the possibly modal operator.
 import MeTTaIL.Semantics.OSLF
+-- Runtime: the denotational-semantics interface for context-labelled systems and full abstraction.
+import MeTTaIL.Semantics.Denotational
 -- Runtime: a generic S-expression front end (parse and pretty-print) and the `run` entry point.
 import MeTTaIL.Runtime.Sexpr
 import MeTTaIL.Runtime.Generic

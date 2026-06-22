@@ -130,6 +130,34 @@ backbone is Beck's composite-monad theorem {citep beckDistributiveLaws}[], in th
 made explicit by Street {citep streetFormalTheoryMonads}[]; `MeTTaILProofs/DistributiveLaw.lean`
 formalizes that theorem for Mathlib monads.
 
+# The Denotational Semantics Target
+
+The newer F1R3FLY manuscripts add a denotational target for this operational story. The first paper
+builds a red/black reflective set theory where each colour's atoms are the other colour's sets
+{citep knottedUniverse}[]. The second paper uses that universe for the rho-calculus: quote and
+dereference become colour-swap operations, rho terms denote RSpace-style tables, and the behavioural
+model identifies equality with context bisimilarity {citep quotingColourSwap}[]. The third paper lifts
+that pattern one categorical level: a finitely presentable GSLT presented in MeTTaIL should desugar to
+rho by installing persistent rewrite listeners at term locations, then inherit the fully abstract rho
+denotation inside the knotted topos {citep knottedTopoi}[].
+
+The checked Lean surface now has a precise hook for this claim. `MeTTaIL.Semantics.Denotational`
+defines labelled transition systems, simulations, bisimulations, the kernel relation of a denotation,
+and `FullyAbstract`, the statement
+`denote s = denote t <-> Bisimilar lts s t`. The theorem `fullyAbstract_of_kernel` packages the
+coalgebraic proof shape used by the papers: if equality in the behaviour object is exactly the
+bisimulation kernel, the denotation is fully abstract. The packaged `FullyAbstractModel` also records
+the context-congruence obligation, because the papers need context labels to make bisimilarity a
+congruence without a later closure step.
+
+The Lean file is an interface, not the knotted topos. The current release proves the operational pieces
+that such a denotation must respect: `RewStep`, `RewStepMany`, executable soundness, OSLF predicates,
+greatest-fixed-point OSLF safety, confluence fragments, AC rewriting, and the Cordial Miners runtime
+embedding. The current release does not yet prove the rho desugaring functor, the location-channel
+operational correspondence, the final behaviour coalgebra in a knotted topos, or the calibration between
+context bisimulation and each object language's usual observational equivalence. Those are the real next
+theorems if the automatic-denotation claim is to become machine checked.
+
 # Two Calculi from the Papers
 
 F1R3FLY's recent papers add two calculi, and we formalize the core of each.
@@ -167,13 +195,14 @@ component).
 
 # What Remains Open
 
-The source itself leaves its deepest layer open. MeTTaIL's modal type system (the possibility
-modalities and the recovery of arrow types in the design notes) is sketched in the source, but the
-release does not claim that typing theorem. The rho-calculus full-abstraction result it points at is
-also outside the checked surface. We formalize the determinate fragments and mark the open parts in
-place. The Scala tool's own `--hypercube` pass omits the modal types too, and our type-lift matches the
-tool, not the unfinished note. The per-variable category-consistency check of the elaborator's type
-checker remains future work; the category-match and bound-variable checks are in place.
+The deepest layer is still a research target. MeTTaIL's modal type system, the possibility modalities,
+and the recovery of arrow types in the design notes are sketched in the source, but the release does not
+claim that typing theorem. The rho and knotted-topoi papers give the denotational route, and the new
+Lean interface states the proof shape, but the knotted topos and the MeTTaIL-to-rho desugaring are not
+yet formalized. We formalize the determinate fragments and mark the open parts in place. The Scala
+tool's own `--hypercube` pass omits the modal types too, and our type-lift matches the tool, not the
+unfinished note. The per-variable category-consistency check of the elaborator's type checker remains
+future work; the category-match and bound-variable checks are in place.
 
 Building a faithful model is also a good way to find bugs in the thing you are modeling, and we found a
 few in the tool's rename and checking code. Where the Scala does something wrong, an export rename that

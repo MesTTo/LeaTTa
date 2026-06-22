@@ -37,6 +37,42 @@ def enrichedLawvereSemantics : ArXiv where
   year := 2017
   id := "1704.03080"
 
+/-- Meredith; the red/black reflective set-theory construction used by the rho and topos papers. -/
+def knottedUniverse : Article where
+  title := inlines!"A Knotted Universe: a new notion of reflective set theories"
+  authors := #[inlines!"Lucius Gregory Meredith"]
+  journal := inlines!"Manuscript"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/F1R3FLY-io/publications/tree/main/rset"
+
+/-- Meredith; rho-calculus denotation in the knotted universe. -/
+def quotingColourSwap : Article where
+  title := inlines!"Quoting is Colour-Swap: a model of the rho calculus in the knotted universe"
+  authors := #[inlines!"Lucius Gregory Meredith"]
+  journal := inlines!"Manuscript"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/F1R3FLY-io/publications/blob/main/denotational-semantics-for-rho/knot-rho.pdf"
+
+/-- Meredith; the categorical lift from the rho model to finitely presentable GSLTs. -/
+def knottedTopoi : Article where
+  title := inlines!"Knotted Topoi: the lift of the knotted set-theoretic universe, and fully abstract denotational semantics for the category of graph-structured lambda theories"
+  authors := #[inlines!"Lucius Gregory Meredith"]
+  journal := inlines!"Manuscript"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/F1R3FLY-io/publications/blob/main/knotted-topoi/knotted-topoi.pdf"
+
 /-- Beck; the classical composite-monad theorem for distributive laws. -/
 def beckDistributiveLaws : InProceedings where
   title := inlines!"Distributive laws"

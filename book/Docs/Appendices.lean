@@ -228,6 +228,9 @@ Here are the sources this development draws on.
  * Mike Stay and Lucius Gregory Meredith, *Logic as a Distributive Law* (arXiv:1610.02247) and
    *Representing operational semantics with enriched Lawvere theories* (arXiv:1704.03080): OSLF,
    spatial/behavioral modalities, and the GSLT route from operational rules to logic.
+ * Lucius Gregory Meredith, *A Knotted Universe*, *Quoting is Colour-Swap*, and *Knotted Topoi*:
+   the red/black reflective set-theory route from rho-calculus context bisimulation to a fully abstract
+   denotational semantics for finitely presentable GSLTs.
  * Jon Beck, *Distributive laws* (1969), and Ross Street, *The formal theory of monads* (1972):
    the composite-monad theorem and the 2-categorical monad setting formalized in
    `MeTTaILProofs/DistributiveLaw.lean`.
@@ -269,6 +272,12 @@ The map below states what each source supports in the Lean development, and what
    `arrow_eq_diaCtx`, `box_preserved`, and the greatest-fixed-point invariance lemmas. The claim is not
    that every construction in the papers has been mechanized; the mechanized part is the predicate-model
    core used by this runtime story.
+ * The rset, rho, and knotted-topoi manuscripts {citep knottedUniverse}[] {citep quotingColourSwap}[]
+   {citep knottedTopoi}[] support the denotational target. The Lean surface is
+   `MeTTaIL/Semantics/Denotational.lean`. The checked claims include `bisimilar_isBisimulation`,
+   `fullyAbstract_of_kernel`, `FullyAbstractModel.eq_iff_bisimilar`, and `eval_rewrite_trace`. The claim
+   is not that the knotted topos, rho desugaring, or final coalgebra has been constructed in Lean. The
+   checked module states the exact proof interface that those constructions must instantiate.
  * Beck and Street {citep beckDistributiveLaws}[] {citep streetFormalTheoryMonads}[] support the
    categorical backbone. The Lean surface is `MeTTaILProofs/DistributiveLaw.lean`; the checked headline
    is `MeTTaIL.Beck.DistributiveLaw.composeMonad`. The claim is not a full formalization of Street's

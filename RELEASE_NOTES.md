@@ -1,29 +1,27 @@
-# LeaTTa 1.0.5
+# LeaTTa 1.0.6
 
-LeaTTa 1.0.5 extends the red/black denotational track with a checked category of reflective
-universes. The runnable MeTTaIL runtime and Cordial Miners bridge remain in scope, while the knotted
-topos, the full MeTTaIL-to-rho operational correspondence, and language-specific observational
-calibration remain open work.
+LeaTTa 1.0.6 adds the next checked piece of the generated-hypercube layer. Modal sites, spatial heads,
+slot families, rule schemes, and judgment footprints were already represented in Lean. This release
+adds explicit slot constraints and connects them to the finite equational-center checker.
 
 ## Announcement
 
-LeaTTa 1.0.5 adds the next checked categorical surface for the MeTTaIL denotational line.
+LeaTTa 1.0.6 moves the generated-hypercube work one step closer to the center construction described
+by Stay, Meredith, and Wells.
 
-`MeTTaIL.Semantics.KnottedUniverse` now defines `ReflectiveUniverseHom`, the structure-preserving maps
-between red/black reflective universes. A morphism carries red sets, red atoms, black sets, and black
-atoms forward, and it must commute with quote, drop, and the colour-swap equivalences.
+`MeTTaIL.Semantics.Hypercube` now defines `SlotConstraint`, the explicit equality that says two
+generated slots must receive the same sort. The file also adds nullary slot expressions, so those
+equalities can be seen by the generic equation checker already used for the hypercube center.
 
-The file also packages reflective universes as a Mathlib category. `ReflectiveUniverse.category`
-supplies identity morphisms, composition, and the category laws for those structure-preserving maps.
-The new names are included in the axiom audit.
+The new `constrainedCenter` and `Presentation.hypercubeConstrainedCenter` functions compute the center
+under a list of explicit slot constraints. The theorem `mem_constrainedCenter_iff` states the exact
+meaning of that computation: a member is a raw slot assignment that satisfies every listed slot
+equality. The bridge theorems are included in the axiom audit and in the Verso theorem register.
 
-The root README and the Verso book now describe the reflective-universe category directly. The docs
-still draw the line where the Lean code currently draws it: the project has checked interfaces and
-kernels for the denotational route, but it does not yet construct the knotted topos, prove finality for
-the real rho behaviour functor, or prove the full MeTTaIL-to-rho desugaring theorem.
-
-The next step is still to carry the MeTTaIL and Cordial Miners bridge deeper while turning the rho,
-RSpace, and knotted-universe interfaces into concrete correspondence and finality proofs.
+The checked claim is precise. The release checks explicit slot constraints. It does not yet
+derive every constraint automatically from source equations and rewrite laws, and it does not yet turn
+the recorded judgment footprints into the full generated typing system. Those are the next hypercube
+obligations.
 
 ## Highlights
 
@@ -33,10 +31,11 @@ RSpace, and knotted-universe interfaces into concrete correspondence and finalit
   dialect file.
 - Cordial Miners remains hosted as a MeTTaIL runtime presentation with AC-aware state and inbox
   rewriting.
-- `MeTTaIL.Semantics.RSet` adds finite red/black rsets, atom opacity, finite support, colour-swap
-  equivalences, and extensional union laws.
-- `MeTTaIL.Semantics.KnottedUniverse` now has a category of reflective universes, a category of
-  coalgebras, and the calibration bridge from final behaviour to full abstraction.
+- `MeTTaIL.Semantics.Hypercube` now has checked explicit slot constraints, the constrained center, and
+  the membership theorem connecting that center to direct constraint satisfaction.
+- The denotational files still provide checked interfaces and small kernels for the rset, rho/RSpace,
+  and knotted-universe route. They do not claim the knotted topos or full rho operational
+  correspondence.
 - The release bundles include `examples/bool.mettail`, so the MeTTaIL runtime path can be tested
   without a Lean toolchain.
 
@@ -75,6 +74,10 @@ The `--mettail` file format covers `sort`, `term`, and base `rewrite` declaratio
 terms. The format is the CLI path into the checked runtime, not the full BNFC MeTTaIL surface parser.
 The AC matcher used by the Cordial Miners runtime bridge covers the linear collection fragment needed
 by those rules: one fixed payload and one rest variable.
+
+The hypercube layer now checks explicit slot constraints through the finite center machinery. The
+automatic derivation of those constraints from source equations and rewrite laws remains open, as does
+the full generated typing theorem for binder calculi.
 
 The rho and denotational additions say what the future model has to prove and check the pieces already
 in reach. The release does not claim the knotted topos, the full MeTTaIL-to-rho desugaring theorem, the

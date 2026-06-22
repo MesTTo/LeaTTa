@@ -268,6 +268,9 @@ What is checked now:
   congruence, full abstraction, and observational calibration;
 - the red/black reflective-universe interface: four sorts, quote/drop round trips, a generic
   final-coalgebra surface, and a bridge from final-behaviour models to `FullyAbstractModel`;
+- the finitary rset core: red finite sets whose atoms are black finite sets, black finite sets whose
+  atoms are red finite sets, an explicit two-state colour automaton, opacity of atoms under same-colour
+  membership, red/black colour-swap equivalences, and the finite-support theorem for atom renaming;
 - the interacting trie-map surface: the reflective `RITM ::= ITM[RITM, 1 + RITM, RITM]`
   equation and Jetta-style packed binding addresses that fit the path-key RSpace prefix interface;
 - a rho target fragment: names, quote/drop, ordinary and persistent send/receive COMM, structural
@@ -306,6 +309,16 @@ papers
 (<https://github.com/F1R3FLY-io/publications/blob/main/cost-accounting-as-monad/continued-gslt-cost-v2.pdf>,
 <https://github.com/F1R3FLY-io/publications/blob/main/cost-accounting/cost-accounted-rho.pdf>) give the
 phlogiston/token-stack refinement.
+
+The rset paper now has a direct Lean surface.
+`MeTTaIL/Semantics/RSet.lean` formalizes the hereditarily finite core the paper marks as the first
+rigorous target. A red finite set contains red nested sets and atoms supplied by black finite sets; the
+black copy mirrors that. The checked theorems say that the two-state colour automaton has no self-loop,
+quoted atoms round-trip through `dropAtom`, atoms stay opaque to same-colour membership, red and black
+finite sets are equivalent by colour swap, and any atom renaming that fixes the atoms occurring in a set
+leaves that set unchanged. The file still does not quotient by extensional equality, prove the FM
+representation theorem, construct the algebraic-set-theory fixpoint, or build the final behaviour
+coalgebra in the knotted topos.
 
 The store side also has implementation sources. The ITM sketch
 (<https://github.com/F1R3FLY-io/itm/blob/main/src/main/scala/syntax/state.scala>) writes the domain

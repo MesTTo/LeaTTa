@@ -280,8 +280,9 @@ The map below states what each source supports in the Lean development, and what
    {citep itmScalaState}[] {citep cz2Repository}[] {citep jettaRuntime}[] support the store-facing
    interface. The Lean surface is
    `MeTTaIL/Semantics/Denotational.lean`, `MeTTaIL/Semantics/KnottedUniverse.lean`,
-   `MeTTaIL/Semantics/Rho.lean`, `MeTTaIL/Semantics/RhoKMachine.lean`,
-   `MeTTaIL/Semantics/RhoCompiler.lean`, and `MeTTaIL/Semantics/InteractingTrieMap.lean`.
+   `MeTTaIL/Semantics/RSet.lean`, `MeTTaIL/Semantics/Rho.lean`,
+   `MeTTaIL/Semantics/RhoKMachine.lean`, `MeTTaIL/Semantics/RhoCompiler.lean`, and
+   `MeTTaIL/Semantics/InteractingTrieMap.lean`.
    The checked claims include
    `bisimilar_isBisimulation`, `fullyAbstract_of_kernel`, `FullyAbstractModel.eq_iff_bisimilar`,
    `fullyAbstract_of_calibration`, `fullyAbstract_of_observation_calibration`,
@@ -303,6 +304,15 @@ The map below states what each source supports in the Lean development, and what
    `KnottedUniverse.FinalCoalgebra.identity`,
    `KnottedUniverse.FinalBehaviourModel.toFullyAbstractModel`,
    `KnottedUniverse.FinalBehaviourModel.eq_iff_bisimilar`,
+   `RSetModel.twoColourAutomaton_no_self_loop`,
+   `RSetModel.RElem.quoteAtom_dropAtom`,
+   `RSetModel.RSet.renameAtoms_eq_of_forall_mem_atomsOf`,
+   `RSetModel.RSet.renameAtoms_eq_of_supports`,
+   `RSetModel.RSet.renameAtoms_id`,
+   `RSetModel.blackToRedSet_redToBlackSet`,
+   `RSetModel.redToBlackSet_blackToRedSet`,
+   `RSetModel.reflective_dropRed_quoteRed`,
+   `RSetModel.reflective_dropBlack_quoteBlack`,
    `InteractingTrieMap.RITM.ofStep_toStep`, `InteractingTrieMap.RITM.toStep_ofStep`,
    `InteractingTrieMap.RITM.stepEquiv`,
    `InteractingTrieMap.PackedBinding.root_prefix_address`,
@@ -312,8 +322,8 @@ The map below states what each source supports in the Lean development, and what
    coalgebra has been constructed in Lean. The checked modules state the proof interfaces, COMM
    kernels, the K one-pair creation and ready-pair guarded ordinary and persistent input/output cell
    steps, the packet-level base-rewrite bridge, the red/black quote/drop and final-coalgebra
-   interfaces, the ITM roll/unroll surface, and the packed-binding prefix connector that those
-   constructions must instantiate.
+   interfaces, the finitary rset atom-supply and finite-support core, the ITM roll/unroll surface,
+   and the packed-binding prefix connector that those constructions must instantiate.
  * The MeTTa-calculus, Turing-to-rho, and optimal-channel papers {citep mettaCalculus}[]
    {citep rhoViaTuring}[] {citep optimalChannels}[] support the compiler direction from MeTTaIL/GSLT
    presentations to rho/RSpace. The current release uses them as a roadmap, not as completed

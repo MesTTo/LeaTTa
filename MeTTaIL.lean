@@ -59,6 +59,8 @@ import MeTTaIL.Semantics.OSLF
 import MeTTaIL.Semantics.Denotational
 -- Runtime: the red/black reflective-universe and final-coalgebra interfaces.
 import MeTTaIL.Semantics.KnottedUniverse
+-- Runtime: the finitary rset core with red sets whose atoms are black sets, and conversely.
+import MeTTaIL.Semantics.RSet
 -- Runtime: interacting trie maps and the reflective RITM equation used by the denotational target.
 import MeTTaIL.Semantics.InteractingTrieMap
 -- Runtime: a small rho-calculus target plus the one-channel RSpace COMM boundary used by the compiler

@@ -183,6 +183,15 @@ the two colours, the four visible sorts, the red and black quote/drop equivalenc
 reading to the existing full-abstraction package. The module still does not construct the knotted topos
 or prove finality for the real rho behaviour functor.
 
+`MeTTaIL.Semantics.RSet` makes the rset paper do more work in this repo. It formalizes the
+hereditarily finite red/black core: red sets contain red nested sets and atoms supplied by black sets,
+and black sets mirror the same discipline. The module checks the two-state colour automaton, the absence
+of a self-loop, atom quote/drop, same-colour opacity for atoms, red/black colour-swap equivalences, and
+the finite-support theorem that a renaming fixing all atoms occurring in a finite set leaves the set
+unchanged. It does not quotient by extensional equality or prove the FM representation theorem. Those are
+the next rset-specific obligations before the algebraic-set-theory fixpoint can become the actual
+knotted-topos construction.
+
 `MeTTaIL.Semantics.InteractingTrieMap` is the first checked store-side object. The `ITMStep` layer
 records the six summands from the ITM sketch. `RITM` is the reflective specialization with
 `Option RITM` for `1 + RITM`. `RITM.stepEquiv` packages the roll and unroll laws.

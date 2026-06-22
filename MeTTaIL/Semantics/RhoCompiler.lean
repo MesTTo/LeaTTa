@@ -11,7 +11,9 @@ Main exports: Rho.Compiler.ruleChannel, Rho.Compiler.contractumBinder,
   Rho.Compiler.contractumForwarder, Rho.Compiler.contractumPacket, Rho.Compiler.contractumRun,
   Rho.Compiler.contractumEmitted, Rho.Compiler.contractumForwarder_emits,
   Rho.Compiler.contractumInputCell, Rho.Compiler.contractumOutputCell,
-  Rho.Compiler.contractum_kstep, Rho.Compiler.contractum_kstep_to_rho,
+  Rho.Compiler.contractum_kstep, Rho.Compiler.contractumRun_struct_kSource,
+  Rho.Compiler.contractumRun_kstep_to_rho, Rho.Compiler.contractum_kstep_to_rho,
+  Rho.Compiler.applyBaseRewrite_reduces_emits_and_reifies_kstep,
   Rho.Compiler.applyBaseRewrite_reduces_and_emits
 Open obligations: replace the contractum packet with the full matcher/router process, add contextual
   and set-automaton channels, prove freshness for compiler-generated binders, and then prove the
@@ -78,12 +80,29 @@ theorem contractum_kstep (rd : RewriteDecl) (source contractum : AST) :
       (by simp [KMachine.MatchedOne, KMachine.acceptAny, contractumInputCell, contractumOutputCell]))
     rfl rfl
 
+/-- The packet/listener rho process is the reification of the corresponding created K cells, up to
+    the trailing parallel unit introduced by `parList`. -/
+theorem contractumRun_struct_kSource (rd : RewriteDecl) (source contractum : AST) :
+    StructEq (contractumRun rd source contractum)
+      (KMachine.receiveSource (contractumInputCell rd source) (contractumOutputCell rd contractum)).toProc := by
+  simp [contractumRun, contractumForwarder, contractumPacket, contractumInputCell,
+    contractumOutputCell, KMachine.receiveSource, KMachine.Config.toProc, KMachine.InCell.toProc,
+    KMachine.OutCell.toProc, payloadForwarder, parList]
+  exact StructEq.par_congr StructEq.refl (StructEq.symm StructEq.par_zero_right)
+
 /-- The compiler K-step reifies to rho reduction modulo parallel-structure laws. -/
 theorem contractum_kstep_to_rho (rd : RewriteDecl) (source contractum : AST) :
     StepModStruct
       (KMachine.receiveSource (contractumInputCell rd source) (contractumOutputCell rd contractum)).toProc
       (KMachine.receiveTarget (contractumInputCell rd source) (contractumOutputCell rd contractum)).toProc := by
   exact KMachine.step_to_rho (contractum_kstep rd source contractum)
+
+/-- The actual packet/listener rho process takes the K-machine communication step modulo `|` laws. -/
+theorem contractumRun_kstep_to_rho (rd : RewriteDecl) (source contractum : AST) :
+    StepModStruct (contractumRun rd source contractum)
+      (KMachine.receiveTarget (contractumInputCell rd source) (contractumOutputCell rd contractum)).toProc := by
+  rcases contractum_kstep_to_rho rd source contractum with ⟨u, v, hsrc, hstep, htgt⟩
+  exact ⟨u, v, StructEq.trans (contractumRun_struct_kSource rd source contractum) hsrc, hstep, htgt⟩
 
 /-- The packet-level direct-rule listener emits the encoded contractum. -/
 theorem contractumForwarder_emits (rd : RewriteDecl) (source contractum : AST) :
@@ -100,8 +119,21 @@ theorem applyBaseRewrite_reduces_and_emits (p : Presentation) (rd : RewriteDecl)
     (h : applyBaseRewrite rd source = some contractum) :
     Reduces p source contractum ∧
       Relation.ReflTransGen Step (contractumRun rd source contractum)
+      (contractumEmitted rd source contractum) := by
+  exact ⟨reduces_of_applyBaseRewrite p rd source contractum hmem h,
+    contractumForwarder_emits rd source contractum⟩
+
+/-- A successful base matcher result is also the corresponding ready K-machine packet step. -/
+theorem applyBaseRewrite_reduces_emits_and_reifies_kstep (p : Presentation) (rd : RewriteDecl)
+    (source contractum : AST) (hmem : rd ∈ p.rewrites)
+    (h : applyBaseRewrite rd source = some contractum) :
+    Reduces p source contractum ∧
+      StepModStruct (contractumRun rd source contractum)
+        (KMachine.receiveTarget (contractumInputCell rd source) (contractumOutputCell rd contractum)).toProc ∧
+      Relation.ReflTransGen Step (contractumRun rd source contractum)
         (contractumEmitted rd source contractum) := by
   exact ⟨reduces_of_applyBaseRewrite p rd source contractum hmem h,
+    contractumRun_kstep_to_rho rd source contractum,
     contractumForwarder_emits rd source contractum⟩
 
 end Compiler

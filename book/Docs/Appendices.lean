@@ -286,10 +286,12 @@ The map below states what each source supports in the Lean development, and what
    `Rho.RSpace.comm_to_step_one`, `Rho.KMachine.creation_to_struct`, `Rho.KMachine.step_to_rho`,
    `Rho.KMachine.ordinaryReceive_to_rho`, `Rho.KMachine.persistentOutput_to_rho`,
    `Rho.KMachine.persistentReceive_to_rho`, `Rho.KMachine.persistentBoth_to_rho`,
-   `Rho.Compiler.contractum_kstep_to_rho`, and
-   `Rho.Compiler.applyBaseRewrite_reduces_and_emits`. The claim is not that the knotted topos, full rho
-   desugaring, trie store, cut distributive law, cost endofunctor, causal-set functor, or final
-   coalgebra has been constructed in Lean. The checked modules state the proof interfaces, small COMM
+   `Rho.Compiler.contractumRun_struct_kSource`, `Rho.Compiler.contractum_kstep_to_rho`,
+   `Rho.Compiler.contractumRun_kstep_to_rho`,
+   `Rho.Compiler.applyBaseRewrite_reduces_and_emits`, and
+   `Rho.Compiler.applyBaseRewrite_reduces_emits_and_reifies_kstep`. The claim is not that the knotted
+   topos, full rho desugaring, trie store, cut distributive law, cost endofunctor, causal-set functor,
+   or final coalgebra has been constructed in Lean. The checked modules state the proof interfaces, small COMM
    kernels, the K one-pair creation and ready-pair guarded ordinary and persistent input/output cell
    steps, and the packet-level base-rewrite bridge that those constructions must instantiate.
  * The MeTTa-calculus, Turing-to-rho, and optimal-channel papers {citep mettaCalculus}[]

@@ -178,10 +178,13 @@ and a one-channel RSpace produce/consume boundary. The local implementation sour
 and substitutes the send channel and data before calling `produce`, which is why the Lean bridge emits
 the encoded contractum process rather than a suspended dereference.
 
-The same repo also carries an older K semantics in `rholang/src/main/k/rholang/`. The relevant files are
-`configuration.k`, `sending-receiving.k`, and `persistent-sending-receiving.k`. They split execution into
-`<In>` and `<Out>` cell creation, candidate-ID bookkeeping, pattern matching, substitution, ordinary
-send/receive, persistent send, persistent receive, and the persistent/persistent loop case.
+The same repo also carries an older K semantics in `rholang/src/main/k/rholang/`. Its README says that
+version is unfinished and points to newer K work elsewhere, so we use it as an operational staging
+guide, not as a finished reference semantics. The useful files are `configuration.k`,
+`sending-receiving.k`, `persistent-sending-receiving.k`, `specific-matching-rules.k`, and
+`matching-with-par.k`. They split execution into `<In>` and `<Out>` cell creation, candidate-ID
+bookkeeping, pattern matching, substitution through `<subst>`, ordinary send/receive, persistent send,
+persistent receive, the persistent/persistent loop case, and a separate par-matching machine.
 
 `MeTTaIL.Semantics.RhoKMachine` now checks the four one-channel COMM cases from that K machine:
 ordinary input with ordinary output, ordinary input with persistent output, persistent input with
@@ -194,7 +197,8 @@ current global ID lists; those creation steps preserve the reified rho process b
 `Rho.KMachine.creation_to_struct`. The branch theorems are `Rho.KMachine.ordinaryReceive_to_rho`,
 `Rho.KMachine.persistentOutput_to_rho`, `Rho.KMachine.persistentReceive_to_rho`, and
 `Rho.KMachine.persistentBoth_to_rho`. The file does not yet model full multi-cell ID maintenance, the
-full K matcher, or the repeated scheduling discipline behind the persistent/persistent loop.
+full K matcher, the par matcher, or the repeated scheduling discipline behind the persistent/persistent
+loop.
 
 `MeTTaIL.Semantics.RhoCompiler` adds the first checked compiler bridge. It follows the direct-rule
 shape in the `mettail-rust` GSLT2rho prototype: a rule has a persistent listener on a rule channel, and
@@ -204,9 +208,13 @@ real MeTTaIL `Reduces` step and that the rho listener emits `encodeAST` of the c
 term location. The theorem is packet-level. The file also proves `Rho.Compiler.contractum_kstep`, so the
 same packet exchange is a K-machine persistent-receive step whose `ReadyPair` proof comes from the
 packet channel, and uses `Rho.KMachine.acceptAny` because `applyBaseRewrite` has already produced the
-matched contractum. `Rho.Compiler.contractum_kstep_to_rho` says that K step reifies back to rho
-reduction. It does not prove the full matcher/router, contextual channel compiler, binder freshness
-discipline, or two-direction operational correspondence.
+matched contractum. `Rho.Compiler.contractumRun_struct_kSource` identifies the actual packet/listener
+rho process with the created K cells, up to the trailing `| 0` introduced by the K configuration
+renderer. `Rho.Compiler.contractumRun_kstep_to_rho` starts from that actual packet/listener process and
+takes the ready K communication step modulo `|` laws. The combined theorem
+`Rho.Compiler.applyBaseRewrite_reduces_emits_and_reifies_kstep` packages MeTTaIL reduction, ready K
+communication, and rho emission. It does not prove the full matcher/router, contextual channel compiler,
+binder freshness discipline, or two-direction operational correspondence.
 
 The path-key RSpace note adds another interface in the same Lean file. `PathRSpace.Path` is a list of
 names, `PathRSpace.Prefix` and `PathRSpace.Comparable` state the prefix-order matching condition, and

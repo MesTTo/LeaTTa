@@ -268,6 +268,9 @@ What is checked now:
   congruence, and full abstraction;
 - a rho target fragment: names, quote/drop, persistent COMM, structural congruence for `|`, and the
   one-channel RSpace produce/consume shape used by the local `f1r3node` runtime;
+- the first packet-level MeTTaIL-to-rho compiler bridge: when `applyBaseRewrite` produces a
+  contractum, Lean proves both the corresponding `Reduces` step and a rho listener emission of the
+  encoded contractum;
 - the axiom-audited theorem surface for those claims.
 
 The MeTTaIL layer builds with 0 `sorry`, 0 `admit`, 0 `native_decide`, 0 `partial`, and 0 `unsafe`. The
@@ -309,9 +312,23 @@ observational equivalence.
 substitution, quote/drop, persistent COMM, structural congruence for parallel composition, and a small
 RSpace boundary where a one-channel consume matches a produced payload. The local implementation source
 for that boundary is `/home/user/Dev/mettatron-workspace/f1r3node/rholang/src/rust/interpreter/reduce.rs`:
-`produce` stores a `ListParWithRandom`, `consume` installs a `TaggedContinuation`, both carry
-persistent flags, and the matcher lives under `rholang/src/rust/interpreter/matcher/`. The Lean file
-models the proof core, not the whole Rust runtime.
+`eval_send` evaluates and substitutes the channel and data before `produce`, `produce` stores a
+`ListParWithRandom`, `consume` installs a `TaggedContinuation`, both carry persistent flags, and the
+matcher lives under `rholang/src/rust/interpreter/matcher/`. The old K semantics is also in that repo,
+under `rholang/src/main/k/rholang/`. It is useful because it makes the operational staging explicit:
+`configuration.k` has `<In>`, `<Out>`, `<subst>`, and global candidate-ID cells;
+`sending-receiving.k` covers ordinary send/receive; `persistent-sending-receiving.k` separates
+persistent send `!!`, persistent receive `for (... <= C) { Q }`, and the persistent/persistent loop
+case. Lean currently models the persistent receive core used by compiled rewrite listeners. It does not
+yet model the full K machine.
+
+`MeTTaIL/Semantics/RhoCompiler.lean` is the first checked compiler bridge. It follows the direct-rule
+shape in `/tmp/mettail-rust-GSLT2rho/gslt2rho/rho_compile/src/compile.rs`: a rule has a persistent
+listener on a rule channel, and a matched contractum is sent as a packet. The theorem
+`Rho.Compiler.applyBaseRewrite_reduces_and_emits` says that a successful `applyBaseRewrite` result is a
+real MeTTaIL `Reduces` step and that the rho listener emits `encodeAST` of the contractum at the source
+term location. The file does not prove the full matcher/router, contextual channel compiler, binder
+freshness discipline, or two-direction operational correspondence.
 
 Formalizing the tool also turned up several bugs in it. They are written up for the F1R3FLY team in
 [`MeTTaIL/HYPERON_IMPROVEMENTS.md`](MeTTaIL/HYPERON_IMPROVEMENTS.md). The full treatment is the MeTTaIL

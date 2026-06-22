@@ -7,13 +7,17 @@ Purpose: A rho-calculus target for the MeTTaIL-to-rho correspondence work. The s
   drop a quote, and COMM between a persistent input and an output on the same channel. The RSpace
   section records the local `f1r3node` runtime boundary: produce and consume carry persistent flags,
   consume matches a list of payloads, and one matched consume produces a body with bound names filled.
+  The K semantics in `f1r3node/rholang/src/main/k/rholang` splits that story into creation,
+  matching, substitution, ordinary send/receive, persistent send, and persistent receive rules. This
+  file models the persistent receive core used by compiled rewrite listeners, not the whole K machine.
   Parallel contexts and structural congruence are explicit so later compiler proofs can state whether
   they reason syntactically or modulo `|`.
 Imports: MeTTaIL.Semantics.Denotational
 Trusted boundary: none
 Main exports: Rho.Name, Rho.Proc, Rho.substName, Rho.substProc, Rho.Step,
   Rho.StepModStruct, Rho.lts, Rho.RSpace, Rho.encodeAST, Rho.termLocation, Rho.tupleListener,
-  Rho.listener_step, Rho.drop_termLocation, Rho.receivedVar_drops
+  Rho.listener_step, Rho.payloadForwarder, Rho.payloadForwarder_emits, Rho.drop_termLocation,
+  Rho.receivedVar_drops
 Open obligations: define the matcher/router process that sends matched GSLT redex bindings to listener
   channels, then prove the two-direction simulation with MeTTaIL reduction. The checked part here is the
   target calculus, the RSpace one-communication shape, and the listener firing facts that such a
@@ -73,6 +77,7 @@ inductive Step : Proc → Proc → Prop where
         (.par (.input chan binder body) (substProc binder (.quote msg) body))
   | par_left {p p' q : Proc} : Step p p' → Step (.par p q) (.par p' q)
   | par_right {p q q' : Proc} : Step q q' → Step (.par p q) (.par p q')
+  | out_msg {chan : Name} {msg msg' : Proc} : Step msg msg' → Step (.out chan msg) (.out chan msg')
 
 /-- Structural congruence for the parallel operator. Zero is the unit, and parallel is AC up to
     reassociation. -/
@@ -173,6 +178,35 @@ theorem listener_step (chan outChan : Name) (binder : String) (target msg : Proc
         (substProc binder (.quote msg) (.out outChan target))) := by
   simpa [listener, tupleListener] using
     tupleListener_step chan outChan binder [] target msg
+
+/-- A listener that forwards the received process to an output channel after dereferencing the received
+    quote. -/
+def payloadForwarder (chan outChan : Name) (binder : String) : Proc :=
+  .input chan binder (.out outChan (.drop (.var binder)))
+
+/-- A forwarding listener receives one payload and emits the payload process on the output channel. If
+    the output channel mentions the binder, rho substitution affects the channel as well. -/
+theorem payloadForwarder_emits (chan outChan : Name) (binder : String) (msg : Proc) :
+    Relation.ReflTransGen Step (.par (payloadForwarder chan outChan binder) (.out chan msg))
+      (.par (payloadForwarder chan outChan binder)
+        (.out (substName binder (.quote msg) outChan) msg)) := by
+  have hcomm :
+      Step (.par (payloadForwarder chan outChan binder) (.out chan msg))
+        (.par (payloadForwarder chan outChan binder)
+          (.out (substName binder (.quote msg) outChan) (.drop (.quote msg)))) := by
+    simpa [payloadForwarder, substProc, substName] using
+      (Step.comm :
+        Step (.par (.input chan binder (.out outChan (.drop (.var binder)))) (.out chan msg))
+          (.par (.input chan binder (.out outChan (.drop (.var binder))))
+            (substProc binder (.quote msg) (.out outChan (.drop (.var binder))))))
+  have hdrop :
+      Step
+        (.par (payloadForwarder chan outChan binder)
+          (.out (substName binder (.quote msg) outChan) (.drop (.quote msg))))
+        (.par (payloadForwarder chan outChan binder)
+          (.out (substName binder (.quote msg) outChan) msg)) :=
+    Step.par_right (Step.out_msg Step.drop)
+  exact (Relation.ReflTransGen.single hcomm).trans (Relation.ReflTransGen.single hdrop)
 
 /-- Render a label as a stable channel fragment. -/
 def labelKey : Label → String

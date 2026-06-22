@@ -173,9 +173,24 @@ quote/drop, persistent COMM, structural congruence for parallel composition, and
 produce/consume boundary. The local implementation source is the `mettatron-workspace` checkout:
 `MeTTa-Compiler/src/pathmap_par_integration.rs` serializes MeTTa state into `Par`, while
 `f1r3node/rholang/src/rust/interpreter/reduce.rs` runs `produce` and `consume` against RSpace using
-`ListParWithRandom`, `BindPattern`, `TaggedContinuation`, and persistent flags. The checked Lean
-theorems cover the small COMM shape that a compiler proof can reuse. They do not yet prove the full
-`Par` normalizer, matcher, or runtime manager correct.
+`ListParWithRandom`, `BindPattern`, `TaggedContinuation`, and persistent flags. `eval_send` evaluates
+and substitutes the send channel and data before calling `produce`, which is why the Lean bridge emits
+the encoded contractum process rather than a suspended dereference.
+
+The same repo also carries an older K semantics in `rholang/src/main/k/rholang/`. The relevant files are
+`configuration.k`, `sending-receiving.k`, and `persistent-sending-receiving.k`. They split execution into
+`<In>` and `<Out>` cell creation, candidate-ID bookkeeping, pattern matching, substitution, ordinary
+send/receive, persistent send, persistent receive, and the persistent/persistent loop case. The Lean
+rho relation does not claim that whole machine. It captures the persistent receive fragment, because
+compiled rewrite rules are listeners that stay installed after COMM.
+
+`MeTTaIL.Semantics.RhoCompiler` adds the first checked compiler bridge. It follows the direct-rule
+shape in the `mettail-rust` GSLT2rho prototype: a rule has a persistent listener on a rule channel, and
+the matcher sends the computed contractum as a packet. The theorem
+`Rho.Compiler.applyBaseRewrite_reduces_and_emits` says that a successful `applyBaseRewrite` result is a
+real MeTTaIL `Reduces` step and that the rho listener emits `encodeAST` of the contractum at the source
+term location. The theorem is packet-level. It does not prove the full matcher/router, contextual
+channel compiler, binder freshness discipline, or two-direction operational correspondence.
 
 The path-key RSpace note adds another interface in the same Lean file. `PathRSpace.Path` is a list of
 names, `PathRSpace.Prefix` and `PathRSpace.Comparable` state the prefix-order matching condition, and

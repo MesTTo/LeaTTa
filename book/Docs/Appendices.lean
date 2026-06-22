@@ -277,15 +277,18 @@ The map below states what each source supports in the Lean development, and what
    {citep knottedUniverse}[] {citep quotingColourSwap}[] {citep pathsSubspaces}[]
    {citep continuedGSLTCost}[] {citep costAccountedRho}[] {citep costSpacetime}[]
    {citep knottedTopoi}[] support the denotational target. The Lean surface is
-   `MeTTaIL/Semantics/Denotational.lean`, `MeTTaIL/Semantics/Rho.lean`, and
-   `MeTTaIL/Semantics/RhoCompiler.lean`. The checked claims include
+   `MeTTaIL/Semantics/Denotational.lean`, `MeTTaIL/Semantics/Rho.lean`,
+   `MeTTaIL/Semantics/RhoKMachine.lean`, and `MeTTaIL/Semantics/RhoCompiler.lean`. The checked claims
+   include
    `bisimilar_isBisimulation`, `fullyAbstract_of_kernel`, `FullyAbstractModel.eq_iff_bisimilar`,
    `PathRSpace.comparable_iff_nonempty_subspaceBranch`, `Costed.costedStep_forget`,
    `Costed.Trace.to_reflTransGen`, `eval_rewrite_trace`, `Rho.listener_step`,
-   `Rho.RSpace.comm_to_step_one`, and `Rho.Compiler.applyBaseRewrite_reduces_and_emits`. The claim is
-   not that the knotted topos, full rho desugaring, trie store, cut distributive law, cost endofunctor,
-   causal-set functor, or final coalgebra has been constructed in Lean. The checked modules state the
-   proof interfaces, small COMM kernels, and the packet-level base-rewrite bridge that those
+   `Rho.RSpace.comm_to_step_one`, `Rho.KMachine.step_to_rho`,
+   `Rho.Compiler.contractum_kstep_to_rho`, and
+   `Rho.Compiler.applyBaseRewrite_reduces_and_emits`. The claim is not that the knotted topos, full rho
+   desugaring, trie store, cut distributive law, cost endofunctor, causal-set functor, or final
+   coalgebra has been constructed in Lean. The checked modules state the proof interfaces, small COMM
+   kernels, the K persistent-receive cell step, and the packet-level base-rewrite bridge that those
    constructions must instantiate.
  * The MeTTa-calculus, Turing-to-rho, and optimal-channel papers {citep mettaCalculus}[]
    {citep rhoViaTuring}[] {citep optimalChannels}[] support the compiler direction from MeTTaIL/GSLT

@@ -268,6 +268,8 @@ What is checked now:
   congruence, and full abstraction;
 - a rho target fragment: names, quote/drop, persistent COMM, structural congruence for `|`, and the
   one-channel RSpace produce/consume shape used by the local `f1r3node` runtime;
+- a K-shaped rho machine fragment: `<In>` and `<Out>` cells for persistent receives and ordinary
+  outputs, with a theorem that the checked K step reifies to rho COMM modulo `|` structure;
 - the first packet-level MeTTaIL-to-rho compiler bridge: when `applyBaseRewrite` produces a
   contractum, Lean proves both the corresponding `Reduces` step and a rho listener emission of the
   encoded contractum;
@@ -319,15 +321,20 @@ under `rholang/src/main/k/rholang/`. It is useful because it makes the operation
 `configuration.k` has `<In>`, `<Out>`, `<subst>`, and global candidate-ID cells;
 `sending-receiving.k` covers ordinary send/receive; `persistent-sending-receiving.k` separates
 persistent send `!!`, persistent receive `for (... <= C) { Q }`, and the persistent/persistent loop
-case. Lean currently models the persistent receive core used by compiled rewrite listeners. It does not
-yet model the full K machine.
+case. `MeTTaIL/Semantics/RhoKMachine.lean` now models the persistent receive branch used by compiled
+rewrite listeners. It defines K-style input and output cells, a one-step machine transition that keeps
+the persistent input installed and consumes the ordinary output, and `Rho.KMachine.step_to_rho`, which
+reifies that step to rho COMM modulo parallel structure. It does not yet model ordinary receives,
+persistent sends, persistent/persistent loops, candidate-ID bookkeeping, or the K matcher.
 
 `MeTTaIL/Semantics/RhoCompiler.lean` is the first checked compiler bridge. It follows the direct-rule
 shape in `/tmp/mettail-rust-GSLT2rho/gslt2rho/rho_compile/src/compile.rs`: a rule has a persistent
 listener on a rule channel, and a matched contractum is sent as a packet. The theorem
 `Rho.Compiler.applyBaseRewrite_reduces_and_emits` says that a successful `applyBaseRewrite` result is a
 real MeTTaIL `Reduces` step and that the rho listener emits `encodeAST` of the contractum at the source
-term location. The file does not prove the full matcher/router, contextual channel compiler, binder
+term location. The same file now also proves `Rho.Compiler.contractum_kstep`: the contractum packet is
+a K-machine persistent-receive step, and `Rho.Compiler.contractum_kstep_to_rho`: that K step reifies
+back to rho reduction. It does not prove the full matcher/router, contextual channel compiler, binder
 freshness discipline, or two-direction operational correspondence.
 
 Formalizing the tool also turned up several bugs in it. They are written up for the F1R3FLY team in

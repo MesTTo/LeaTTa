@@ -5,17 +5,19 @@ Purpose: A checked packet-level bridge from the existing MeTTaIL base matcher to
   The bridge follows the direct-rule shape in `mettail-rust/gslt2rho`: a matched rewrite sends the
   contractum to a persistent listener, and the listener emits the encoded contractum at the source
   term location.
-Imports: MeTTaIL.Semantics.Rho
+Imports: MeTTaIL.Semantics.RhoKMachine
 Trusted boundary: none
 Main exports: Rho.Compiler.ruleChannel, Rho.Compiler.contractumBinder,
   Rho.Compiler.contractumForwarder, Rho.Compiler.contractumPacket, Rho.Compiler.contractumRun,
   Rho.Compiler.contractumEmitted, Rho.Compiler.contractumForwarder_emits,
+  Rho.Compiler.contractumInputCell, Rho.Compiler.contractumOutputCell,
+  Rho.Compiler.contractum_kstep, Rho.Compiler.contractum_kstep_to_rho,
   Rho.Compiler.applyBaseRewrite_reduces_and_emits
 Open obligations: replace the contractum packet with the full matcher/router process, add contextual
   and set-automaton channels, prove freshness for compiler-generated binders, and then prove the
   two-direction MeTTaIL-to-rho simulation.
 -/
-import MeTTaIL.Semantics.Rho
+import MeTTaIL.Semantics.RhoKMachine
 
 namespace MeTTaIL
 namespace Rho
@@ -46,6 +48,33 @@ def contractumEmitted (rd : RewriteDecl) (source contractum : AST) : Proc :=
   .par (contractumForwarder rd source)
     (.out (substName (contractumBinder rd) (.quote (encodeAST contractum)) (termLocation source))
       (encodeAST contractum))
+
+/-- K receive cell installed for the packet-level direct-rule bridge. -/
+def contractumInputCell (rd : RewriteDecl) (source : AST) : KMachine.InCell where
+  chan := ruleChannel rd
+  binder := contractumBinder rd
+  body := .out (termLocation source) (.drop (.var (contractumBinder rd)))
+  persistent := true
+
+/-- K output cell carrying the matched contractum packet. -/
+def contractumOutputCell (rd : RewriteDecl) (contractum : AST) : KMachine.OutCell where
+  chan := ruleChannel rd
+  msg := encodeAST contractum
+  persistent := false
+
+/-- The packet-level direct-rule bridge is a K-machine persistent-receive step. -/
+theorem contractum_kstep (rd : RewriteDecl) (source contractum : AST) :
+    KMachine.Step
+      (KMachine.receiveSource (contractumInputCell rd source) (contractumOutputCell rd contractum))
+      (KMachine.receiveTarget (contractumInputCell rd source) (contractumOutputCell rd contractum)) := by
+  exact KMachine.Step.persistentReceive rfl rfl rfl
+
+/-- The compiler K-step reifies to rho reduction modulo parallel-structure laws. -/
+theorem contractum_kstep_to_rho (rd : RewriteDecl) (source contractum : AST) :
+    StepModStruct
+      (KMachine.receiveSource (contractumInputCell rd source) (contractumOutputCell rd contractum)).toProc
+      (KMachine.receiveTarget (contractumInputCell rd source) (contractumOutputCell rd contractum)).toProc := by
+  exact KMachine.step_to_rho (contractum_kstep rd source contractum)
 
 /-- The packet-level direct-rule listener emits the encoded contractum. -/
 theorem contractumForwarder_emits (rd : RewriteDecl) (source contractum : AST) :

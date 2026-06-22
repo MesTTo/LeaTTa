@@ -180,16 +180,22 @@ the encoded contractum process rather than a suspended dereference.
 The same repo also carries an older K semantics in `rholang/src/main/k/rholang/`. The relevant files are
 `configuration.k`, `sending-receiving.k`, and `persistent-sending-receiving.k`. They split execution into
 `<In>` and `<Out>` cell creation, candidate-ID bookkeeping, pattern matching, substitution, ordinary
-send/receive, persistent send, persistent receive, and the persistent/persistent loop case. The Lean
-rho relation does not claim that whole machine. It captures the persistent receive fragment, because
-compiled rewrite rules are listeners that stay installed after COMM.
+send/receive, persistent send, persistent receive, and the persistent/persistent loop case.
+
+`MeTTaIL.Semantics.RhoKMachine` now checks the persistent receive branch of that K machine. It defines
+K-style input and output cells, the local machine transition that keeps the persistent input installed
+and consumes the ordinary output, and `Rho.KMachine.step_to_rho`, which reifies that transition to rho
+COMM modulo parallel-structure laws. The file does not yet model ordinary receives, persistent sends,
+persistent/persistent loops, candidate-ID bookkeeping, or the K matcher.
 
 `MeTTaIL.Semantics.RhoCompiler` adds the first checked compiler bridge. It follows the direct-rule
 shape in the `mettail-rust` GSLT2rho prototype: a rule has a persistent listener on a rule channel, and
 the matcher sends the computed contractum as a packet. The theorem
 `Rho.Compiler.applyBaseRewrite_reduces_and_emits` says that a successful `applyBaseRewrite` result is a
 real MeTTaIL `Reduces` step and that the rho listener emits `encodeAST` of the contractum at the source
-term location. The theorem is packet-level. It does not prove the full matcher/router, contextual
+term location. The theorem is packet-level. The file also proves `Rho.Compiler.contractum_kstep`, so the
+same packet exchange is a K-machine persistent-receive step, and `Rho.Compiler.contractum_kstep_to_rho`,
+so that K step reifies back to rho reduction. It does not prove the full matcher/router, contextual
 channel compiler, binder freshness discipline, or two-direction operational correspondence.
 
 The path-key RSpace note adds another interface in the same Lean file. `PathRSpace.Path` is a list of

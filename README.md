@@ -266,6 +266,8 @@ What is checked now:
 - the AC-aware runtime fragment used by Cordial Miners;
 - the denotational-semantics interface for labelled transition systems, bisimulation, context
   congruence, and full abstraction;
+- a rho target fragment: names, quote/drop, persistent COMM, structural congruence for `|`, and the
+  one-channel RSpace produce/consume shape used by the local `f1r3node` runtime;
 - the axiom-audited theorem surface for those claims.
 
 The MeTTaIL layer builds with 0 `sorry`, 0 `admit`, 0 `native_decide`, 0 `partial`, and 0 `unsafe`. The
@@ -274,9 +276,9 @@ axiom audit shows only the three standard axioms used elsewhere in the project: 
 
 What is still missing is also stated directly. The release does not claim the modal hypercube typing
 theorem for binder calculi, the rho-calculus full-abstraction theorem, spice and mq as full reduction
-theories, a standalone rho-calculus reduction development, the per-variable category-consistency check in
-the elaborator, or an operational bisimulation against the four-register machine. The module headers and
-the book keep those boundaries visible.
+theories, a full f1r3node/RSpace operational model, the per-variable category-consistency check in the
+elaborator, or an operational bisimulation against the four-register machine. The module headers and the
+book keep those boundaries visible.
 
 The denotational and compiler target comes from the F1R3FLY publication set. The core route uses the
 rset knotted-universe paper (<https://github.com/F1R3FLY-io/publications/tree/main/rset>), the rho
@@ -302,6 +304,14 @@ traces forget to ordinary behaviour traces. The file does not construct the knot
 MeTTaIL-to-rho operational correspondence, formalize the trie store, prove the cut distributive law,
 construct the cost endofunctor, or calibrate context bisimilarity against each object language's
 observational equivalence.
+
+`MeTTaIL/Semantics/Rho.lean` adds the first rho-side checked target. It defines the rho syntax, name
+substitution, quote/drop, persistent COMM, structural congruence for parallel composition, and a small
+RSpace boundary where a one-channel consume matches a produced payload. The local implementation source
+for that boundary is `/home/user/Dev/mettatron-workspace/f1r3node/rholang/src/rust/interpreter/reduce.rs`:
+`produce` stores a `ListParWithRandom`, `consume` installs a `TaggedContinuation`, both carry
+persistent flags, and the matcher lives under `rholang/src/rust/interpreter/matcher/`. The Lean file
+models the proof core, not the whole Rust runtime.
 
 Formalizing the tool also turned up several bugs in it. They are written up for the F1R3FLY team in
 [`MeTTaIL/HYPERON_IMPROVEMENTS.md`](MeTTaIL/HYPERON_IMPROVEMENTS.md). The full treatment is the MeTTaIL

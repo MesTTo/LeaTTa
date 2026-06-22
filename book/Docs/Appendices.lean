@@ -277,12 +277,13 @@ The map below states what each source supports in the Lean development, and what
    {citep knottedUniverse}[] {citep quotingColourSwap}[] {citep pathsSubspaces}[]
    {citep continuedGSLTCost}[] {citep costAccountedRho}[] {citep costSpacetime}[]
    {citep knottedTopoi}[] support the denotational target. The Lean surface is
-   `MeTTaIL/Semantics/Denotational.lean`. The checked claims include `bisimilar_isBisimulation`,
-   `fullyAbstract_of_kernel`, `FullyAbstractModel.eq_iff_bisimilar`,
+   `MeTTaIL/Semantics/Denotational.lean` and `MeTTaIL/Semantics/Rho.lean`. The checked claims include
+   `bisimilar_isBisimulation`, `fullyAbstract_of_kernel`, `FullyAbstractModel.eq_iff_bisimilar`,
    `PathRSpace.comparable_iff_nonempty_subspaceBranch`, `Costed.costedStep_forget`,
-   `Costed.Trace.to_reflTransGen`, and `eval_rewrite_trace`. The claim is not that the knotted topos,
-   rho desugaring, trie store, cut distributive law, cost endofunctor, causal-set functor, or final
-   coalgebra has been constructed in Lean. The checked module states the proof interfaces that those
+   `Costed.Trace.to_reflTransGen`, `eval_rewrite_trace`, `Rho.listener_step`, and
+   `Rho.RSpace.comm_to_step_one`. The claim is not that the knotted topos, rho desugaring, trie store,
+   cut distributive law, cost endofunctor, causal-set functor, or final coalgebra has been constructed
+   in Lean. The checked modules state the proof interfaces and small COMM kernels that those
    constructions must instantiate.
  * The MeTTa-calculus, Turing-to-rho, and optimal-channel papers {citep mettaCalculus}[]
    {citep rhoViaTuring}[] {citep optimalChannels}[] support the compiler direction from MeTTaIL/GSLT
@@ -301,6 +302,9 @@ The map below states what each source supports in the Lean development, and what
 ## Other sources checked
 
  * The `trueagi-io/hyperon-experimental` repository, for the current implementation shape.
+ * The local `/home/user/Dev/mettatron-workspace` checkout, especially
+   `MeTTa-Compiler/src/pathmap_par_integration.rs` and
+   `f1r3node/rholang/src/rust/interpreter/reduce.rs`, for the concrete `Par` and RSpace boundary.
  * `hyperon.opencog.org` and the `metta-lang.dev` tutorials, for surface concepts: equality and
    reduction, type assignment, spaces, matching, and atomspace operations.
  * The MeTTa standard library documentation, for runtime and stdlib coverage.

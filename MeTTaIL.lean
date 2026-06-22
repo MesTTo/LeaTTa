@@ -57,6 +57,9 @@ import MeTTaIL.Semantics.WellSorted
 import MeTTaIL.Semantics.OSLF
 -- Runtime: the denotational-semantics interface for context-labelled systems and full abstraction.
 import MeTTaIL.Semantics.Denotational
+-- Runtime: a small rho-calculus target plus the one-channel RSpace COMM boundary used by the compiler
+-- correspondence work.
+import MeTTaIL.Semantics.Rho
 -- Runtime: a generic S-expression front end (parse and pretty-print) and the `run` entry point.
 import MeTTaIL.Runtime.Sexpr
 import MeTTaIL.Runtime.Generic

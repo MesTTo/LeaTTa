@@ -6,6 +6,7 @@ Purpose: Build-visible axiom audit for the headline theorem surfaces. This modul
   declarations. The output should contain only Lean/Mathlib's standard classical axioms where the imported
   theorem uses Mathlib's classical infrastructure, and no project axiom or placeholder.
 Imports: MettaHyperonFull.Operational.Properties, MeTTaIL.Semantics.Denotational,
+  MeTTaIL.Semantics.Rho,
   MeTTaILProofs.ConditionalCP, MeTTaILProofs.CPDemo, MeTTaILProofs.ConditionalCPRuntime,
   MeTTaILProofs.ACMatch, MeTTaILProofs.DistributiveLaw
 Trusted boundary: none
@@ -14,6 +15,7 @@ Open obligations: keep this list aligned with the headline claims in the docs an
 -/
 import MettaHyperonFull.Operational.Properties
 import MeTTaIL.Semantics.Denotational
+import MeTTaIL.Semantics.Rho
 import MeTTaILProofs.ConditionalCP
 import MeTTaILProofs.CPDemo
 import MeTTaILProofs.ConditionalCPRuntime
@@ -55,3 +57,10 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.Denotational.Costed.costedStep_forget
 #print axioms MeTTaIL.Denotational.Costed.Trace.to_reflTransGen
 #print axioms MeTTaIL.Denotational.eval_rewrite_trace
+
+#print axioms MeTTaIL.Rho.step_to_mod
+#print axioms MeTTaIL.Rho.RSpace.fits_one
+#print axioms MeTTaIL.Rho.RSpace.comm_to_step_one
+#print axioms MeTTaIL.Rho.listener_step
+#print axioms MeTTaIL.Rho.drop_termLocation
+#print axioms MeTTaIL.Rho.receivedVar_drops

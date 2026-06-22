@@ -168,6 +168,15 @@ contexts under the translation, target congruence pulls back to source congruenc
 theorems are the part of the knotted-topoi story that can already be stated before the missing
 MeTTaIL-to-rho desugaring theorem is supplied.
 
+`MeTTaIL.Semantics.Rho` starts the target side of that theorem. It defines rho names and processes,
+quote/drop, persistent COMM, structural congruence for parallel composition, and a one-channel RSpace
+produce/consume boundary. The local implementation source is the `mettatron-workspace` checkout:
+`MeTTa-Compiler/src/pathmap_par_integration.rs` serializes MeTTa state into `Par`, while
+`f1r3node/rholang/src/rust/interpreter/reduce.rs` runs `produce` and `consume` against RSpace using
+`ListParWithRandom`, `BindPattern`, `TaggedContinuation`, and persistent flags. The checked Lean
+theorems cover the small COMM shape that a compiler proof can reuse. They do not yet prove the full
+`Par` normalizer, matcher, or runtime manager correct.
+
 The path-key RSpace note adds another interface in the same Lean file. `PathRSpace.Path` is a list of
 names, `PathRSpace.Prefix` and `PathRSpace.Comparable` state the prefix-order matching condition, and
 `PathRSpace.SubspaceBranch` records the two COMM cases: output deeper than input, or input deeper than
@@ -185,10 +194,11 @@ replace the behaviour relation {citep continuedGSLTCost}[] {citep costAccountedR
 paper sits one layer beyond that, reading spent cost as the measure of a causal history
 {citep costSpacetime}[].
 
-The Lean file is an interface, not the knotted topos. The current release proves the operational pieces
-that such a denotation must respect: `RewStep`, `RewStepMany`, executable soundness, OSLF predicates,
-greatest-fixed-point OSLF safety, confluence fragments, AC rewriting, and the Cordial Miners runtime
-embedding. The rho desugaring functor, the location-channel operational correspondence, the final
+The Lean files are interfaces and small kernels, not the knotted topos. The current release proves the
+operational pieces that such a denotation must respect: `RewStep`, `RewStepMany`, executable soundness,
+OSLF predicates, greatest-fixed-point OSLF safety, confluence fragments, AC rewriting, the Cordial
+Miners runtime embedding, and the rho COMM/RSpace fragment in `MeTTaIL.Semantics.Rho`. The rho
+desugaring functor, the location-channel operational correspondence, the final
 behaviour coalgebra in a knotted topos, the path-key trie store, the cut distributive law, subspace
 reaction confluence, the set-automaton channel compiler, the cost endofunctor itself, and the calibration
 between context bisimulation and each object language's usual observational equivalence are still not

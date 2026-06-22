@@ -65,6 +65,8 @@ import MeTTaIL.Semantics.Native
 import MeTTaIL.Semantics.NativeGrammar
 -- Runtime: OSLF native types as sort-predicate pairs over presentations.
 import MeTTaIL.Semantics.NativeTypes
+-- Runtime: finite sort-assignment centers for generated modal and spatial hypercubes.
+import MeTTaIL.Semantics.Hypercube
 -- Runtime: the red/black reflective-universe and final-coalgebra interfaces.
 import MeTTaIL.Semantics.KnottedUniverse
 -- Runtime: the finitary rset core with red sets whose atoms are black sets, and conversely.

@@ -289,11 +289,12 @@ The MeTTaIL layer builds with 0 `sorry`, 0 `admit`, 0 `native_decide`, 0 `partia
 axiom audit shows only the three standard axioms used elsewhere in the project: `propext`,
 `Classical.choice`, and `Quot.sound`.
 
-What is still missing is also stated directly. The release does not claim the modal hypercube typing
-theorem for binder calculi, the rho-calculus full-abstraction theorem, spice and mq as full reduction
-theories, a full f1r3node/RSpace operational model, the per-variable category-consistency check in the
-elaborator, or an operational bisimulation against the four-register machine. The module headers and the
-book keep those boundaries visible.
+What is still missing is also stated directly. The release does not claim the full generated modal
+hypercube typing theorem for binder calculi, the rho-calculus full-abstraction theorem, spice and mq as
+full reduction theories, a full f1r3node/RSpace operational model, the per-variable
+category-consistency check in the elaborator, or an operational bisimulation against the four-register
+machine. The hypercube modal-site extractor and center checker are formalized, but the generated typing
+rules are still a future pass. The module headers and the book keep those boundaries visible.
 
 The denotational and compiler target comes from the F1R3FLY publication set. The core route uses the
 rset knotted-universe paper (<https://github.com/F1R3FLY-io/publications/tree/main/rset>), the rho
@@ -385,6 +386,18 @@ future-safety operator, so its left adjoint is `Pred.future`, the forward image 
 many-step reduction. The existing `Pred.dia` is possible future reachability, and it is left adjoint to
 the new `Pred.pastBox`, which checks all predecessors. The exported bridge values are
 `forwardGaloisBridge` and `possiblePastGaloisBridge`.
+
+`MeTTaIL/Semantics/Hypercube.lean` records the finite center from Stay, Meredith, and Wells'
+hypercube draft. A generated modal or spatial type family has finitely many sort slots. Without
+equations, every assignment of `star` or `box` to those slots is a vertex. With equations, a vertex is
+kept only when the induced two-sort algebra makes both sides of every listed equation evaluate to the
+same sort under every finite valuation of the equation variables. The checker is executable, and Lean
+proves `Equation.admissible_iff`, `centerMember_iff`, `mem_equationalCenter_iff`,
+`equationalCenter_sound`, and `equationalCenter_complete`. The same file also extracts
+`RewriteDecl.modalSites` from rewrite left-hand-side subterms and `Rule.spatialHead` values from term
+constructors, giving the presentation-facing objects that the paper uses for modal and spatial type
+families. The typing-rule generator is still future work. The checked part is the site extraction and
+equation filter that generated modal and spatial families must pass.
 
 `MeTTaIL/Semantics/KnottedUniverse.lean` adds the checked red/black surface that the rset, rho, and
 knotted-topoi papers need. It defines the colours, the four visible sorts, the two quote/drop

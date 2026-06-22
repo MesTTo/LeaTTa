@@ -51,6 +51,18 @@ def nativeTypeTheory : ArXiv where
   year := 2021
   id := "2102.04672"
 
+/-- Stay, Meredith and Wells; modal and spatial hypercubes generated from operational rules. -/
+def generatedHypercubes : Article where
+  title := inlines!"Generating Hypercubes of Type Systems"
+  authors := #[inlines!"Michael Stay", inlines!"L. Gregory Meredith", inlines!"Christian Wells"]
+  journal := inlines!"Manuscript"
+  year := 2025
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/F1R3FLY-io/publications/tree/main/drafts/Hypercube"
+
 /-- Assaf et al.; Dedukti as a logical framework with user-defined rewrite rules. -/
 def deduktiLogicalFramework : ArXiv where
   title := inlines!"Dedukti: a Logical Framework based on the λΠ-Calculus Modulo Theory"

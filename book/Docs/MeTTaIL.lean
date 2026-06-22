@@ -218,6 +218,20 @@ reachability. It is left adjoint to `Pred.pastBox`, which checks all predecessor
 are `Pred.future_box_galois` and `Pred.dia_pastBox_galois`, and the bridge values are
 `forwardGaloisBridge` and `possiblePastGaloisBridge`.
 
+`MeTTaIL.Semantics.Hypercube` adds the finite sort-center from the generated-hypercubes draft
+{citep generatedHypercubes}[]. The construction in that paper has modal type formers from rewrite
+contexts and spatial type formers from AST roots. Each generated family has slots that can be filled
+with `star` or `box`. In the equation-free case, every filling is allowed. With equations, only the
+fillings that make both sides of every equation evaluate to the same sort survive.
+
+The Lean file checks that finite condition directly. `Equation.admissible_iff` says the boolean checker
+for one equation agrees with the all-valuations condition. `centerMember_iff` lifts that to a list of
+equations. `mem_equationalCenter_iff`, `equationalCenter_sound`, and `equationalCenter_complete` say the
+computed center is exactly the raw hypercube filtered by those equation obligations. The same file also
+extracts `RewriteDecl.modalSites` from rewrite left-hand-side subterms and extracts `Rule.spatialHead`
+from term constructors. So the presentation-facing modal and spatial sites exist in Lean now. The
+remaining pass is to turn those sites into generated typing rules and concrete slot families.
+
 `MeTTaIL.Semantics.KnottedUniverse` adds the red/black surface that sits under that target. It defines
 the two colours, the four visible sorts, the red and black quote/drop equivalences,
 structure-preserving morphisms between reflective universes, a category of those universes, and the
@@ -371,12 +385,14 @@ component).
 
 # What Remains Open
 
-The deepest layer is still a research target. MeTTaIL's modal type system, the possibility modalities,
-and the recovery of arrow types in the design notes are sketched in the source, but the release does not
-claim that typing theorem. The rho and knotted-topoi papers give the denotational route, and the new Lean
-interface states the theorem to prove, but the knotted topos and the MeTTaIL-to-rho desugaring are not yet
-formalized. We formalize the determinate fragments and mark the open parts in place. The Scala tool's own
-`--hypercube` pass omits the modal types too, and our type-lift matches the tool, not the unfinished note.
+The deepest layer is still a research target. MeTTaIL's generated modal type system, the possibility
+modalities, and the recovery of arrow types in the design notes are only partly covered here. The modal
+sites, spatial heads, and equational center of the hypercube are now checked, but the pass that turns
+those sites into generated typing rules is not yet implemented. The rho and knotted-topoi papers give
+the denotational route, and the new Lean interface states the theorem to prove, but the knotted topos and
+the MeTTaIL-to-rho desugaring are not yet formalized. We formalize the determinate fragments and mark
+the open parts in place. The Scala tool's own `--hypercube` pass omits the modal types too, and our
+type-lift matches the tool, not the unfinished note.
 The per-variable category-consistency check of the elaborator's type checker remains future work; the
 category-match and bound-variable checks are in place.
 

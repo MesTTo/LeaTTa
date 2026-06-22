@@ -284,10 +284,13 @@ The map below states what each source supports in the Lean development, and what
    are the closest proof-framework comparison points for native types plus rewriting
    {citep deduktiLogicalFramework}[] {citep lambdapiDocs}[]. The MeTTapedia native grammatical
    formalism paper supplies the surface-invariance pattern used for native readings
-   {citep nativeGrammaticalFormalism}[]. The Lean surface is
+   {citep nativeGrammaticalFormalism}[]. Stay, Meredith, and Wells' generated-hypercubes draft supplies
+   the finite slot-center reading of generated modal and spatial type systems
+   {citep generatedHypercubes}[]. The Lean surface is
    `MeTTaIL/Semantics/Denotational.lean`, `MeTTaIL/Semantics/Native.lean`,
    `MeTTaIL/Semantics/NativeGrammar.lean`, `MeTTaIL/Semantics/NativeTypes.lean`,
-   `MeTTaIL/Semantics/CostRoundTrip.lean`, `MeTTaIL/Semantics/KnottedUniverse.lean`,
+   `MeTTaIL/Semantics/Hypercube.lean`, `MeTTaIL/Semantics/CostRoundTrip.lean`,
+   `MeTTaIL/Semantics/KnottedUniverse.lean`,
    `MeTTaIL/Semantics/RSet.lean`, `MeTTaIL/Semantics/Rho.lean`,
    `MeTTaIL/Semantics/RhoKMachine.lean`, `MeTTaIL/Semantics/RhoCompiler.lean`, and
    `MeTTaIL/Semantics/InteractingTrieMap.lean`.
@@ -306,6 +309,10 @@ The map below states what each source supports in the Lean development, and what
    `Pred.future_box_galois`, `Pred.dia_pastBox_galois`,
    `NativeType.constructor_satisfies_iff`, `NativeType.spatial_satisfies_sexp_iff`,
    `NativeType.arrow_satisfies_iff`, `NativeType.sortedBox_preserved`,
+   `Hypercube.Equation.admissible_iff`, `Hypercube.centerMember_iff`,
+   `Hypercube.mem_equationalCenter_iff`, `Hypercube.equationalCenter_sound`,
+   `Hypercube.equationalCenter_complete`, `AST.hypercubeContextVarsAt?_root`,
+   `AST.mem_hypercubeSubterms_root`,
    `Bisimilar.trans`,
    `PathRSpace.comparable_iff_nonempty_subspaceBranch`, `Costed.costedStep_forget`,
    `Costed.Trace.to_reflTransGen`, `Costed.costDeadlocked_iff_forget_deadlocked`,

@@ -7,7 +7,8 @@ Purpose: Build-visible axiom audit for the headline theorem surfaces. This modul
   theorem uses Mathlib's classical infrastructure, and no project axiom or placeholder.
 Imports: MettaHyperonFull.Operational.Properties, MeTTaIL.Semantics.Denotational,
   MeTTaIL.Semantics.Native, MeTTaIL.Semantics.NativeGrammar, MeTTaIL.Semantics.NativeTypes,
-  MeTTaIL.Semantics.CostRoundTrip, MeTTaIL.Semantics.KnottedUniverse, MeTTaIL.Semantics.RSet,
+  MeTTaIL.Semantics.Hypercube, MeTTaIL.Semantics.CostRoundTrip, MeTTaIL.Semantics.KnottedUniverse,
+  MeTTaIL.Semantics.RSet,
   MeTTaIL.Semantics.InteractingTrieMap, MeTTaIL.Semantics.Rho, MeTTaIL.Semantics.RhoKMachine,
   MeTTaIL.Semantics.RhoCompiler,
   MeTTaILProofs.ConditionalCP, MeTTaILProofs.CPDemo,
@@ -22,6 +23,7 @@ import MeTTaIL.Semantics.Denotational
 import MeTTaIL.Semantics.Native
 import MeTTaIL.Semantics.NativeGrammar
 import MeTTaIL.Semantics.NativeTypes
+import MeTTaIL.Semantics.Hypercube
 import MeTTaIL.Semantics.CostRoundTrip
 import MeTTaIL.Semantics.KnottedUniverse
 import MeTTaIL.Semantics.RSet
@@ -105,6 +107,14 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.OSLF.NativeType.sortedBox_preserved
 #print axioms MeTTaIL.OSLF.forwardGaloisBridge
 #print axioms MeTTaIL.OSLF.possiblePastGaloisBridge
+#print axioms MeTTaIL.Hypercube.Equation.admissible_iff
+#print axioms MeTTaIL.Hypercube.centerMember_iff
+#print axioms MeTTaIL.Hypercube.mem_equationalCenter_iff
+#print axioms MeTTaIL.Hypercube.equationalCenter_sound
+#print axioms MeTTaIL.Hypercube.equationalCenter_complete
+#print axioms MeTTaIL.Hypercube.equationalCenter_nil
+#print axioms MeTTaIL.AST.hypercubeContextVarsAt?_root
+#print axioms MeTTaIL.AST.mem_hypercubeSubterms_root
 #print axioms MeTTaIL.Denotational.PathRSpace.prefix_trans
 #print axioms MeTTaIL.Denotational.PathRSpace.comparable_iff_nonempty_subspaceBranch
 #print axioms MeTTaIL.Denotational.PathRSpace.SubspaceSystem.branch_of_step

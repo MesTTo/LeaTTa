@@ -1,31 +1,35 @@
-# LeaTTa 1.0.1
+# LeaTTa 1.0.2
 
-LeaTTa 1.0.1 adds the checked MeTTaIL runtime path and the Cordial Miners runtime bridge to the public
-release line.
+LeaTTa 1.0.2 is a follow-up release for the checked MeTTaIL runtime line. The release adds a
+source-backed denotational-semantics interface, rewrites the release-facing README, and keeps the
+Cordial Miners runtime bridge in the public release path.
 
 ## Announcement
 
-This release adds the verified MeTTaIL runtime path. An editable language definition in the checked
-LeaTTa MeTTaIL runtime format can be parsed, monomorphized, and run through the verified reducer. Each
-executable step is tied back to the presentation semantics.
+LeaTTa 1.0.2 tightens the 1.0 line around exact claims and testable entry points. The root README now
+opens with the main validation commands and expected results, then explains the MeTTaIL runtime,
+Cordial Miners bridge, and current open surface without alpha or work-in-progress framing.
 
-It also adds the PoR-weighted Cordial Miners formalization and runtime bridge. The coarse protocol is
-encoded as real `MeTTaIL.AST`, run as a MeTTaIL presentation with AC-aware state and inbox rewriting,
-and connected to the protocol model through simulation and stuttering-refinement theorems.
+The MeTTaIL layer now includes `MeTTaIL.Semantics.Denotational`, a checked interface for labelled
+transition systems, simulations, bisimulations, denotational kernels, context congruence, and the
+`FullyAbstract` property. The book connects that interface to the rset, rho-calculus, and knotted-topoi
+manuscripts. The release does not claim the knotted topos, the MeTTaIL-to-rho desugaring, or the final
+coalgebra construction as completed Lean proofs.
 
-The next step will be deepening the bridge between MeTTaIL and Cordial Miners.
+The next step is deepening the bridge between MeTTaIL and Cordial Miners.
 
 ## Highlights
 
 - The minimal MeTTa interpreter and standard library still pass Hyperon's vendored oracle corpus:
   270 assertions across 22 files.
-- `LeaTTa --mettail FILE --term TERM [--fuel N]` runs a term through a small editable MeTTaIL dialect
-  file.
+- `LeaTTa --mettail FILE --term TERM [--fuel N]` still runs a term through a small editable MeTTaIL
+  dialect file.
 - The release bundles include `examples/bool.mettail`, so the MeTTaIL runtime path can be tested
   without a Lean toolchain.
-- Cordial Miners now has runtime demos for buried proposal events, ordered-prefix events, and finality.
-- The book covers the MeTTa kernel, gradual type system, operational semantics, MeTTaIL runtime path,
-  Cordial Miners safety core, proof status, and current limits.
+- Cordial Miners remains hosted as a MeTTaIL runtime presentation with AC-aware state and inbox
+  rewriting.
+- The book cites the rset, rho, and knotted-topoi papers and states which denotational claims are
+  interfaces versus completed proofs.
 - The GitHub Pages workflow builds the Verso book and API docs for the kernel, metatheory, operational
   semantics, MeTTaIL, MeTTaILProofs, and CordialMiners targets.
 
@@ -51,7 +55,8 @@ From a source checkout:
 
 ```bash
 lake build
-lake build CordialMiners
+lake build MeTTaIL MeTTaILProofs MeTTaILTests
+lake build CordialMiners CordialMiners.Runtime.Run
 ./scripts/run-oracle.sh
 ./scripts/run-regression.sh
 cd book && lake exe docs
@@ -60,6 +65,10 @@ cd book && lake exe docs
 ## Scope
 
 The `--mettail` file format is intentionally small: `sort`, `term`, and base `rewrite` declarations
-over S-expression terms. It is the release-facing path into the checked runtime, not the full BNFC
+over S-expression terms. The format is the release-facing path into the checked runtime, not the full BNFC
 MeTTaIL surface parser. The AC matcher used by the Cordial Miners runtime bridge covers the linear
 collection fragment needed by those rules: one fixed payload and one rest variable.
+
+The denotational-semantics addition is an interface and theorem scaffold. The interface states the Lean
+shape of full abstraction for a context-labelled system. The interface does not construct the knotted
+topos or prove the rho desugaring functor.

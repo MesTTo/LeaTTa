@@ -6,7 +6,7 @@ Lean or Mathlib.
 
 ## Platforms
 
-The prebuilt Linux x86_64 binary is the tested target. It runs on any glibc Linux of the
+The prebuilt Linux x86_64 binary is the tested target. The binary runs on any glibc Linux of the
 same architecture. macOS and Windows are supported through the source build below. The
 release workflow (`.github/workflows/release.yml`) produces binaries for Linux, macOS,
 and Windows on each tagged release.
@@ -17,8 +17,8 @@ Download the archive for your platform from the
 [releases page](https://github.com/MesTTo/LeaTTa/releases), then unpack and install it:
 
 ```bash
-tar xzf leatta-1.0.1-linux-x86_64.tar.gz
-cd leatta-1.0.1-linux-x86_64
+tar xzf leatta-1.0.2-linux-x86_64.tar.gz
+cd leatta-1.0.2-linux-x86_64
 ./install.sh                 # installs to ~/.local/bin by default
 ```
 

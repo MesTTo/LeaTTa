@@ -17,7 +17,7 @@ esac
 cat > "$OUT_DIR/README.md" <<EOF
 # LeaTTa ${VERSION} (${PLATFORM})
 
-This bundle contains the native LeaTTa executable and a small set of examples. The binary runs
+The bundle contains the native LeaTTa executable and a small set of examples. The binary runs
 without a Lean toolchain.
 
 ## Contents
@@ -59,8 +59,8 @@ On Linux and macOS:
 
     ./install.sh
 
-That installs \`${BIN}\` to \`~/.local/bin\` by default. Pass a prefix to install elsewhere, for example
-\`sudo ./install.sh /usr/local\`.
+The installer writes \`${BIN}\` to \`~/.local/bin\` by default. Pass a prefix to install elsewhere, for
+example \`sudo ./install.sh /usr/local\`.
 
 On Windows, run \`${BIN}\` from this directory or place it on your PATH.
 
@@ -75,6 +75,6 @@ The \`--mettail\` mode accepts a small line-oriented format:
     rewrite notTt : (notOp tt) => ff
     rewrite notFf : (notOp ff) => tt
 
-Blank lines and \`#\` comments are allowed. This format covers base-rewrite dialects and feeds the
+Blank lines and \`#\` comments are allowed. The format covers base-rewrite dialects and feeds the
 checked MeTTaIL runtime path.
 EOF

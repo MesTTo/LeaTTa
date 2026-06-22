@@ -1,7 +1,7 @@
 # LeaTTa: machine-checked MeTTa semantics in Lean 4
 
-LeaTTa is a Lean 4 development for MeTTa, MeTTaIL, and a checked Cordial Miners runtime. It starts from
-Hyperon's minimal MeTTa interpreter, the small instruction set that the rest of MeTTa is built on. The
+LeaTTa is a Lean 4 development for MeTTa, MeTTaIL, and a checked Cordial Miners runtime. LeaTTa starts
+from Hyperon's minimal MeTTa interpreter, the small instruction set that the rest of MeTTa is built on. The
 standard library is written in MeTTa on top of those instructions, following `hyperon-experimental`.
 The executable kernel is total and has no Mathlib or Batteries dependency.
 
@@ -14,7 +14,7 @@ The release has three active layers.
 - The Cordial Miners layer formalizes the PoR-weighted coarse protocol, proves the top-level safety
   theorem, and hosts the protocol as a MeTTaIL runtime presentation.
 
-LeaTTa 1.0.1 is a research release with an exact checked surface. The release does not claim the full
+LeaTTa 1.0.2 is a research release with an exact checked surface. The release does not claim the full
 Hyperon module system, MeTTa on Rholang, or the remaining MeTTaIL denotational goals. The theorems named
 in this README are checked by Lean's kernel with no `sorry`, no `admit`, no `native_decide`, no
 `partial`, and no `unsafe`. The full comparison with Hyperon is in the book's Improvements over Hyperon
@@ -42,8 +42,8 @@ Expected results:
 
 ## Quick test: editable MeTTaIL runtime
 
-The fastest way to check the MeTTaIL runtime path is the external dialect fixture. It declares a tiny
-boolean language:
+The fastest way to check the MeTTaIL runtime path is the external dialect fixture. The fixture declares
+a tiny boolean language:
 
 ```text
 sort Tm
@@ -154,7 +154,7 @@ Build completed successfully
 
 The kernel lives in `MettaHyperonFull/Minimal/`:
 
-- `Interpreter.lean` is a faithful port of `interpreter.rs`. It is the continuation-passing,
+- `Interpreter.lean` is a faithful port of `interpreter.rs`. The file is the continuation-passing,
   nondeterministic stack machine with all thirteen minimal instructions (`eval`/`evalc`, `chain`,
   `unify`, `cons-atom`/`decons-atom`, `function`/`return`, `collapse-bind`/`superpose-bind`, `metta`,
   `metta-thread`, `capture`, `context-space`). One step is a total function, and the driver is
@@ -168,8 +168,8 @@ The whole library builds with 0 `sorry`, 0 `partial`, and 0 `unsafe`.
 
 ## How it is validated
 
-The test is whether it agrees with Hyperon. It runs as a differential oracle against Hyperon's own
-unmodified test corpus, vendored under [tests/corpus/](tests/corpus/) (MIT, commit `3f76dc4`). One
+Validation checks agreement with Hyperon. The oracle runs against Hyperon's own unmodified test corpus,
+vendored under [tests/corpus/](tests/corpus/) (MIT, commit `3f76dc4`). One
 command builds the interpreter, runs every `!`-assertion in all 22 files, and checks each result. An
 assertion passes when it evaluates to `()`. The script exits non-zero on any mismatch, so it doubles
 as the regression gate.
@@ -221,8 +221,8 @@ All of this is built on the minimal interpreter and follows Hyperon:
 
 ## The proofs
 
-The metatheory layer lives in `MettaHyperonFull/Proofs/`. It uses Mathlib and keeps 0 `sorry`, 0
-`admit`, and 0 `native_decide`. It proves what an on-chain MeTTa needs:
+The metatheory layer lives in `MettaHyperonFull/Proofs/`. The layer uses Mathlib and keeps 0 `sorry`, 0
+`admit`, and 0 `native_decide`. The layer proves what an on-chain MeTTa needs:
 
 - the abstract machine is deterministic, with all nondeterminism kept in the result list rather than
   the transition relation, which is what replayability needs;
@@ -278,7 +278,7 @@ rho-calculus reduction development, the per-variable category-consistency check 
 operational bisimulation against the four-register machine. The module headers and the book state these
 boundaries directly.
 
-The denotational target is source-backed. It comes from three F1R3FLY manuscripts: the rset
+The denotational target is source-backed. The target comes from three F1R3FLY manuscripts: the rset
 knotted-universe paper (<https://github.com/F1R3FLY-io/publications/tree/main/rset>), the rho-calculus
 model (<https://github.com/F1R3FLY-io/publications/blob/main/denotational-semantics-for-rho/knot-rho.pdf>),
 and the knotted-topoi lift
@@ -305,8 +305,8 @@ lake build MeTTaIL MeTTaILProofs MeTTaILTests
 The formalization carries a presentation all the way to a running reducer. Change the dialect
 declarations in the small release-facing format, and the `LeaTTa` binary parses the file, monomorphizes
 the presentation, and runs the term through the checked evaluator. The one-step engine is sound and, for
-base rewriting, complete. It terminates under a measure and is confluent by Newman's lemma, with unique
-normal forms when the usual termination and local-confluence hypotheses are supplied.
+base rewriting, complete. The engine terminates under a measure and is confluent by Newman's lemma, with
+unique normal forms when the usual termination and local-confluence hypotheses are supplied.
 
 The shipped binary now exposes the path directly for a small editable dialect format with `sort`,
 `term`, and `rewrite` declarations. The quick-test section near the top of this README shows the CLI
@@ -370,7 +370,7 @@ items are listed in the module headers and the proof-status appendix.
 ## Cordial Miners (PoR-weighted consensus)
 
 `CordialMiners/` is a machine-checked formalization of PoR-weighted Cordial Miners, a leaderless
-DAG-based BFT consensus protocol (arXiv 2205.09174). It follows the weighted Proof-of-Reputation
+DAG-based BFT consensus protocol (arXiv 2205.09174). The layer follows the weighted Proof-of-Reputation
 variant from a blueprint by Ben Goertzel. The layer is checked under the same bar as the rest of the
 repo: 0 `sorry`/`admit`/`native_decide`/`partial`/`unsafe`, and the public theorem audits never report
 `sorryAx`.
@@ -389,7 +389,7 @@ gives the source-backed explanation.
 lake build CordialMiners
 ```
 
-The runtime bridge is the concrete "host a protocol as a MeTTaIL dialect" artifact. It encodes Cordial
+The runtime bridge is the concrete "host a protocol as a MeTTaIL dialect" artifact. The bridge encodes Cordial
 Miners facts and input events into `MeTTaIL.AST`, defines `cmPresentation` with the six coarse rewrite
 rules, marks the state and inbox labels as AC, and runs the result with `evalAC'`.
 
@@ -443,7 +443,7 @@ The book and a generated API reference are published together at
 
 ## The book
 
-A textbook-style treatment of the formalization is in [`book/`](book/), built with Verso. It covers
+A textbook-style treatment of the formalization is in [`book/`](book/), built with Verso. The book covers
 the object language, the interpreter, the type system, the metatheory, the operational semantics and
 its correspondence to the kernel, the blockchain angle, the MeTTaIL framework, and the Cordial Miners
 consensus formalization. The book is its own Lean project, so build it separately:
@@ -462,14 +462,14 @@ python3 -m http.server 8137 --directory book/_out/html-multi   # then open http:
 
 ## Install and run
 
-The interpreter ships as a single native binary, `LeaTTa`. It links only against the standard
+The interpreter ships as a single native binary, `LeaTTa`. The binary links only against the standard
 C library, so a prebuilt release runs on any glibc Linux of the same architecture without installing
 the Lean toolchain. Download an archive from the [releases page](https://github.com/MesTTo/LeaTTa/releases),
 then:
 
 ```bash
-tar xzf leatta-1.0.1-linux-x86_64.tar.gz
-cd leatta-1.0.1-linux-x86_64 && ./install.sh   # installs to ~/.local/bin
+tar xzf leatta-1.0.2-linux-x86_64.tar.gz
+cd leatta-1.0.2-linux-x86_64 && ./install.sh   # installs to ~/.local/bin
 LeaTTa --min '!(+ 1 (* 2 (- 10 4)))'             # [13]
 ```
 

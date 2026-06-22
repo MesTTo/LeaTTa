@@ -169,8 +169,9 @@ theorems are the part of the knotted-topoi story that can already be stated befo
 MeTTaIL-to-rho desugaring theorem is supplied.
 
 `MeTTaIL.Semantics.Rho` starts the target side of that theorem. It defines rho names and processes,
-quote/drop, persistent COMM, structural congruence for parallel composition, and a one-channel RSpace
-produce/consume boundary. The local implementation source is the `mettatron-workspace` checkout:
+quote/drop, ordinary and persistent send/receive COMM, structural congruence for parallel composition,
+and a one-channel RSpace produce/consume boundary. The local implementation source is the
+`mettatron-workspace` checkout:
 `MeTTa-Compiler/src/pathmap_par_integration.rs` serializes MeTTa state into `Par`, while
 `f1r3node/rholang/src/rust/interpreter/reduce.rs` runs `produce` and `consume` against RSpace using
 `ListParWithRandom`, `BindPattern`, `TaggedContinuation`, and persistent flags. `eval_send` evaluates
@@ -182,12 +183,14 @@ The same repo also carries an older K semantics in `rholang/src/main/k/rholang/`
 `<In>` and `<Out>` cell creation, candidate-ID bookkeeping, pattern matching, substitution, ordinary
 send/receive, persistent send, persistent receive, and the persistent/persistent loop case.
 
-`MeTTaIL.Semantics.RhoKMachine` now checks the ordinary receive and persistent receive branches of that
-K machine. It defines K-style input and output cells, the local machine transition that consumes an
-ordinary input, the transition that keeps a persistent input installed, and `Rho.KMachine.step_to_rho`,
-which reifies both transitions to rho COMM modulo parallel-structure laws. The branch theorems are
-`Rho.KMachine.ordinaryReceive_to_rho` and `Rho.KMachine.persistentReceive_to_rho`. The file does not yet
-model persistent sends, persistent/persistent loops, candidate-ID bookkeeping, or the K matcher.
+`MeTTaIL.Semantics.RhoKMachine` now checks the four one-channel COMM cases from that K machine:
+ordinary input with ordinary output, ordinary input with persistent output, persistent input with
+ordinary output, and persistent input with persistent output. It defines K-style input and output cells,
+then proves that each branch reifies to rho COMM modulo parallel-structure laws. The branch theorems are
+`Rho.KMachine.ordinaryReceive_to_rho`, `Rho.KMachine.persistentOutput_to_rho`,
+`Rho.KMachine.persistentReceive_to_rho`, and `Rho.KMachine.persistentBoth_to_rho`. The file does not yet
+model candidate-ID bookkeeping, the K matcher, or the repeated scheduling discipline behind the
+persistent/persistent loop.
 
 `MeTTaIL.Semantics.RhoCompiler` adds the first checked compiler bridge. It follows the direct-rule
 shape in the `mettail-rust` GSLT2rho prototype: a rule has a persistent listener on a rule channel, and

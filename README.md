@@ -266,10 +266,12 @@ What is checked now:
 - the AC-aware runtime fragment used by Cordial Miners;
 - the denotational-semantics interface for labelled transition systems, bisimulation, context
   congruence, and full abstraction;
-- a rho target fragment: names, quote/drop, persistent COMM, structural congruence for `|`, and the
-  one-channel RSpace produce/consume shape used by the local `f1r3node` runtime;
+- a rho target fragment: names, quote/drop, ordinary and persistent send/receive COMM, structural
+  congruence for `|`, and the one-channel RSpace produce/consume shape used by the local `f1r3node`
+  runtime;
 - a K-shaped rho machine fragment: `<In>` and `<Out>` cells for ordinary receives, persistent receives,
-  and ordinary outputs, with theorems that the checked K steps reify to rho COMM modulo `|` structure;
+  ordinary outputs, and persistent outputs, with theorems that the checked K steps reify to rho COMM
+  modulo `|` structure;
 - the first packet-level MeTTaIL-to-rho compiler bridge: when `applyBaseRewrite` produces a
   contractum, Lean proves both the corresponding `Reduces` step and a rho listener emission of the
   encoded contractum;
@@ -311,9 +313,10 @@ construct the cost endofunctor, or calibrate context bisimilarity against each o
 observational equivalence.
 
 `MeTTaIL/Semantics/Rho.lean` adds the first rho-side checked target. It defines the rho syntax, name
-substitution, quote/drop, persistent COMM, structural congruence for parallel composition, and a small
-RSpace boundary where a one-channel consume matches a produced payload. The local implementation source
-for that boundary is `/home/user/Dev/mettatron-workspace/f1r3node/rholang/src/rust/interpreter/reduce.rs`:
+substitution, quote/drop, ordinary and persistent send/receive COMM, structural congruence for parallel
+composition, and a small RSpace boundary where a one-channel consume matches a produced payload. The
+local implementation source for that boundary is
+`/home/user/Dev/mettatron-workspace/f1r3node/rholang/src/rust/interpreter/reduce.rs`:
 `eval_send` evaluates and substitutes the channel and data before `produce`, `produce` stores a
 `ListParWithRandom`, `consume` installs a `TaggedContinuation`, both carry persistent flags, and the
 matcher lives under `rholang/src/rust/interpreter/matcher/`. The old K semantics is also in that repo,
@@ -321,13 +324,14 @@ under `rholang/src/main/k/rholang/`. It is useful because it makes the operation
 `configuration.k` has `<In>`, `<Out>`, `<subst>`, and global candidate-ID cells;
 `sending-receiving.k` covers ordinary send/receive; `persistent-sending-receiving.k` separates
 persistent send `!!`, persistent receive `for (... <= C) { Q }`, and the persistent/persistent loop
-case. `MeTTaIL/Semantics/RhoKMachine.lean` now models the ordinary receive and persistent receive
-branches used by the one-channel fragment. It defines K-style input and output cells, a one-step machine
-transition that consumes an ordinary input, another that keeps a persistent input installed, and
-`Rho.KMachine.step_to_rho`, which reifies those steps to rho COMM modulo parallel structure. The named
-branch theorems are `Rho.KMachine.ordinaryReceive_to_rho` and `Rho.KMachine.persistentReceive_to_rho`.
-The file does not yet model persistent sends, persistent/persistent loops, candidate-ID bookkeeping, or
-the K matcher.
+case. `MeTTaIL/Semantics/RhoKMachine.lean` now models the four one-channel COMM cases: ordinary input
+with ordinary output, ordinary input with persistent output, persistent input with ordinary output, and
+persistent input with persistent output. It defines K-style input and output cells, then proves that
+each branch reifies to rho COMM modulo parallel structure. The named branch theorems are
+`Rho.KMachine.ordinaryReceive_to_rho`, `Rho.KMachine.persistentOutput_to_rho`,
+`Rho.KMachine.persistentReceive_to_rho`, and `Rho.KMachine.persistentBoth_to_rho`. The file does not yet
+model candidate-ID bookkeeping, the K matcher, or the repeated scheduling discipline behind the
+persistent/persistent loop.
 
 `MeTTaIL/Semantics/RhoCompiler.lean` is the first checked compiler bridge. It follows the direct-rule
 shape in `/tmp/mettail-rust-GSLT2rho/gslt2rho/rho_compile/src/compile.rs`: a rule has a persistent

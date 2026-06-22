@@ -67,7 +67,9 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.Rho.payloadForwarder_emits
 #print axioms MeTTaIL.Rho.KMachine.step_to_rho
 #print axioms MeTTaIL.Rho.KMachine.ordinaryReceive_to_rho
+#print axioms MeTTaIL.Rho.KMachine.persistentOutput_to_rho
 #print axioms MeTTaIL.Rho.KMachine.persistentReceive_to_rho
+#print axioms MeTTaIL.Rho.KMachine.persistentBoth_to_rho
 #print axioms MeTTaIL.Rho.Compiler.contractumForwarder_emits
 #print axioms MeTTaIL.Rho.Compiler.contractum_kstep
 #print axioms MeTTaIL.Rho.Compiler.contractum_kstep_to_rho

@@ -287,7 +287,8 @@ The map below states what each source supports in the Lean development, and what
    {citep nativeGrammaticalFormalism}[]. The Lean surface is
    `MeTTaIL/Semantics/Denotational.lean`, `MeTTaIL/Semantics/Native.lean`,
    `MeTTaIL/Semantics/NativeGrammar.lean`, `MeTTaIL/Semantics/NativeTypes.lean`,
-   `MeTTaIL/Semantics/KnottedUniverse.lean`, `MeTTaIL/Semantics/RSet.lean`, `MeTTaIL/Semantics/Rho.lean`,
+   `MeTTaIL/Semantics/CostRoundTrip.lean`, `MeTTaIL/Semantics/KnottedUniverse.lean`,
+   `MeTTaIL/Semantics/RSet.lean`, `MeTTaIL/Semantics/Rho.lean`,
    `MeTTaIL/Semantics/RhoKMachine.lean`, `MeTTaIL/Semantics/RhoCompiler.lean`, and
    `MeTTaIL/Semantics/InteractingTrieMap.lean`.
    The checked claims include
@@ -305,8 +306,12 @@ The map below states what each source supports in the Lean development, and what
    `Pred.future_box_galois`, `Pred.dia_pastBox_galois`,
    `NativeType.constructor_satisfies_iff`, `NativeType.spatial_satisfies_sexp_iff`,
    `NativeType.arrow_satisfies_iff`, `NativeType.sortedBox_preserved`,
+   `Bisimilar.trans`,
    `PathRSpace.comparable_iff_nonempty_subspaceBranch`, `Costed.costedStep_forget`,
-   `Costed.Trace.to_reflTransGen`, `eval_rewrite_trace`, `Rho.listener_step`,
+   `Costed.Trace.to_reflTransGen`, `Costed.costDeadlocked_iff_forget_deadlocked`,
+   `Costed.ContinuedCostSystem.starved_deadlocked`,
+   `Costed.ContinuedCostSystem.wrapped_trace_preserved`,
+   `Costed.CostRoundTrip.image_iff_fixed`, `eval_rewrite_trace`, `Rho.listener_step`,
    `Rho.RSpace.comm_to_step_one`, `Rho.KMachine.creation_to_struct`, `Rho.KMachine.step_to_rho`,
    `Rho.KMachine.ordinaryReceive_to_rho`, `Rho.KMachine.persistentOutput_to_rho`,
    `Rho.KMachine.persistentReceive_to_rho`, `Rho.KMachine.persistentBoth_to_rho`,

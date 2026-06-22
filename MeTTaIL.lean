@@ -57,6 +57,8 @@ import MeTTaIL.Semantics.WellSorted
 import MeTTaIL.Semantics.OSLF
 -- Runtime: the denotational-semantics interface for context-labelled systems and full abstraction.
 import MeTTaIL.Semantics.Denotational
+-- Runtime: abstract cost round trips, starvation deadlock, and wrapped trace preservation.
+import MeTTaIL.Semantics.CostRoundTrip
 -- Runtime: native-carrier obligations for interpreted types inside MeTTaIL presentations.
 import MeTTaIL.Semantics.Native
 -- Runtime: surface-language invariance for concrete readings over native carriers.

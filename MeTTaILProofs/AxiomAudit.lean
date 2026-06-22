@@ -7,8 +7,9 @@ Purpose: Build-visible axiom audit for the headline theorem surfaces. This modul
   theorem uses Mathlib's classical infrastructure, and no project axiom or placeholder.
 Imports: MettaHyperonFull.Operational.Properties, MeTTaIL.Semantics.Denotational,
   MeTTaIL.Semantics.Native, MeTTaIL.Semantics.NativeGrammar, MeTTaIL.Semantics.NativeTypes,
-  MeTTaIL.Semantics.KnottedUniverse, MeTTaIL.Semantics.RSet, MeTTaIL.Semantics.InteractingTrieMap,
-  MeTTaIL.Semantics.Rho, MeTTaIL.Semantics.RhoKMachine, MeTTaIL.Semantics.RhoCompiler,
+  MeTTaIL.Semantics.CostRoundTrip, MeTTaIL.Semantics.KnottedUniverse, MeTTaIL.Semantics.RSet,
+  MeTTaIL.Semantics.InteractingTrieMap, MeTTaIL.Semantics.Rho, MeTTaIL.Semantics.RhoKMachine,
+  MeTTaIL.Semantics.RhoCompiler,
   MeTTaILProofs.ConditionalCP, MeTTaILProofs.CPDemo,
   MeTTaILProofs.ConditionalCPRuntime,
   MeTTaILProofs.ACMatch, MeTTaILProofs.DistributiveLaw
@@ -21,6 +22,7 @@ import MeTTaIL.Semantics.Denotational
 import MeTTaIL.Semantics.Native
 import MeTTaIL.Semantics.NativeGrammar
 import MeTTaIL.Semantics.NativeTypes
+import MeTTaIL.Semantics.CostRoundTrip
 import MeTTaIL.Semantics.KnottedUniverse
 import MeTTaIL.Semantics.RSet
 import MeTTaIL.Semantics.InteractingTrieMap
@@ -106,8 +108,16 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.Denotational.PathRSpace.prefix_trans
 #print axioms MeTTaIL.Denotational.PathRSpace.comparable_iff_nonempty_subspaceBranch
 #print axioms MeTTaIL.Denotational.PathRSpace.SubspaceSystem.branch_of_step
+#print axioms MeTTaIL.Denotational.Bisimilar.trans
 #print axioms MeTTaIL.Denotational.Costed.costedStep_forget
 #print axioms MeTTaIL.Denotational.Costed.Trace.to_reflTransGen
+#print axioms MeTTaIL.Denotational.Costed.costDeadlocked_iff_forget_deadlocked
+#print axioms MeTTaIL.Denotational.Costed.ContinuedCostSystem.starved_costDeadlocked
+#print axioms MeTTaIL.Denotational.Costed.ContinuedCostSystem.starved_deadlocked
+#print axioms MeTTaIL.Denotational.Costed.ContinuedCostSystem.wrapped_trace_preserved
+#print axioms MeTTaIL.Denotational.Costed.CostRoundTrip.image_subset_fixed
+#print axioms MeTTaIL.Denotational.Costed.CostRoundTrip.fixed_subset_image
+#print axioms MeTTaIL.Denotational.Costed.CostRoundTrip.image_iff_fixed
 #print axioms MeTTaIL.Denotational.eval_rewrite_trace
 
 #print axioms MeTTaIL.KnottedUniverse.Colour.swap_swap

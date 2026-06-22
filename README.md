@@ -341,6 +341,16 @@ MeTTaIL-to-rho operational correspondence, formalize the trie store, prove the c
 construct the cost endofunctor, or instantiate the observational-calibration theorem for each object
 language.
 
+`MeTTaIL/Semantics/CostRoundTrip.lean` adds the next cost-accounting interface. A
+`Costed.ContinuedCostSystem` records the part of a continued interactive GSLT that the cost paper uses:
+costed steps, a wrapper invariant, and the gate-token condition for each step. `starved_deadlocked`
+proves that a state with no available gate token has no ordinary step after costs are forgotten, and
+`wrapped_trace_preserved` proves that wrapping is preserved along a finite costed trace. The same file
+packages the round trip `T ◦ C` as `Costed.CostRoundTrip`. If the round trip respects bisimilarity and
+is idempotent up to bisimulation, `CostRoundTrip.image_iff_fixed` proves that its image is exactly its
+fixed-point sublanguage, again up to bisimulation. This is the checked interface the concrete cost
+endofunctor still has to instantiate.
+
 `MeTTaIL/Semantics/Native.lean` records the boundary for native carriers inside a MeTTaIL language
 definition. A native carrier does not get to bypass the semantics. It has to embed into a source
 transition system, match labelled steps in both directions on embedded states, preserve its native type

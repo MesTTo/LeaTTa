@@ -80,6 +80,24 @@ theorem bisimilar_isBisimulation {State : Type u} {Label : Type v} (lts : LTS St
     rcases hR.2 hst hstep with ⟨t', ht', hRt'⟩
     exact ⟨t', ht', ⟨R, hR, hRt'⟩⟩
 
+namespace Bisimilar
+
+/-- Bisimilarity is transitive. Compose two bisimilarity witnesses through their middle state. -/
+theorem trans {State : Type u} {Label : Type v} {lts : LTS State Label} {s t u : State}
+    (hst : Bisimilar lts s t) (htu : Bisimilar lts t u) : Bisimilar lts s u := by
+  refine ⟨fun a c => ∃ b, Bisimilar lts a b ∧ Bisimilar lts b c, ?_, ⟨t, hst, htu⟩⟩
+  constructor
+  · intro a c hac
+    rcases hac with ⟨b, hab, hbc⟩
+    exact ⟨b, Bisimilar.symm hbc, Bisimilar.symm hab⟩
+  · intro a c label a' hac hstep
+    rcases hac with ⟨b, hab, hbc⟩
+    rcases (bisimilar_isBisimulation lts).2 hab hstep with ⟨b', hb', ha'b'⟩
+    rcases (bisimilar_isBisimulation lts).2 hbc hb' with ⟨c', hc', hb'c'⟩
+    exact ⟨c', hc', ⟨b', ha'b', hb'c'⟩⟩
+
+end Bisimilar
+
 /-- The kernel relation of a denotation. -/
 def KernelEq {State : Type u} {Den : Type w} (denote : State → Den) : State → State → Prop :=
   fun s t => denote s = denote t

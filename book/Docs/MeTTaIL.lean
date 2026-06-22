@@ -306,11 +306,20 @@ that the cut exposes comparable paths.
 The cost-accounting papers add a second interface. `Costed.CostedLTS` is a labelled transition system
 whose steps carry a cost. `Costed.CostedLTS.forget` drops the cost annotation and recovers the ordinary
 behavioural system. The theorem `Costed.Trace.to_reflTransGen` proves that any finite costed trace is an
-ordinary trace after costs are forgotten. That is the checked kernel of the story told by the cost
-endofunctor and cost-accounted rho papers: phlogiston and token stacks refine behaviour, they do not
-replace the behaviour relation {citep continuedGSLTCost}[] {citep costAccountedRho}[]. The spacetime
+ordinary trace after costs are forgotten. That is the checked kernel needed by the cost endofunctor and
+cost-accounted rho papers: phlogiston and token stacks refine behaviour, they do not replace the
+behaviour relation {citep continuedGSLTCost}[] {citep costAccountedRho}[]. The spacetime
 paper sits one layer beyond that, reading spent cost as the measure of a causal history
 {citep costSpacetime}[].
+
+`MeTTaIL.Semantics.CostRoundTrip` records the next interface from the continued-GSLT cost line. A
+`Costed.ContinuedCostSystem` has costed steps, a wrapper predicate, and a token-availability predicate.
+The theorem `Costed.ContinuedCostSystem.starved_deadlocked` says that if no gate token is available,
+then the forgotten behavioural system has no step. The theorem
+`Costed.ContinuedCostSystem.wrapped_trace_preserved` says that the wrapper invariant is preserved along
+finite costed traces. `Costed.CostRoundTrip` then packages the abstract endomorphism `T ◦ C`; when it
+respects bisimilarity and is idempotent up to bisimulation, `Costed.CostRoundTrip.image_iff_fixed`
+identifies the image sublanguage with the fixed points up to bisimulation.
 
 The Lean files are interfaces and small kernels, not the knotted topos. The current release proves the
 operational pieces that such a denotation must respect: `RewStep`, `RewStepMany`, executable soundness,

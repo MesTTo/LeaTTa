@@ -169,6 +169,42 @@ def mettaCalculus : Article where
   pages := none
   url := "https://github.com/F1R3FLY-io/publications/blob/main/metta-calculus/metta-calculus.pdf"
 
+/-- F1R3FLY-io; Scala sketch of the interacting-trie-map state equation. -/
+def itmScalaState : Article where
+  title := inlines!"Interacting trie maps: state equation sketch"
+  authors := #[inlines!"F1R3FLY-io"]
+  journal := inlines!"Source repository"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/F1R3FLY-io/itm/blob/main/src/main/scala/syntax/state.scala"
+
+/-- Vandervorst; prefix-compressed expression storage and pattern lookup. -/
+def cz2Repository : Article where
+  title := inlines!"CZ2 prefix-compressed expression store"
+  authors := #[inlines!"Adam Vandervorst"]
+  journal := inlines!"Source repository"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/Adam-Vandervorst/CZ2"
+
+/-- trueagi-io; Kotlin runtime with packed binding addresses for matched expressions. -/
+def jettaRuntime : Article where
+  title := inlines!"Jetta runtime space and packed binding store"
+  authors := #[inlines!"trueagi-io"]
+  journal := inlines!"Source repository"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/trueagi-io/jetta"
+
 /-- Meredith; identity-indexed judgments and evidence-indexed OSLF modalities for reputation. -/
 def reputationFramework : Article where
   title := inlines!"Identity-Indexed Typing Judgments and the Adjudication of Capability"

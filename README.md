@@ -266,6 +266,9 @@ What is checked now:
 - the AC-aware runtime fragment used by Cordial Miners;
 - the denotational-semantics interface for labelled transition systems, bisimulation, context
   congruence, and full abstraction;
+- the interacting trie-map surface: the reflective `RITM ::= ITM[RITM, 1 + RITM, RITM]`
+  equation, the red/black colour-swap primitive, and Jetta-style packed binding addresses that fit
+  the path-key RSpace prefix interface;
 - a rho target fragment: names, quote/drop, ordinary and persistent send/receive COMM, structural
   congruence for `|`, and the one-channel RSpace produce/consume shape used by the local `f1r3node`
   runtime;
@@ -303,6 +306,13 @@ papers
 <https://github.com/F1R3FLY-io/publications/blob/main/cost-accounting/cost-accounted-rho.pdf>) give the
 phlogiston/token-stack refinement.
 
+The store side also has implementation sources. The ITM sketch
+(<https://github.com/F1R3FLY-io/itm/blob/main/src/main/scala/syntax/state.scala>) writes the domain
+equations for interacting trie maps, including the reflective `RITM` specialization. CZ2
+(<https://github.com/Adam-Vandervorst/CZ2>) gives the prefix-compressed storage direction. Jetta
+(<https://github.com/trueagi-io/jetta>) gives a concrete packed-index design where a match binding is a
+store index plus an atom path inside that stored expression.
+
 `MeTTaIL/Semantics/Denotational.lean` writes the usable part of that target as Lean definitions and
 transfer theorems. The file defines labelled transition systems, simulations, bisimulations,
 denotational kernels, context congruence, the `FullyAbstract` property, a pullback theorem for
@@ -312,6 +322,13 @@ traces forget to ordinary behaviour traces. The file does not construct the knot
 MeTTaIL-to-rho operational correspondence, formalize the trie store, prove the cut distributive law,
 construct the cost endofunctor, or calibrate context bisimilarity against each object language's
 observational equivalence.
+
+`MeTTaIL/Semantics/InteractingTrieMap.lean` adds the checked ITM surface. It separates the ITM
+polynomial layer from the reflective fixed point, so Lean can state the equation without a
+same-universe nested-inductive problem. The audited theorems prove that `RITM` rolls and unrolls to one
+layer of `ITM[RITM, 1 + RITM, RITM]`, that colour swap is an involution, and that a Jetta-style packed
+binding address is comparable with its store root in the path-key RSpace prefix order. The file still
+does not implement the prefix-compressed trie store, the cut law, or the final behaviour coalgebra.
 
 `MeTTaIL/Semantics/Rho.lean` adds the first rho-side checked target. It defines the rho syntax, name
 substitution, quote/drop, ordinary and persistent send/receive COMM, structural congruence for parallel

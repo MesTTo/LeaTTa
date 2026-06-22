@@ -57,6 +57,8 @@ import MeTTaIL.Semantics.WellSorted
 import MeTTaIL.Semantics.OSLF
 -- Runtime: the denotational-semantics interface for context-labelled systems and full abstraction.
 import MeTTaIL.Semantics.Denotational
+-- Runtime: interacting trie maps and the reflective RITM equation used by the denotational target.
+import MeTTaIL.Semantics.InteractingTrieMap
 -- Runtime: a small rho-calculus target plus the one-channel RSpace COMM boundary used by the compiler
 -- correspondence work.
 import MeTTaIL.Semantics.Rho

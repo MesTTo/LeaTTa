@@ -6,8 +6,9 @@ Purpose: Build-visible axiom audit for the headline theorem surfaces. This modul
   declarations. The output should contain only Lean/Mathlib's standard classical axioms where the imported
   theorem uses Mathlib's classical infrastructure, and no project axiom or placeholder.
 Imports: MettaHyperonFull.Operational.Properties, MeTTaIL.Semantics.Denotational,
-  MeTTaIL.Semantics.Rho, MeTTaIL.Semantics.RhoKMachine, MeTTaIL.Semantics.RhoCompiler,
-  MeTTaILProofs.ConditionalCP, MeTTaILProofs.CPDemo, MeTTaILProofs.ConditionalCPRuntime,
+  MeTTaIL.Semantics.InteractingTrieMap, MeTTaIL.Semantics.Rho, MeTTaIL.Semantics.RhoKMachine,
+  MeTTaIL.Semantics.RhoCompiler, MeTTaILProofs.ConditionalCP, MeTTaILProofs.CPDemo,
+  MeTTaILProofs.ConditionalCPRuntime,
   MeTTaILProofs.ACMatch, MeTTaILProofs.DistributiveLaw
 Trusted boundary: none
 Main exports: (audit output only)
@@ -15,6 +16,7 @@ Open obligations: keep this list aligned with the headline claims in the docs an
 -/
 import MettaHyperonFull.Operational.Properties
 import MeTTaIL.Semantics.Denotational
+import MeTTaIL.Semantics.InteractingTrieMap
 import MeTTaIL.Semantics.Rho
 import MeTTaIL.Semantics.RhoKMachine
 import MeTTaIL.Semantics.RhoCompiler
@@ -59,6 +61,13 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.Denotational.Costed.costedStep_forget
 #print axioms MeTTaIL.Denotational.Costed.Trace.to_reflTransGen
 #print axioms MeTTaIL.Denotational.eval_rewrite_trace
+
+#print axioms MeTTaIL.InteractingTrieMap.RITM.ofStep_toStep
+#print axioms MeTTaIL.InteractingTrieMap.RITM.toStep_ofStep
+#print axioms MeTTaIL.InteractingTrieMap.RITM.stepEquiv
+#print axioms MeTTaIL.InteractingTrieMap.PackedBinding.root_prefix_address
+#print axioms MeTTaIL.InteractingTrieMap.PackedBinding.root_comparable_address
+#print axioms MeTTaIL.InteractingTrieMap.Colour.swap_swap
 
 #print axioms MeTTaIL.Rho.step_to_mod
 #print axioms MeTTaIL.Rho.RSpace.fits_one

@@ -152,6 +152,12 @@ for-comprehensions, writes are outputs, and step and namespace costs transport t
 GSLT-to-rho translation: channel names should be computed from rewrite contexts by set-automaton partial
 evaluation, so outer channels survive inner reductions {citep optimalChannels}[].
 
+The store side has source code as well as papers. The ITM sketch writes the domain equation for
+interacting trie maps and the reflective `RITM` specialization {citep itmScalaState}[]. CZ2 gives the
+prefix-compressed storage direction for expression lookup {citep cz2Repository}[]. Jetta gives a runtime
+store where a packed match binding is a store index plus an atom path inside the stored expression
+{citep jettaRuntime}[].
+
 The Lean side now states that claim as an interface. `MeTTaIL.Semantics.Denotational` defines labelled
 transition systems, simulations, bisimulations, the kernel relation of a denotation, and `FullyAbstract`,
 the statement `denote s = denote t <-> Bisimilar lts s t`. The theorem `fullyAbstract_of_kernel` packages
@@ -167,6 +173,13 @@ contexts under the translation, target congruence pulls back to source congruenc
 `FullyAbstractModel.pullback` packages those two facts as a constructor for the pulled-back model. These
 theorems are the part of the knotted-topoi story that can already be stated before the missing
 MeTTaIL-to-rho desugaring theorem is supplied.
+
+`MeTTaIL.Semantics.InteractingTrieMap` is the first checked store-side object. The `ITMStep` layer
+records the six summands from the ITM sketch. `RITM` is the reflective specialization with
+`Option RITM` for `1 + RITM`. `RITM.stepEquiv` packages the roll and unroll laws.
+`PackedBinding.root_prefix_address` and `PackedBinding.root_comparable_address` connect Jetta-style
+`storeIndex` plus `atomPath` bindings to `PathRSpace.Prefix` and `Comparable`. The file still does not
+implement CZ2's prefix-compressed store, the cut law, or the final coalgebra.
 
 `MeTTaIL.Semantics.Rho` starts the target side of that theorem. It defines rho names and processes,
 quote/drop, ordinary and persistent send/receive COMM, structural congruence for parallel composition,

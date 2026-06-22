@@ -115,6 +115,11 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.Hypercube.equationalCenter_nil
 #print axioms MeTTaIL.AST.hypercubeContextVarsAt?_root
 #print axioms MeTTaIL.AST.mem_hypercubeSubterms_root
+#print axioms MeTTaIL.Hypercube.Slot.head_sortOp_eq
+#print axioms MeTTaIL.Hypercube.Slot.sortExpr_eval_eq
+#print axioms MeTTaIL.Hypercube.SlotConstraint.toEquation_inCenter_iff
+#print axioms MeTTaIL.Hypercube.inEquationalCenter_slotConstraints_iff
+#print axioms MeTTaIL.Hypercube.mem_constrainedCenter_iff
 #print axioms MeTTaIL.Hypercube.SlotFamily.outputSlot_mem_slots
 #print axioms MeTTaIL.Hypercube.SlotFamily.head_sortOp_eq
 #print axioms MeTTaIL.Hypercube.SlotFamily.inputFootprint_within

@@ -13,14 +13,16 @@ Main exports: Hypercube.SortCode, Hypercube.SortExpr, Hypercube.Equation,
   Hypercube.InEquationalCenter, Hypercube.equationalCenter,
   Hypercube.mem_equationalCenter_iff, Hypercube.ModalSite, Hypercube.SpatialHead,
   Hypercube.Slot, Hypercube.SlotFamily, Hypercube.ModalSite.slotFamily,
-  Hypercube.SpatialHead.slotFamily, Hypercube.TypeFamily, Hypercube.RuleKind,
+  Hypercube.SpatialHead.slotFamily, Hypercube.SlotConstraint,
+  Hypercube.constrainedCenter, Hypercube.TypeFamily, Hypercube.RuleKind,
   Hypercube.RuleScheme, Hypercube.ModalSite.ruleSchemes,
   Hypercube.SpatialHead.ruleSchemes, Hypercube.JudgmentFootprint,
   Hypercube.RuleScheme.footprints,
   AST.hypercubeSubterms, RewriteDecl.modalSites, Presentation.modalSites,
   Rule.spatialHead, Presentation.spatialHeads, Presentation.hypercubeSlotFamilies,
   Presentation.hypercubeSlots, Presentation.hypercubeTypeFamilies,
-  Presentation.hypercubeRuleSchemes, Presentation.hypercubeJudgmentFootprints
+  Presentation.hypercubeRuleSchemes, Presentation.hypercubeJudgmentFootprints,
+  Presentation.hypercubeConstrainedCenter
 Open obligations: interpret these judgment footprints as full typing rules, generate the sort-level
   equations from those judgments, then feed the resulting equations to this center checker.
 -/
@@ -339,6 +341,96 @@ inductive Slot where
   | spatialArg (head : String) (index : Nat)
   | spatialOutput (head : String)
   deriving BEq, DecidableEq, Repr
+
+namespace Slot
+
+/-- A nullary sort-level head that reads this slot. -/
+def head (slot : Slot) : Head Slot where
+  arity := 0
+  outputSlot := fun _ => slot
+
+/-- This nullary head reads exactly this slot. -/
+theorem head_sortOp_eq (slot : Slot) (σ : SortAssignment Slot) (args : List SortCode) :
+    Head.sortOp σ slot.head args = σ slot := by
+  rfl
+
+/-- The sort expression that reads this slot. -/
+def sortExpr (slot : Slot) : SortExpr (Head Slot) Unit :=
+  .app slot.head []
+
+/-- Evaluating a slot expression returns the assigned sort of that slot. -/
+theorem sortExpr_eval_eq (slot : Slot) (σ : SortAssignment Slot)
+    (env : Unit → SortCode) :
+    slot.sortExpr.eval (Head.sortOp σ) env = σ slot := by
+  rfl
+
+end Slot
+
+/-- A generated sort constraint that says two slots must receive the same sort. -/
+structure SlotConstraint where
+  lhs : Slot
+  rhs : Slot
+  deriving BEq, DecidableEq, Repr
+
+namespace SlotConstraint
+
+/-- The generic center-checker equation for this slot equality. -/
+def toEquation (c : SlotConstraint) : Equation (Head Slot) Unit where
+  vars := []
+  lhs := c.lhs.sortExpr
+  rhs := c.rhs.sortExpr
+
+/-- A slot constraint holds for one sort assignment. -/
+def holds (σ : SortAssignment Slot) (c : SlotConstraint) : Prop :=
+  σ c.lhs = σ c.rhs
+
+/-- The generic equation view is equivalent to direct slot equality. -/
+theorem toEquation_inCenter_iff (c : SlotConstraint) (σ : SortAssignment Slot) :
+    c.toEquation.InCenter (Head.sortOp σ) ↔ c.holds σ := by
+  constructor
+  · intro h
+    have hholds := h [] (by simp [toEquation, valuations])
+    simpa [toEquation, holds, Equation.holdsOn, Slot.sortExpr, Slot.head,
+      Head.sortOp, SortExpr.eval, SortExpr.evalList] using hholds
+  · intro h env henv
+    simpa [toEquation, holds, Equation.holdsOn, Slot.sortExpr, Slot.head,
+      Head.sortOp, SortExpr.eval] using h
+
+end SlotConstraint
+
+/-- All slot constraints hold for one sort assignment. -/
+def InSlotConstraintCenter (σ : SortAssignment Slot) (constraints : List SlotConstraint) : Prop :=
+  ∀ c, c ∈ constraints → c.holds σ
+
+/-- The generic equation center agrees with direct slot-constraint satisfaction. -/
+theorem inEquationalCenter_slotConstraints_iff
+    (σ : SortAssignment Slot) (constraints : List SlotConstraint) :
+    InEquationalCenter (Head.sortOp σ) (constraints.map SlotConstraint.toEquation) ↔
+      InSlotConstraintCenter σ constraints := by
+  constructor
+  · intro h c hc
+    exact (SlotConstraint.toEquation_inCenter_iff c σ).1
+      (h c.toEquation (List.mem_map.2 ⟨c, hc, rfl⟩))
+  · intro h e he
+    rcases List.mem_map.1 he with ⟨c, hc, rfl⟩
+    exact (SlotConstraint.toEquation_inCenter_iff c σ).2 (h c hc)
+
+/-- The center induced by explicit slot equalities. -/
+def constrainedCenter (slots : List Slot) (constraints : List SlotConstraint) :
+    List (SortAssignment Slot) :=
+  equationalCenter slots (constraints.map SlotConstraint.toEquation)
+
+/-- Membership in a constrained center is raw assignment plus direct satisfaction of each slot constraint. -/
+theorem mem_constrainedCenter_iff (slots : List Slot) (constraints : List SlotConstraint)
+    (σ : SortAssignment Slot) :
+    σ ∈ constrainedCenter slots constraints ↔
+      σ ∈ assignments slots ∧ InSlotConstraintCenter σ constraints := by
+  rw [constrainedCenter, mem_equationalCenter_iff]
+  constructor
+  · intro h
+    exact ⟨h.1, (inEquationalCenter_slotConstraints_iff σ constraints).1 h.2⟩
+  · intro h
+    exact ⟨h.1, (inEquationalCenter_slotConstraints_iff σ constraints).2 h.2⟩
 
 /-- The slots carried by one generated modal or spatial type former. -/
 structure SlotFamily where
@@ -774,6 +866,12 @@ def hypercubeRuleSchemes (p : Presentation) : List Hypercube.RuleScheme :=
 /-- The generated judgment footprints of a presentation. -/
 def hypercubeJudgmentFootprints (p : Presentation) : List Hypercube.JudgmentFootprint :=
   p.hypercubeRuleSchemes.flatMap Hypercube.RuleScheme.footprints
+
+/-- The center of this presentation under explicit generated slot constraints. -/
+def hypercubeConstrainedCenter (p : Presentation)
+    (constraints : List Hypercube.SlotConstraint) :
+    List (Hypercube.SortAssignment Hypercube.Slot) :=
+  Hypercube.constrainedCenter p.hypercubeSlots constraints
 
 end Presentation
 

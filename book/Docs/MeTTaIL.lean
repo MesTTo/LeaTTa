@@ -228,19 +228,23 @@ The Lean file checks that finite condition directly. `Equation.admissible_iff` s
 for one equation agrees with the all-valuations condition. `centerMember_iff` lifts that to a list of
 equations. `mem_equationalCenter_iff`, `equationalCenter_sound`, and `equationalCenter_complete` say the
 computed center is exactly the raw hypercube filtered by those equation obligations. The same file also
-extracts `RewriteDecl.modalSites` from rewrite left-hand-side subterms and extracts `Rule.spatialHead`
-from term constructors. `ModalSite.slotFamily`, `SpatialHead.slotFamily`, and
-`Presentation.hypercubeSlots` then build the concrete slots. `ModalSite.ruleSchemes`,
-`SpatialHead.ruleSchemes`, and `Presentation.hypercubeRuleSchemes` record the generated rule surfaces.
-For modal families, those surfaces are formation, introduction, elimination step, reduct typing, and lax
-conversion. For spatial families, they are formation, introduction, and elimination.
-`Presentation.hypercubeJudgmentFootprints` records the slot footprint of those generated judgments:
-rely sorts, argument sorts, subject typings, reduct typings, rewrite steps, diamond typings, and
-structural motives. Lean also proves that every footprint slot is a slot of the generated family it came
-from. The presentation-facing modal and spatial sites, their slot families, their rule-scheme
-descriptors, and their judgment footprints exist in Lean now. The remaining pass is to interpret those
-footprints as full typing judgments, derive the sort-level equations from source equations and rewrite
-laws, and prove subject reduction for the generated system.
+adds `SlotConstraint` for explicit generated slot equalities. `constrainedCenter` and
+`Presentation.hypercubeConstrainedCenter` feed those slot equalities through the existing equation
+checker, and `mem_constrainedCenter_iff` characterizes the result as raw slot assignment plus direct
+satisfaction of each listed equality. The file extracts `RewriteDecl.modalSites` from rewrite
+left-hand-side subterms and extracts `Rule.spatialHead` from term constructors.
+`ModalSite.slotFamily`, `SpatialHead.slotFamily`, and `Presentation.hypercubeSlots` then build the
+concrete slots. `ModalSite.ruleSchemes`, `SpatialHead.ruleSchemes`, and
+`Presentation.hypercubeRuleSchemes` record the generated rule surfaces. For modal families, those
+surfaces are formation, introduction, elimination step, reduct typing, and lax conversion. For spatial
+families, they are formation, introduction, and elimination. `Presentation.hypercubeJudgmentFootprints`
+records the slot footprint of those generated judgments: rely sorts, argument sorts, subject typings,
+reduct typings, rewrite steps, diamond typings, and structural motives. Lean also proves that every
+footprint slot is a slot of the generated family it came from. The presentation-facing modal and spatial
+sites, their slot families, their explicit slot constraints, their rule-scheme descriptors, and their
+judgment footprints exist in Lean now. The remaining pass is to derive those constraints automatically
+from source equations and rewrite laws, interpret the footprints as full typing judgments, and prove
+subject reduction for the generated system.
 
 `MeTTaIL.Semantics.KnottedUniverse` adds the red/black surface that sits under that target. It defines
 the two colours, the four visible sorts, the red and black quote/drop equivalences,

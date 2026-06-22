@@ -230,9 +230,13 @@ equations. `mem_equationalCenter_iff`, `equationalCenter_sound`, and `equational
 computed center is exactly the raw hypercube filtered by those equation obligations. The same file also
 extracts `RewriteDecl.modalSites` from rewrite left-hand-side subterms and extracts `Rule.spatialHead`
 from term constructors. `ModalSite.slotFamily`, `SpatialHead.slotFamily`, and
-`Presentation.hypercubeSlots` then build the concrete slots. So the presentation-facing modal and
-spatial sites, and their slot families, exist in Lean now. The remaining pass is to turn those families
-into generated typing rules and sort-level equations.
+`Presentation.hypercubeSlots` then build the concrete slots. `ModalSite.ruleSchemes`,
+`SpatialHead.ruleSchemes`, and `Presentation.hypercubeRuleSchemes` record the generated rule surfaces.
+For modal families, those surfaces are formation, introduction, elimination step, reduct typing, and lax
+conversion. For spatial families, they are formation, introduction, and elimination. So the
+presentation-facing modal and spatial sites, their slot families, and their rule-scheme descriptors
+exist in Lean now. The remaining pass is to interpret those descriptors as full typing judgments,
+derive the sort-level equations, and prove subject reduction for the generated system.
 
 `MeTTaIL.Semantics.KnottedUniverse` adds the red/black surface that sits under that target. It defines
 the two colours, the four visible sorts, the red and black quote/drop equivalences,

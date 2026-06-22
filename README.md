@@ -397,9 +397,13 @@ proves `Equation.admissible_iff`, `centerMember_iff`, `mem_equationalCenter_iff`
 `equationalCenter_sound`, and `equationalCenter_complete`. The same file also extracts
 `RewriteDecl.modalSites` from rewrite left-hand-side subterms and `Rule.spatialHead` values from term
 constructors. `ModalSite.slotFamily`, `SpatialHead.slotFamily`, and `Presentation.hypercubeSlots`
-then build the concrete slot descriptors used by the generated hypercube. The typing-rule generator is
-still future work. The checked part is the site extraction, slot-family construction, and equation
-filter that generated modal and spatial families must pass.
+then build the concrete slot descriptors used by the generated hypercube. `ModalSite.ruleSchemes`,
+`SpatialHead.ruleSchemes`, and `Presentation.hypercubeRuleSchemes` record the generated rule surfaces:
+modal formation, introduction, elimination step, reduct typing, and lax conversion, plus spatial
+formation, introduction, and elimination. The checked part is site extraction, slot-family construction,
+rule-scheme enumeration, and the equation filter that generated modal and spatial families must pass.
+The next unchecked layer is the interpretation of those rule schemes as full typing judgments, then
+subject reduction for the generated system.
 
 `MeTTaIL/Semantics/KnottedUniverse.lean` adds the checked red/black surface that the rset, rho, and
 knotted-topoi papers need. It defines the colours, the four visible sorts, the two quote/drop

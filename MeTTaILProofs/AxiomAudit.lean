@@ -121,6 +121,13 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.Hypercube.ModalSite.outputSlot_mem_slotFamily
 #print axioms MeTTaIL.Hypercube.SpatialHead.slotFamily_slots_length
 #print axioms MeTTaIL.Hypercube.SpatialHead.outputSlot_mem_slotFamily
+#print axioms MeTTaIL.Hypercube.TypeFamily.slotFamily_modal
+#print axioms MeTTaIL.Hypercube.TypeFamily.slotFamily_spatial
+#print axioms MeTTaIL.Hypercube.RuleScheme.outputSlot_mem_slotFamily
+#print axioms MeTTaIL.Hypercube.ModalSite.ruleKinds_length
+#print axioms MeTTaIL.Hypercube.ModalSite.ruleSchemes_length
+#print axioms MeTTaIL.Hypercube.SpatialHead.ruleKinds_length
+#print axioms MeTTaIL.Hypercube.SpatialHead.ruleSchemes_length
 #print axioms MeTTaIL.Denotational.PathRSpace.prefix_trans
 #print axioms MeTTaIL.Denotational.PathRSpace.comparable_iff_nonempty_subspaceBranch
 #print axioms MeTTaIL.Denotational.PathRSpace.SubspaceSystem.branch_of_step

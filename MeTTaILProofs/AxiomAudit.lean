@@ -117,6 +117,9 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.AST.mem_hypercubeSubterms_root
 #print axioms MeTTaIL.Hypercube.SlotFamily.outputSlot_mem_slots
 #print axioms MeTTaIL.Hypercube.SlotFamily.head_sortOp_eq
+#print axioms MeTTaIL.Hypercube.SlotFamily.inputFootprint_within
+#print axioms MeTTaIL.Hypercube.SlotFamily.outputFootprint_within
+#print axioms MeTTaIL.Hypercube.SlotFamily.allFootprint_within
 #print axioms MeTTaIL.Hypercube.ModalSite.slotFamily_slots_length
 #print axioms MeTTaIL.Hypercube.ModalSite.outputSlot_mem_slotFamily
 #print axioms MeTTaIL.Hypercube.SpatialHead.slotFamily_slots_length
@@ -124,10 +127,14 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.Hypercube.TypeFamily.slotFamily_modal
 #print axioms MeTTaIL.Hypercube.TypeFamily.slotFamily_spatial
 #print axioms MeTTaIL.Hypercube.RuleScheme.outputSlot_mem_slotFamily
+#print axioms MeTTaIL.Hypercube.RuleScheme.footprintSlots_subset_slots
+#print axioms MeTTaIL.Hypercube.RuleScheme.footprints_within
 #print axioms MeTTaIL.Hypercube.ModalSite.ruleKinds_length
 #print axioms MeTTaIL.Hypercube.ModalSite.ruleSchemes_length
+#print axioms MeTTaIL.Hypercube.ModalSite.ruleSchemes_compatible
 #print axioms MeTTaIL.Hypercube.SpatialHead.ruleKinds_length
 #print axioms MeTTaIL.Hypercube.SpatialHead.ruleSchemes_length
+#print axioms MeTTaIL.Hypercube.SpatialHead.ruleSchemes_compatible
 #print axioms MeTTaIL.Denotational.PathRSpace.prefix_trans
 #print axioms MeTTaIL.Denotational.PathRSpace.comparable_iff_nonempty_subspaceBranch
 #print axioms MeTTaIL.Denotational.PathRSpace.SubspaceSystem.branch_of_step

@@ -400,10 +400,13 @@ constructors. `ModalSite.slotFamily`, `SpatialHead.slotFamily`, and `Presentatio
 then build the concrete slot descriptors used by the generated hypercube. `ModalSite.ruleSchemes`,
 `SpatialHead.ruleSchemes`, and `Presentation.hypercubeRuleSchemes` record the generated rule surfaces:
 modal formation, introduction, elimination step, reduct typing, and lax conversion, plus spatial
-formation, introduction, and elimination. The checked part is site extraction, slot-family construction,
-rule-scheme enumeration, and the equation filter that generated modal and spatial families must pass.
-The next unchecked layer is the interpretation of those rule schemes as full typing judgments, then
-subject reduction for the generated system.
+formation, introduction, and elimination. `Presentation.hypercubeJudgmentFootprints` records which
+generated judgments read the input slots, output slot, or whole family slot list, and Lean proves that
+each footprint stays inside its generated family. The checked part is site extraction, slot-family
+construction, rule-scheme enumeration, judgment-footprint enumeration, and the equation filter that
+generated modal and spatial families must pass. The next unchecked layer is the interpretation of those
+footprints as full typing judgments, the derivation of sort equations from source equations and rewrite
+laws, then subject reduction for the generated system.
 
 `MeTTaIL/Semantics/KnottedUniverse.lean` adds the checked red/black surface that the rset, rho, and
 knotted-topoi papers need. It defines the colours, the four visible sorts, the two quote/drop

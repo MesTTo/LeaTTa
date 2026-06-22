@@ -177,6 +177,17 @@ contexts under the translation, target congruence pulls back to source congruenc
 theorems are the part of the knotted-topoi story that can already be stated before the missing
 MeTTaIL-to-rho desugaring theorem is supplied.
 
+The native-type question has its own boundary now. Dedukti and Lambdapi are useful comparison points:
+they put dependent types and user-defined rewriting rules in the same logical framework
+{citep deduktiLogicalFramework}[] {citep lambdapiDocs}[]. `MeTTaIL.Semantics.Native` keeps the MeTTaIL
+obligation explicit instead of treating host values as magic. `StepTranslation` says that a translated
+system matches labelled steps in both directions on translated states. From that, Lean proves
+`StepTranslation.bisimilarityPreserving` and `StepTranslation.bisimilarityReflecting`. A
+`NativeCarrier` then adds a native type assignment, native contexts, a commuting context square, and a
+source fully abstract model. `NativeCarrier.toFullyAbstractModel` pulls full abstraction back to the
+native surface, and `NativeCarrier.typeOf_eq_of_step` exposes the native preservation obligation. The
+module does not instantiate concrete native MeTTaIL types yet.
+
 `MeTTaIL.Semantics.KnottedUniverse` adds the red/black surface that sits under that target. It defines
 the two colours, the four visible sorts, the red and black quote/drop equivalences,
 structure-preserving morphisms between reflective universes, a category of those universes, and the

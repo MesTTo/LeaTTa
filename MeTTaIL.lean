@@ -57,6 +57,8 @@ import MeTTaIL.Semantics.WellSorted
 import MeTTaIL.Semantics.OSLF
 -- Runtime: the denotational-semantics interface for context-labelled systems and full abstraction.
 import MeTTaIL.Semantics.Denotational
+-- Runtime: native-carrier obligations for interpreted types inside MeTTaIL presentations.
+import MeTTaIL.Semantics.Native
 -- Runtime: the red/black reflective-universe and final-coalgebra interfaces.
 import MeTTaIL.Semantics.KnottedUniverse
 -- Runtime: the finitary rset core with red sets whose atoms are black sets, and conversely.

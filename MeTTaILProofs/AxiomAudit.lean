@@ -6,7 +6,7 @@ Purpose: Build-visible axiom audit for the headline theorem surfaces. This modul
   declarations. The output should contain only Lean/Mathlib's standard classical axioms where the imported
   theorem uses Mathlib's classical infrastructure, and no project axiom or placeholder.
 Imports: MettaHyperonFull.Operational.Properties, MeTTaIL.Semantics.Denotational,
-  MeTTaIL.Semantics.KnottedUniverse, MeTTaIL.Semantics.RSet,
+  MeTTaIL.Semantics.Native, MeTTaIL.Semantics.KnottedUniverse, MeTTaIL.Semantics.RSet,
   MeTTaIL.Semantics.InteractingTrieMap, MeTTaIL.Semantics.Rho, MeTTaIL.Semantics.RhoKMachine,
   MeTTaIL.Semantics.RhoCompiler, MeTTaILProofs.ConditionalCP, MeTTaILProofs.CPDemo,
   MeTTaILProofs.ConditionalCPRuntime,
@@ -17,6 +17,7 @@ Open obligations: keep this list aligned with the headline claims in the docs an
 -/
 import MettaHyperonFull.Operational.Properties
 import MeTTaIL.Semantics.Denotational
+import MeTTaIL.Semantics.Native
 import MeTTaIL.Semantics.KnottedUniverse
 import MeTTaIL.Semantics.RSet
 import MeTTaIL.Semantics.InteractingTrieMap
@@ -60,6 +61,13 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.Denotational.congruence_of_bisimilarity_translation
 #print axioms MeTTaIL.Denotational.FullyAbstractModel.eq_iff_bisimilar
 #print axioms MeTTaIL.Denotational.FullyAbstractModel.pullback
+#print axioms MeTTaIL.Denotational.StepTranslation.bisimilarityPreserving
+#print axioms MeTTaIL.Denotational.StepTranslation.bisimilarityReflecting
+#print axioms MeTTaIL.Denotational.NativeCarrier.source_bisimilar_of_native
+#print axioms MeTTaIL.Denotational.NativeCarrier.native_bisimilar_of_source
+#print axioms MeTTaIL.Denotational.NativeCarrier.toFullyAbstractModel
+#print axioms MeTTaIL.Denotational.NativeCarrier.eq_iff_bisimilar
+#print axioms MeTTaIL.Denotational.NativeCarrier.typeOf_eq_of_step
 #print axioms MeTTaIL.Denotational.PathRSpace.prefix_trans
 #print axioms MeTTaIL.Denotational.PathRSpace.comparable_iff_nonempty_subspaceBranch
 #print axioms MeTTaIL.Denotational.PathRSpace.SubspaceSystem.branch_of_step

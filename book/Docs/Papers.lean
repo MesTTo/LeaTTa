@@ -37,6 +37,28 @@ def enrichedLawvereSemantics : ArXiv where
   year := 2017
   id := "1704.03080"
 
+/-- Assaf et al.; Dedukti as a logical framework with user-defined rewrite rules. -/
+def deduktiLogicalFramework : ArXiv where
+  title := inlines!"Dedukti: a Logical Framework based on the λΠ-Calculus Modulo Theory"
+  authors := #[inlines!"Ali Assaf", inlines!"Guillaume Burel", inlines!"Raphaël Cauderlier",
+               inlines!"David Delahaye", inlines!"Gilles Dowek", inlines!"Catherine Dubois",
+               inlines!"Frédéric Gilbert", inlines!"Pierre Halmagrand", inlines!"Olivier Hermant",
+               inlines!"Ronan Saillard"]
+  year := 2023
+  id := "2311.07185"
+
+/-- Deducteam; Lambdapi user documentation on dependent types with rewriting rules. -/
+def lambdapiDocs : Article where
+  title := inlines!"What is Lambdapi?"
+  authors := #[inlines!"Deducteam"]
+  journal := inlines!"Documentation"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://lambdapi.readthedocs.io/en/latest/about.html"
+
 /-- Meredith; the red/black reflective set-theory construction used by the rho and topos papers. -/
 def knottedUniverse : Article where
   title := inlines!"A Knotted Universe: a new notion of reflective set theories"

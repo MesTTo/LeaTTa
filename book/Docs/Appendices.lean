@@ -278,14 +278,19 @@ The map below states what each source supports in the Lean development, and what
    {citep continuedGSLTCost}[] {citep costAccountedRho}[] {citep costSpacetime}[]
    {citep knottedTopoi}[] support the denotational target. The ITM, CZ2, and Jetta repositories
    {citep itmScalaState}[] {citep cz2Repository}[] {citep jettaRuntime}[] support the store-facing
-   interface. The Lean surface is
-   `MeTTaIL/Semantics/Denotational.lean`, `MeTTaIL/Semantics/KnottedUniverse.lean`,
+   interface. Dedukti and Lambdapi are the closest proof-framework comparison points for native types
+   plus rewriting {citep deduktiLogicalFramework}[] {citep lambdapiDocs}[]. The Lean surface is
+   `MeTTaIL/Semantics/Denotational.lean`, `MeTTaIL/Semantics/Native.lean`,
+   `MeTTaIL/Semantics/KnottedUniverse.lean`,
    `MeTTaIL/Semantics/RSet.lean`, `MeTTaIL/Semantics/Rho.lean`,
    `MeTTaIL/Semantics/RhoKMachine.lean`, `MeTTaIL/Semantics/RhoCompiler.lean`, and
    `MeTTaIL/Semantics/InteractingTrieMap.lean`.
    The checked claims include
    `bisimilar_isBisimulation`, `fullyAbstract_of_kernel`, `FullyAbstractModel.eq_iff_bisimilar`,
    `fullyAbstract_of_calibration`, `fullyAbstract_of_observation_calibration`,
+   `StepTranslation.bisimilarityPreserving`, `StepTranslation.bisimilarityReflecting`,
+   `NativeCarrier.toFullyAbstractModel`, `NativeCarrier.eq_iff_bisimilar`,
+   `NativeCarrier.typeOf_eq_of_step`,
    `PathRSpace.comparable_iff_nonempty_subspaceBranch`, `Costed.costedStep_forget`,
    `Costed.Trace.to_reflTransGen`, `eval_rewrite_trace`, `Rho.listener_step`,
    `Rho.RSpace.comm_to_step_one`, `Rho.KMachine.creation_to_struct`, `Rho.KMachine.step_to_rho`,

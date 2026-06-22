@@ -341,6 +341,15 @@ MeTTaIL-to-rho operational correspondence, formalize the trie store, prove the c
 construct the cost endofunctor, or instantiate the observational-calibration theorem for each object
 language.
 
+`MeTTaIL/Semantics/Native.lean` records the boundary for native carriers inside a MeTTaIL language
+definition. A native carrier does not get to bypass the semantics. It has to embed into a source
+transition system, match labelled steps in both directions on embedded states, preserve its native type
+assignment, and commute with the source context operation. `StepTranslation.bisimilarityPreserving` and
+`StepTranslation.bisimilarityReflecting` prove that exact step matching gives the two bisimilarity
+directions needed by the existing pullback theorem. `NativeCarrier.toFullyAbstractModel` then says that
+such a carrier inherits the source fully abstract model. The file does not instantiate concrete native
+types yet; it states the obligations that a future native-type proof system has to discharge.
+
 `MeTTaIL/Semantics/KnottedUniverse.lean` adds the checked red/black surface that the rset, rho, and
 knotted-topoi papers need. It defines the colours, the four visible sorts, the two quote/drop
 equivalences, structure-preserving morphisms between reflective universes, a category of those

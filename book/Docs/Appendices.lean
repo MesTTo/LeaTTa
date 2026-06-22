@@ -290,8 +290,8 @@ The map below states what each source supports in the Lean development, and what
    `Rho.Compiler.applyBaseRewrite_reduces_and_emits`. The claim is not that the knotted topos, full rho
    desugaring, trie store, cut distributive law, cost endofunctor, causal-set functor, or final
    coalgebra has been constructed in Lean. The checked modules state the proof interfaces, small COMM
-   kernels, the K ordinary and persistent input/output cell steps, and the packet-level base-rewrite
-   bridge that those constructions must instantiate.
+   kernels, the K candidate-ID guarded ordinary and persistent input/output cell steps, and the
+   packet-level base-rewrite bridge that those constructions must instantiate.
  * The MeTTa-calculus, Turing-to-rho, and optimal-channel papers {citep mettaCalculus}[]
    {citep rhoViaTuring}[] {citep optimalChannels}[] support the compiler direction from MeTTaIL/GSLT
    presentations to rho/RSpace. The current release uses them as a roadmap, not as completed

@@ -49,25 +49,30 @@ def contractumEmitted (rd : RewriteDecl) (source contractum : AST) : Proc :=
     (.out (substName (contractumBinder rd) (.quote (encodeAST contractum)) (termLocation source))
       (encodeAST contractum))
 
-/-- K receive cell installed for the packet-level direct-rule bridge. -/
+/-- K receive cell installed for the packet-level direct-rule bridge. Candidate `1` is the packet. -/
 def contractumInputCell (rd : RewriteDecl) (source : AST) : KMachine.InCell where
+  id := 0
   chan := ruleChannel rd
   binder := contractumBinder rd
   body := .out (termLocation source) (.drop (.var (contractumBinder rd)))
   persistent := true
+  candidates := [1]
 
-/-- K output cell carrying the matched contractum packet. -/
+/-- K output cell carrying the matched contractum packet. Candidate `0` is the listener. -/
 def contractumOutputCell (rd : RewriteDecl) (contractum : AST) : KMachine.OutCell where
+  id := 1
   chan := ruleChannel rd
   msg := encodeAST contractum
   persistent := false
+  candidates := [0]
 
 /-- The packet-level direct-rule bridge is a K-machine persistent-receive step. -/
 theorem contractum_kstep (rd : RewriteDecl) (source contractum : AST) :
     KMachine.Step
       (KMachine.receiveSource (contractumInputCell rd source) (contractumOutputCell rd contractum))
       (KMachine.receiveTarget (contractumInputCell rd source) (contractumOutputCell rd contractum)) := by
-  exact KMachine.Step.persistentReceive rfl rfl rfl
+  exact KMachine.Step.persistentReceive rfl (by
+    simp [KMachine.CandidatePair, contractumInputCell, contractumOutputCell]) rfl rfl
 
 /-- The compiler K-step reifies to rho reduction modulo parallel-structure laws. -/
 theorem contractum_kstep_to_rho (rd : RewriteDecl) (source contractum : AST) :

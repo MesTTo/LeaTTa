@@ -2,13 +2,13 @@ import Lake
 open Lake DSL
 
 package «MettaHyperonFull» where
-  version := v!"1.0.3"
+  version := v!"1.0.4"
   keywords := #["MeTTa", "Hyperon", "formal semantics", "metatheory", "verified interpreter"]
   leanOptions := #[⟨`autoImplicit, false⟩, ⟨`relaxedAutoImplicit, false⟩]
 
--- Mathlib backs the *metatheory layer only* (Multiset, Relation.ReflTransGen, order /
+-- Mathlib backs the *metatheory layer only* (Multiset, Relation.ReflTransGen, order and
 -- decidability infrastructure, aesop). Pinned to the release whose toolchain matches ours
--- (leanprover/lean4:v4.31.0). The executable kernel deliberately does NOT import it:
+-- (leanprover/lean4:v4.31.0). The executable kernel deliberately does not import it:
 -- Multiset/Finset/Real are noncomputable, so the interpreter that must `lake exe` stays on
 -- List / Std.HashMap. This split is about computability, not dependency purity.
 require mathlib from git
@@ -20,7 +20,7 @@ lean_lib «MettaHyperonFull» where
 
 -- Proofs ABOUT the kernel (determinism / result well-definedness, confluence of the
 -- deterministic fragment, optimization-preservation, α-equivalence, type soundness).
--- A separate target so `LeaTTa` — the runnable binary, rooted at `Main` — never links
+-- A separate target so the runnable `LeaTTa` binary, rooted at `Main`, never links
 -- Mathlib.
 @[default_target]
 lean_lib «Metatheory» where

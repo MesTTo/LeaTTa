@@ -1,51 +1,53 @@
-# LeaTTa 1.0.3
+# LeaTTa 1.0.4
 
-LeaTTa 1.0.3 extends the checked MeTTaIL runtime and denotational track. It keeps the
-1.0 release scope honest: the runnable runtime is real, the Cordial Miners bridge is in
-the checked runtime path, and the knotted-topoi work is represented by checked interfaces
-and small kernels, not by a claimed finished topos construction.
+LeaTTa 1.0.4 is a focused metatheory release. It builds on the 1.0 runtime line by making the
+red/black denotational track more explicit in Lean. The runnable MeTTaIL runtime and Cordial Miners
+bridge remain in scope, while the knotted topos, the full MeTTaIL-to-rho operational correspondence,
+and language-specific observational calibration remain open work.
 
 ## Announcement
 
-LeaTTa 1.0.3 adds three pieces to the MeTTaIL line.
+LeaTTa 1.0.4 adds five checked pieces to the MeTTaIL denotational line.
 
-The rho bridge now has a clearer K-machine staging path. The release includes candidate-ID
-gating, ordinary and persistent K steps, K cell creation, named match-readiness helpers, and
-a packet-level theorem that ties a successful MeTTaIL base rewrite to a ready K communication
-step and the corresponding rho listener emission.
+The rset paper now has a finite Lean core. `MeTTaIL.Semantics.RSet` defines finite red and black sets,
+atoms as sealed opposite-colour sets, finite support for atom renaming, colour-swap equivalences, and
+an exact-member extensional quotient with finite union laws. Those union laws prove that empty is
+neutral and that union is idempotent, commutative, and associative at the extensional level.
 
-The denotational side now has the first checked red/black and store-facing surfaces. The
-new `MeTTaIL.Semantics.KnottedUniverse` module records the four visible red/black sorts,
-quote/drop round trips, a generic final-coalgebra interface, and the bridge from final
-behaviour models to the existing `FullyAbstractModel`. The new
-`MeTTaIL.Semantics.InteractingTrieMap` module records the reflective `RITM` equation from
-the ITM sketch and connects Jetta-style packed binding addresses to the path-key RSpace
-prefix relation.
+The rset core is tied back to the generic red/black interface. The `reflective_*` theorems identify
+the `ReflectiveUniverse` quote/drop and colour-swap fields with the concrete rset functions. This keeps
+the rset work connected to the knotted-universe surface instead of living as a separate model.
 
-The full-abstraction interface now names the last calibration step explicitly.
-`BisimilarityCalibration` states when the chosen context-labelled bisimilarity agrees with an
-object language's observational equivalence, and
-`fullyAbstract_of_observation_calibration` turns the internal theorem into the user-facing
-observational theorem.
+The coalgebra side now uses standard category-theory language. `CoalgebraHom` gives the morphisms
+between coalgebras for a `TypeEndofunctor`, `Coalgebra.category` packages them as a Mathlib category,
+and `FinalCoalgebra.isTerminal` states that a final coalgebra is a terminal object in that category.
 
-The next step is still bridging MeTTaIL and Cordial Miners more deeply, while carrying the rho
-and knotted-universe work from interfaces into concrete operational correspondence and finality
-proofs.
+The final-behaviour model now exposes the last calibration step directly.
+`FinalBehaviourModel.fullyAbstractFor` calibrates final-behaviour equality against a chosen
+object-language equivalence, and `FinalBehaviourModel.fullyAbstractForObservations` does the same for
+an observation family. These theorems are axiom-free.
+
+The README and Verso book now state the current scope more directly. The project has checked interfaces
+and kernels for the denotational route. It does not yet construct the knotted topos, prove finality for
+the real rho behaviour functor, or prove the full MeTTaIL-to-rho desugaring theorem.
+
+The next step is still to carry the MeTTaIL and Cordial Miners bridge deeper while turning the rho and
+knotted-universe interfaces into concrete correspondence and finality proofs.
 
 ## Highlights
 
 - The minimal MeTTa interpreter and standard library still pass Hyperon's vendored oracle corpus:
   270 assertions across 22 files.
-- `LeaTTa --mettail FILE --term TERM [--fuel N]` still runs a term through a small editable
-  MeTTaIL dialect file.
+- `LeaTTa --mettail FILE --term TERM [--fuel N]` still runs a term through a small editable MeTTaIL
+  dialect file.
 - Cordial Miners remains hosted as a MeTTaIL runtime presentation with AC-aware state and inbox
   rewriting.
+- `MeTTaIL.Semantics.RSet` adds finite red/black rsets, atom opacity, finite support, colour-swap
+  equivalences, and extensional union laws.
+- `MeTTaIL.Semantics.KnottedUniverse` now states final coalgebras as terminal objects in the category
+  of coalgebras and links final-behaviour models to observational calibration.
 - The release bundles include `examples/bool.mettail`, so the MeTTaIL runtime path can be tested
   without a Lean toolchain.
-- The book and README now describe the rho K bridge, the knotted-universe interface, the ITM and
-  Jetta store sources, and the observational-calibration theorem.
-- The GitHub Pages workflow builds the Verso book and API docs for the kernel, metatheory,
-  operational semantics, MeTTaIL, MeTTaILProofs, and CordialMiners targets.
 
 ## Quick Checks
 
@@ -78,12 +80,12 @@ cd book && lake exe docs
 
 ## Scope
 
-The `--mettail` file format covers `sort`, `term`, and base `rewrite` declarations over
-S-expression terms. The format is the CLI path into the checked runtime, not the full BNFC
-MeTTaIL surface parser. The AC matcher used by the Cordial Miners runtime bridge covers the
-linear collection fragment needed by those rules: one fixed payload and one rest variable.
+The `--mettail` file format covers `sort`, `term`, and base `rewrite` declarations over S-expression
+terms. The format is the CLI path into the checked runtime, not the full BNFC MeTTaIL surface parser.
+The AC matcher used by the Cordial Miners runtime bridge covers the linear collection fragment needed
+by those rules: one fixed payload and one rest variable.
 
-The rho and denotational additions say what the future model has to prove and check the small
-pieces already in reach. The release does not claim the knotted topos, the full MeTTaIL-to-rho
-desugaring theorem, the trie store, the cut distributive law, the cost endofunctor, or a
-language-specific observational-calibration theorem.
+The rho and denotational additions say what the future model has to prove and check the pieces already
+in reach. The release does not claim the knotted topos, the full MeTTaIL-to-rho desugaring theorem, the
+trie store, the cut distributive law, the cost endofunctor, or a language-specific
+observational-calibration theorem.

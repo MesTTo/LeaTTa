@@ -5,18 +5,24 @@ Purpose: Checked red/black and final-coalgebra interfaces for the knotted-univer
   The source papers use four sorts: red sets, red atoms, black sets, and black atoms. Red
   atoms are black sets seen opaquely, and black atoms are red sets seen opaquely. The rho
   denotation then targets a final behaviour coalgebra. This file records those interfaces and
-  the round-trip laws they force. It does not construct the knotted topos.
-Imports: MeTTaIL.Semantics.Denotational, Mathlib.Logic.Equiv.Basic
+  the round-trip laws they force. It also gives coalgebras their standard morphisms and
+  category instance, so `FinalCoalgebra` can be read as a terminal object there. It does not
+  construct the knotted topos.
+Imports: MeTTaIL.Semantics.Denotational, Mathlib.CategoryTheory.Limits.Shapes.IsTerminal
+  Mathlib.Logic.Equiv.Basic
 Trusted boundary: none
 Main exports: Colour, Colour.swap, Colour.swap_swap, ReflectiveUniverse,
   ReflectiveUniverse.dropRed_quoteRed, ReflectiveUniverse.quoteRed_dropRed,
   ReflectiveUniverse.dropBlack_quoteBlack, ReflectiveUniverse.quoteBlack_dropBlack,
-  TypeEndofunctor, Coalgebra, FinalCoalgebra, FinalBehaviourModel
+  TypeEndofunctor, Coalgebra, CoalgebraHom, Coalgebra.category, FinalCoalgebra,
+  FinalCoalgebra.finalHom, FinalCoalgebra.finalHom_unique, FinalCoalgebra.isTerminal,
+  FinalBehaviourModel
 Open obligations: instantiate ReflectiveUniverse with the knotted topos, prove that the behaviour
   functor has the intended final coalgebra there, and connect the resulting denotation to the
   MeTTaIL-to-rho operational correspondence.
 -/
 import MeTTaIL.Semantics.Denotational
+import Mathlib.CategoryTheory.Limits.Shapes.IsTerminal
 import Mathlib.Logic.Equiv.Basic
 
 namespace MeTTaIL
@@ -139,6 +145,69 @@ structure Coalgebra (F : TypeEndofunctor.{u}) where
   carrier : Type u
   out : carrier → F.obj carrier
 
+/-- A morphism of coalgebras. -/
+structure CoalgebraHom {F : TypeEndofunctor.{u}} (C D : Coalgebra F) where
+  map : C.carrier → D.carrier
+  comm : ∀ x, D.out (map x) = F.map map (C.out x)
+
+namespace CoalgebraHom
+
+/-- The identity coalgebra morphism. -/
+def id {F : TypeEndofunctor.{u}} (C : Coalgebra F) : CoalgebraHom C C where
+  map := fun x => x
+  comm := by
+    intro x
+    exact (F.map_id (C.out x)).symm
+
+/-- Compose coalgebra morphisms in diagram order. -/
+def comp {F : TypeEndofunctor.{u}} {A B C : Coalgebra F}
+    (g : CoalgebraHom B C) (f : CoalgebraHom A B) : CoalgebraHom A C where
+  map := g.map ∘ f.map
+  comm := by
+    intro x
+    calc
+      C.out (g.map (f.map x)) = F.map g.map (B.out (f.map x)) := g.comm (f.map x)
+      _ = F.map g.map (F.map f.map (A.out x)) := by rw [f.comm x]
+      _ = F.map (g.map ∘ f.map) (A.out x) := by
+        exact (F.map_comp f.map g.map (A.out x)).symm
+
+/-- Coalgebra morphisms are equal when their maps are pointwise equal. -/
+@[ext]
+theorem ext {F : TypeEndofunctor.{u}} {C D : Coalgebra F} {f g : CoalgebraHom C D}
+    (h : ∀ x, f.map x = g.map x) : f = g := by
+  cases f with
+  | mk fmap fcomm =>
+    cases g with
+    | mk gmap gcomm =>
+      dsimp at h
+      have hmap : fmap = gmap := funext h
+      cases hmap
+      rfl
+
+end CoalgebraHom
+
+namespace Coalgebra
+
+/-- Coalgebras and coalgebra morphisms form a category. -/
+instance category (F : TypeEndofunctor.{u}) : CategoryTheory.Category.{u} (Coalgebra F) where
+  Hom C D := CoalgebraHom C D
+  id C := CoalgebraHom.id C
+  comp f g := CoalgebraHom.comp g f
+  id_comp := by
+    intro X Y f
+    ext x
+    rfl
+  comp_id := by
+    intro X Y f
+    ext x
+    rfl
+  assoc := by
+    intro W X Y Z f g h
+    ext x
+    rfl
+
+end Coalgebra
+
 /-- A final coalgebra, stated by its universal map from every coalgebra. -/
 structure FinalCoalgebra (F : TypeEndofunctor.{u}) where
   terminal : Coalgebra F
@@ -155,6 +224,27 @@ theorem lift_commutes {F : TypeEndofunctor.{u}} (νF : FinalCoalgebra F)
     (C : Coalgebra F) (x : C.carrier) :
     νF.terminal.out (νF.lift C x) = F.map (νF.lift C) (C.out x) :=
   νF.lift_comm C x
+
+/-- The final map, packaged as a coalgebra morphism. -/
+def finalHom {F : TypeEndofunctor.{u}} (final : FinalCoalgebra F)
+    (C : Coalgebra F) : CoalgebraHom C final.terminal where
+  map := final.lift C
+  comm := final.lift_comm C
+
+/-- Every coalgebra morphism into the final coalgebra is the final map. -/
+theorem finalHom_unique {F : TypeEndofunctor.{u}} (final : FinalCoalgebra F)
+    (C : Coalgebra F) (h : CoalgebraHom C final.terminal) :
+    h = final.finalHom C := by
+  apply CoalgebraHom.ext
+  intro x
+  exact congrFun (final.lift_unique C h.map h.comm) x
+
+/-- The final coalgebra is terminal in the category of coalgebras. -/
+def isTerminal {F : TypeEndofunctor.{u}} (final : FinalCoalgebra F) :
+    CategoryTheory.Limits.IsTerminal final.terminal :=
+  CategoryTheory.Limits.IsTerminal.ofUniqueHom
+    (fun C => final.finalHom C)
+    (fun C h => final.finalHom_unique C h)
 
 /-- `PUnit` is the final coalgebra for the identity functor. This checks the universal-property shape. -/
 def identity : FinalCoalgebra TypeEndofunctor.identity where

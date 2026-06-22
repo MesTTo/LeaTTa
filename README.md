@@ -268,8 +268,8 @@ What is checked now:
   congruence, and full abstraction;
 - a rho target fragment: names, quote/drop, persistent COMM, structural congruence for `|`, and the
   one-channel RSpace produce/consume shape used by the local `f1r3node` runtime;
-- a K-shaped rho machine fragment: `<In>` and `<Out>` cells for persistent receives and ordinary
-  outputs, with a theorem that the checked K step reifies to rho COMM modulo `|` structure;
+- a K-shaped rho machine fragment: `<In>` and `<Out>` cells for ordinary receives, persistent receives,
+  and ordinary outputs, with theorems that the checked K steps reify to rho COMM modulo `|` structure;
 - the first packet-level MeTTaIL-to-rho compiler bridge: when `applyBaseRewrite` produces a
   contractum, Lean proves both the corresponding `Reduces` step and a rho listener emission of the
   encoded contractum;
@@ -321,11 +321,13 @@ under `rholang/src/main/k/rholang/`. It is useful because it makes the operation
 `configuration.k` has `<In>`, `<Out>`, `<subst>`, and global candidate-ID cells;
 `sending-receiving.k` covers ordinary send/receive; `persistent-sending-receiving.k` separates
 persistent send `!!`, persistent receive `for (... <= C) { Q }`, and the persistent/persistent loop
-case. `MeTTaIL/Semantics/RhoKMachine.lean` now models the persistent receive branch used by compiled
-rewrite listeners. It defines K-style input and output cells, a one-step machine transition that keeps
-the persistent input installed and consumes the ordinary output, and `Rho.KMachine.step_to_rho`, which
-reifies that step to rho COMM modulo parallel structure. It does not yet model ordinary receives,
-persistent sends, persistent/persistent loops, candidate-ID bookkeeping, or the K matcher.
+case. `MeTTaIL/Semantics/RhoKMachine.lean` now models the ordinary receive and persistent receive
+branches used by the one-channel fragment. It defines K-style input and output cells, a one-step machine
+transition that consumes an ordinary input, another that keeps a persistent input installed, and
+`Rho.KMachine.step_to_rho`, which reifies those steps to rho COMM modulo parallel structure. The named
+branch theorems are `Rho.KMachine.ordinaryReceive_to_rho` and `Rho.KMachine.persistentReceive_to_rho`.
+The file does not yet model persistent sends, persistent/persistent loops, candidate-ID bookkeeping, or
+the K matcher.
 
 `MeTTaIL/Semantics/RhoCompiler.lean` is the first checked compiler bridge. It follows the direct-rule
 shape in `/tmp/mettail-rust-GSLT2rho/gslt2rho/rho_compile/src/compile.rs`: a rule has a persistent

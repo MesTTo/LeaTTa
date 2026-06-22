@@ -182,11 +182,12 @@ The same repo also carries an older K semantics in `rholang/src/main/k/rholang/`
 `<In>` and `<Out>` cell creation, candidate-ID bookkeeping, pattern matching, substitution, ordinary
 send/receive, persistent send, persistent receive, and the persistent/persistent loop case.
 
-`MeTTaIL.Semantics.RhoKMachine` now checks the persistent receive branch of that K machine. It defines
-K-style input and output cells, the local machine transition that keeps the persistent input installed
-and consumes the ordinary output, and `Rho.KMachine.step_to_rho`, which reifies that transition to rho
-COMM modulo parallel-structure laws. The file does not yet model ordinary receives, persistent sends,
-persistent/persistent loops, candidate-ID bookkeeping, or the K matcher.
+`MeTTaIL.Semantics.RhoKMachine` now checks the ordinary receive and persistent receive branches of that
+K machine. It defines K-style input and output cells, the local machine transition that consumes an
+ordinary input, the transition that keeps a persistent input installed, and `Rho.KMachine.step_to_rho`,
+which reifies both transitions to rho COMM modulo parallel-structure laws. The branch theorems are
+`Rho.KMachine.ordinaryReceive_to_rho` and `Rho.KMachine.persistentReceive_to_rho`. The file does not yet
+model persistent sends, persistent/persistent loops, candidate-ID bookkeeping, or the K matcher.
 
 `MeTTaIL.Semantics.RhoCompiler` adds the first checked compiler bridge. It follows the direct-rule
 shape in the `mettail-rust` GSLT2rho prototype: a rule has a persistent listener on a rule channel, and

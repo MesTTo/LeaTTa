@@ -2,14 +2,14 @@
 Module: MeTTaIL.Semantics.Rho
 Layer: Semantics
 Purpose: A rho-calculus target for the MeTTaIL-to-rho correspondence work. The syntax follows the
-  `RhoCalc` surface used by `mettail-rust`: zero, drop, output, persistent input, parallel
-  composition, and quoted processes as names. The reduction relation gives the two core rho moves:
-  drop a quote, and COMM between a persistent input and an output on the same channel. The RSpace
+  `RhoCalc` surface used by `mettail-rust`: zero, drop, output, ordinary input, persistent input,
+  parallel composition, and quoted processes as names. The reduction relation gives quote/drop, ordinary
+  one-shot COMM, and persistent COMM on one channel. The RSpace
   section records the local `f1r3node` runtime boundary: produce and consume carry persistent flags,
   consume matches a list of payloads, and one matched consume produces a body with bound names filled.
   The K semantics in `f1r3node/rholang/src/main/k/rholang` splits that story into creation,
   matching, substitution, ordinary send/receive, persistent send, and persistent receive rules. This
-  file models the persistent receive core used by compiled rewrite listeners, not the whole K machine.
+  file models the ordinary and persistent one-channel receive cores, not the whole K machine.
   Parallel contexts and structural congruence are explicit so later compiler proofs can state whether
   they reason syntactically or modulo `|`.
 Imports: MeTTaIL.Semantics.Denotational
@@ -34,11 +34,12 @@ mutual
     | var (ident : String)
     | quote (proc : Proc)
 
-  /-- A rho process. `input` is persistent, matching the listener form used by the compiler target. -/
+  /-- A rho process. `inputOnce` consumes one output; `input` is persistent and stays installed. -/
   inductive Proc where
     | zero
     | drop (name : Name)
     | out (chan : Name) (msg : Proc)
+    | inputOnce (chan : Name) (binder : String) (body : Proc)
     | input (chan : Name) (binder : String) (body : Proc)
     | par (left right : Proc)
 end
@@ -54,6 +55,10 @@ mutual
     | .zero => .zero
     | .drop n => .drop (substName x repl n)
     | .out chan msg => .out (substName x repl chan) (substProc x repl msg)
+    | .inputOnce chan binder body =>
+        let chan' := substName x repl chan
+        if binder == x then .inputOnce chan' binder body
+        else .inputOnce chan' binder (substProc x repl body)
     | .input chan binder body =>
         let chan' := substName x repl chan
         if binder == x then .input chan' binder body else .input chan' binder (substProc x repl body)
@@ -65,10 +70,16 @@ def parList : List Proc → Proc
   | [] => .zero
   | p :: ps => .par p (parList ps)
 
-/-- One rho reduction step. COMM keeps the input process, so compiled rewrite rules act as persistent
-    listeners. -/
+/-- One rho reduction step. Ordinary COMM consumes the input process. Persistent COMM keeps the input
+    process, so compiled rewrite rules act as listeners. -/
 inductive Step : Proc → Proc → Prop where
   | drop {p : Proc} : Step (.drop (.quote p)) p
+  | comm_once {chan : Name} {binder : String} {body msg : Proc} :
+      Step (.par (.inputOnce chan binder body) (.out chan msg))
+        (substProc binder (.quote msg) body)
+  | comm_once_symm {chan : Name} {binder : String} {body msg : Proc} :
+      Step (.par (.out chan msg) (.inputOnce chan binder body))
+        (substProc binder (.quote msg) body)
   | comm {chan : Name} {binder : String} {body msg : Proc} :
       Step (.par (.input chan binder body) (.out chan msg))
         (.par (.input chan binder body) (substProc binder (.quote msg) body))

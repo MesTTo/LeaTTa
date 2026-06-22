@@ -6,10 +6,10 @@ Purpose: Build-visible axiom audit for the headline theorem surfaces. This modul
   declarations. The output should contain only Lean/Mathlib's standard classical axioms where the imported
   theorem uses Mathlib's classical infrastructure, and no project axiom or placeholder.
 Imports: MettaHyperonFull.Operational.Properties, MeTTaIL.Semantics.Denotational,
-  MeTTaIL.Semantics.Native, MeTTaIL.Semantics.NativeGrammar, MeTTaIL.Semantics.KnottedUniverse,
-  MeTTaIL.Semantics.RSet, MeTTaIL.Semantics.InteractingTrieMap, MeTTaIL.Semantics.Rho,
-  MeTTaIL.Semantics.RhoKMachine, MeTTaIL.Semantics.RhoCompiler, MeTTaILProofs.ConditionalCP,
-  MeTTaILProofs.CPDemo,
+  MeTTaIL.Semantics.Native, MeTTaIL.Semantics.NativeGrammar, MeTTaIL.Semantics.NativeTypes,
+  MeTTaIL.Semantics.KnottedUniverse, MeTTaIL.Semantics.RSet, MeTTaIL.Semantics.InteractingTrieMap,
+  MeTTaIL.Semantics.Rho, MeTTaIL.Semantics.RhoKMachine, MeTTaIL.Semantics.RhoCompiler,
+  MeTTaILProofs.ConditionalCP, MeTTaILProofs.CPDemo,
   MeTTaILProofs.ConditionalCPRuntime,
   MeTTaILProofs.ACMatch, MeTTaILProofs.DistributiveLaw
 Trusted boundary: none
@@ -20,6 +20,7 @@ import MettaHyperonFull.Operational.Properties
 import MeTTaIL.Semantics.Denotational
 import MeTTaIL.Semantics.Native
 import MeTTaIL.Semantics.NativeGrammar
+import MeTTaIL.Semantics.NativeTypes
 import MeTTaIL.Semantics.KnottedUniverse
 import MeTTaIL.Semantics.RSet
 import MeTTaIL.Semantics.InteractingTrieMap
@@ -80,6 +81,28 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.Denotational.NativeConstructorView.constructorPredicate_iff
 #print axioms MeTTaIL.Denotational.NativeChecker.sound_of_reading
 #print axioms MeTTaIL.Denotational.NativeGaloisBridge.diamond_le_iff
+#print axioms MeTTaIL.Denotational.NativeGaloisBridge.searchSpec_iff_objectiveSpec
+#print axioms MeTTaIL.Denotational.NativeGaloisBridge.le_box_diamond
+#print axioms MeTTaIL.Denotational.NativeGaloisBridge.diamond_box_le
+#print axioms MeTTaIL.Denotational.NativeGaloisBridge.diamond_mono
+#print axioms MeTTaIL.Denotational.NativeGaloisBridge.box_mono
+#print axioms MeTTaIL.OSLF.Pred.future_box_galois
+#print axioms MeTTaIL.OSLF.Pred.dia_pastBox_galois
+#print axioms MeTTaIL.OSLF.Pred.le_box_future
+#print axioms MeTTaIL.OSLF.Pred.future_box_le
+#print axioms MeTTaIL.OSLF.Pred.le_pastBox_dia
+#print axioms MeTTaIL.OSLF.Pred.dia_pastBox_le
+#print axioms MeTTaIL.OSLF.NativeType.constructor_satisfies_iff
+#print axioms MeTTaIL.OSLF.NativeType.constructor_satisfies_self
+#print axioms MeTTaIL.OSLF.NativeType.spatial_satisfies_sexp_iff
+#print axioms MeTTaIL.OSLF.NativeType.arrow_satisfies_iff
+#print axioms MeTTaIL.OSLF.NativeType.dia_satisfies_iff
+#print axioms MeTTaIL.OSLF.NativeType.box_satisfies_iff
+#print axioms MeTTaIL.OSLF.NativeType.future_satisfies_iff
+#print axioms MeTTaIL.OSLF.NativeType.pastBox_satisfies_iff
+#print axioms MeTTaIL.OSLF.NativeType.sortedBox_preserved
+#print axioms MeTTaIL.OSLF.forwardGaloisBridge
+#print axioms MeTTaIL.OSLF.possiblePastGaloisBridge
 #print axioms MeTTaIL.Denotational.PathRSpace.prefix_trans
 #print axioms MeTTaIL.Denotational.PathRSpace.comparable_iff_nonempty_subspaceBranch
 #print axioms MeTTaIL.Denotational.PathRSpace.SubspaceSystem.branch_of_step

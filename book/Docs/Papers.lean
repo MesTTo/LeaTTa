@@ -23,6 +23,13 @@ def goertzelMetagraph : ArXiv where
   year := 2021
   id := "2112.08272"
 
+/-- Goertzel; Galois connections as search/objective specifications on typed metagraphs. -/
+def patternsOfCognition : ArXiv where
+  title := inlines!"Patterns of Cognition: Cognitive Algorithms as Galois Connections Fulfilled by Chronomorphisms On Probabilistically Typed Metagraphs"
+  authors := #[inlines!"Ben Goertzel"]
+  year := 2021
+  id := "2102.10581"
+
 /-- Stay & Meredith; OSLF and the distributive-law view of operational semantics. -/
 def stayMeredithLogic : ArXiv where
   title := inlines!"Logic as a Distributive Law"
@@ -36,6 +43,13 @@ def enrichedLawvereSemantics : ArXiv where
   authors := #[inlines!"Mike Stay", inlines!"Lucius Gregory Meredith"]
   year := 2017
   id := "1704.03080"
+
+/-- Williams & Stay; native type constructors from term constructors and predicate logic. -/
+def nativeTypeTheory : ArXiv where
+  title := inlines!"Native Type Theory"
+  authors := #[inlines!"Christian Williams", inlines!"Michael Stay"]
+  year := 2021
+  id := "2102.04672"
 
 /-- Assaf et al.; Dedukti as a logical framework with user-defined rewrite rules. -/
 def deduktiLogicalFramework : ArXiv where

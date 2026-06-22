@@ -197,8 +197,26 @@ states the exact invariant: if two readings from any two surfaces choose the sam
 their native type, inherited denotation, and native bisimilarity agree. `NativeEvidenceModel` and
 `NativeQueryModel` add the matching evidence and query-evidence invariance statements. The file also
 exports constructor predicates, checker soundness through a reading, and `NativeGaloisBridge` for the
-diamond-box adjunction shape. The module is a target interface for a GF or MeTTaIL frontend. It is not
-a parser implementation.
+diamond-box adjunction shape. Goertzel's typed-metagraph paper reads Galois connections as links
+between a search preorder and an objective preorder {citep patternsOfCognition}[]. The same reading is
+available here through `NativeGaloisBridge.searchSpec`, `NativeGaloisBridge.objectiveSpec`,
+`NativeGaloisBridge.searchSpec_iff_objectiveSpec`, the unit, the counit, and monotonicity for both
+sides. The module is a target interface for a GF or MeTTaIL frontend. It is not a parser
+implementation.
+
+`MeTTaIL.Semantics.NativeTypes` brings the Native Type Theory side into the existing OSLF vocabulary
+{citep nativeTypeTheory}[]. A native type is a pair of a presentation sort, `Cat`, and an OSLF
+predicate over `AST`. Constructor types inspect the outer label of a term. Spatial types reuse
+`Pred.spatial`. The behavioral arrow is the existing OSLF arrow lifted to a native type. Sorted
+satisfaction adds the presentation check `AST.headCat p.terms t = some A.sort`, so the predicate layer
+can be used together with the generated grammar.
+
+The modal adjunctions are stated with the direction made explicit. The existing `Pred.box` in this repo
+is future safety: all future reducts satisfy a predicate. Its left adjoint is therefore `Pred.future`,
+the forward image of a predicate along many-step reduction. The existing `Pred.dia` is possible future
+reachability. It is left adjoint to `Pred.pastBox`, which checks all predecessors. The checked theorems
+are `Pred.future_box_galois` and `Pred.dia_pastBox_galois`, and the bridge values are
+`forwardGaloisBridge` and `possiblePastGaloisBridge`.
 
 `MeTTaIL.Semantics.KnottedUniverse` adds the red/black surface that sits under that target. It defines
 the two colours, the four visible sorts, the red and black quote/drop equivalences,

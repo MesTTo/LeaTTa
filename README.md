@@ -361,6 +361,19 @@ languages, but if they choose the same native value then `SameNative.type_eq`,
 and query-derived evidence agree. The same file also records constructor predicates, checker soundness
 through a reading, and a `NativeGaloisBridge` for diamond-box adjunctions. The file is not a GF parser
 and does not import MeTTapedia. It gives the interface a GF or MeTTaIL frontend has to instantiate.
+Following Goertzel's search/objective reading of Galois connections, `NativeGaloisBridge` also exposes
+`searchSpec`, `objectiveSpec`, `searchSpec_iff_objectiveSpec`, the unit, the counit, and monotonicity
+for both sides.
+
+`MeTTaIL/Semantics/NativeTypes.lean` connects that interface to the actual OSLF layer. A
+`OSLF.NativeType` is a pair of a presentation sort (`Cat`) and an OSLF predicate over `AST`, matching
+the Native Type Theory idea that types are built from term constructors and predicate structure. The
+file adds constructor-derived types, spatial types, the OSLF behavioral arrow, and sorted satisfaction
+using `AST.headCat`. It also records the modal adjunctions precisely. The existing `Pred.box` is a
+future-safety operator, so its left adjoint is `Pred.future`, the forward image of a predicate along
+many-step reduction. The existing `Pred.dia` is possible future reachability, and it is left adjoint to
+the new `Pred.pastBox`, which checks all predecessors. The exported bridge values are
+`forwardGaloisBridge` and `possiblePastGaloisBridge`.
 
 `MeTTaIL/Semantics/KnottedUniverse.lean` adds the checked red/black surface that the rset, rho, and
 knotted-topoi papers need. It defines the colours, the four visible sorts, the two quote/drop

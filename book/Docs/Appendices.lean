@@ -278,13 +278,16 @@ The map below states what each source supports in the Lean development, and what
    {citep continuedGSLTCost}[] {citep costAccountedRho}[] {citep costSpacetime}[]
    {citep knottedTopoi}[] support the denotational target. The ITM, CZ2, and Jetta repositories
    {citep itmScalaState}[] {citep cz2Repository}[] {citep jettaRuntime}[] support the store-facing
-   interface. Dedukti and Lambdapi are the closest proof-framework comparison points for native types
-   plus rewriting {citep deduktiLogicalFramework}[] {citep lambdapiDocs}[]. The MeTTapedia native
-   grammatical formalism paper supplies the surface-invariance pattern used for native readings
+   interface. Williams and Stay's Native Type Theory supplies the sort-predicate native-type target
+   {citep nativeTypeTheory}[]. Goertzel's typed-metagraph Galois-connection paper supplies the
+   search/objective reading of the generic bridge {citep patternsOfCognition}[]. Dedukti and Lambdapi
+   are the closest proof-framework comparison points for native types plus rewriting
+   {citep deduktiLogicalFramework}[] {citep lambdapiDocs}[]. The MeTTapedia native grammatical
+   formalism paper supplies the surface-invariance pattern used for native readings
    {citep nativeGrammaticalFormalism}[]. The Lean surface is
    `MeTTaIL/Semantics/Denotational.lean`, `MeTTaIL/Semantics/Native.lean`,
-   `MeTTaIL/Semantics/NativeGrammar.lean`, `MeTTaIL/Semantics/KnottedUniverse.lean`,
-   `MeTTaIL/Semantics/RSet.lean`, `MeTTaIL/Semantics/Rho.lean`,
+   `MeTTaIL/Semantics/NativeGrammar.lean`, `MeTTaIL/Semantics/NativeTypes.lean`,
+   `MeTTaIL/Semantics/KnottedUniverse.lean`, `MeTTaIL/Semantics/RSet.lean`, `MeTTaIL/Semantics/Rho.lean`,
    `MeTTaIL/Semantics/RhoKMachine.lean`, `MeTTaIL/Semantics/RhoCompiler.lean`, and
    `MeTTaIL/Semantics/InteractingTrieMap.lean`.
    The checked claims include
@@ -296,6 +299,12 @@ The map below states what each source supports in the Lean development, and what
    `NativeSurface.SameNative.denote_eq`, `NativeSurface.SameNative.bisimilar`,
    `NativeEvidenceModel.evidence_eq_of_sameNative`,
    `NativeQueryModel.evidence_eq_of_sameNative`, `NativeGaloisBridge.diamond_le_iff`,
+   `NativeGaloisBridge.searchSpec_iff_objectiveSpec`, `NativeGaloisBridge.le_box_diamond`,
+   `NativeGaloisBridge.diamond_box_le`, `NativeGaloisBridge.diamond_mono`,
+   `NativeGaloisBridge.box_mono`,
+   `Pred.future_box_galois`, `Pred.dia_pastBox_galois`,
+   `NativeType.constructor_satisfies_iff`, `NativeType.spatial_satisfies_sexp_iff`,
+   `NativeType.arrow_satisfies_iff`, `NativeType.sortedBox_preserved`,
    `PathRSpace.comparable_iff_nonempty_subspaceBranch`, `Costed.costedStep_forget`,
    `Costed.Trace.to_reflTransGen`, `eval_rewrite_trace`, `Rho.listener_step`,
    `Rho.RSpace.comm_to_step_one`, `Rho.KMachine.creation_to_struct`, `Rho.KMachine.step_to_rho`,

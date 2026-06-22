@@ -10,7 +10,7 @@ Trusted boundary: none
 Main exports: Denotational.NativeSurface, Denotational.NativeSurface.Reading,
   Denotational.NativeSurface.SameNative, Denotational.NativeEvidenceModel,
   Denotational.NativeQueryModel, Denotational.NativeConstructorView,
-  Denotational.NativeGaloisBridge
+  Denotational.NativeGaloisBridge, Denotational.NativeGaloisBridge.searchSpec_iff_objectiveSpec
 Open obligations: instantiate the surface with a real GF or MeTTaIL parser, connect constructor
   predicates to the native type checker, and connect the query/evidence layer to the world model.
 -/
@@ -214,6 +214,56 @@ theorem diamond_le_iff {SyntaxProp : Type a} {SemanticProp : Type b}
     (syntaxProp : SyntaxProp) (semanticProp : SemanticProp) :
     B.diamond syntaxProp ≤ semanticProp ↔ syntaxProp ≤ B.box semanticProp :=
   B.adjunction syntaxProp semanticProp
+
+/-- Search-side view of a Galois specification. -/
+def searchSpec {SyntaxProp : Type a} {SemanticProp : Type b}
+    [Preorder SyntaxProp] [Preorder SemanticProp]
+    (B : NativeGaloisBridge SyntaxProp SemanticProp)
+    (syntaxProp : SyntaxProp) (semanticProp : SemanticProp) : Prop :=
+  B.diamond syntaxProp ≤ semanticProp
+
+/-- Objective-side view of the same Galois specification. -/
+def objectiveSpec {SyntaxProp : Type a} {SemanticProp : Type b}
+    [Preorder SyntaxProp] [Preorder SemanticProp]
+    (B : NativeGaloisBridge SyntaxProp SemanticProp)
+    (syntaxProp : SyntaxProp) (semanticProp : SemanticProp) : Prop :=
+  syntaxProp ≤ B.box semanticProp
+
+/-- Search and objective specifications are the two sides of the adjunction. -/
+theorem searchSpec_iff_objectiveSpec {SyntaxProp : Type a} {SemanticProp : Type b}
+    [Preorder SyntaxProp] [Preorder SemanticProp]
+    (B : NativeGaloisBridge SyntaxProp SemanticProp)
+    (syntaxProp : SyntaxProp) (semanticProp : SemanticProp) :
+    B.searchSpec syntaxProp semanticProp ↔ B.objectiveSpec syntaxProp semanticProp :=
+  B.diamond_le_iff syntaxProp semanticProp
+
+/-- Unit of the Galois connection. -/
+theorem le_box_diamond {SyntaxProp : Type a} {SemanticProp : Type b}
+    [Preorder SyntaxProp] [Preorder SemanticProp]
+    (B : NativeGaloisBridge SyntaxProp SemanticProp) (syntaxProp : SyntaxProp) :
+    syntaxProp ≤ B.box (B.diamond syntaxProp) :=
+  B.adjunction.le_u_l syntaxProp
+
+/-- Counit of the Galois connection. -/
+theorem diamond_box_le {SyntaxProp : Type a} {SemanticProp : Type b}
+    [Preorder SyntaxProp] [Preorder SemanticProp]
+    (B : NativeGaloisBridge SyntaxProp SemanticProp) (semanticProp : SemanticProp) :
+    B.diamond (B.box semanticProp) ≤ semanticProp :=
+  B.adjunction.l_u_le semanticProp
+
+/-- The left adjoint is monotone. -/
+theorem diamond_mono {SyntaxProp : Type a} {SemanticProp : Type b}
+    [Preorder SyntaxProp] [Preorder SemanticProp]
+    (B : NativeGaloisBridge SyntaxProp SemanticProp) :
+    Monotone B.diamond :=
+  B.adjunction.monotone_l
+
+/-- The right adjoint is monotone. -/
+theorem box_mono {SyntaxProp : Type a} {SemanticProp : Type b}
+    [Preorder SyntaxProp] [Preorder SemanticProp]
+    (B : NativeGaloisBridge SyntaxProp SemanticProp) :
+    Monotone B.box :=
+  B.adjunction.monotone_u
 
 end NativeGaloisBridge
 

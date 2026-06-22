@@ -6,9 +6,10 @@ Purpose: Build-visible axiom audit for the headline theorem surfaces. This modul
   declarations. The output should contain only Lean/Mathlib's standard classical axioms where the imported
   theorem uses Mathlib's classical infrastructure, and no project axiom or placeholder.
 Imports: MettaHyperonFull.Operational.Properties, MeTTaIL.Semantics.Denotational,
-  MeTTaIL.Semantics.Native, MeTTaIL.Semantics.KnottedUniverse, MeTTaIL.Semantics.RSet,
-  MeTTaIL.Semantics.InteractingTrieMap, MeTTaIL.Semantics.Rho, MeTTaIL.Semantics.RhoKMachine,
-  MeTTaIL.Semantics.RhoCompiler, MeTTaILProofs.ConditionalCP, MeTTaILProofs.CPDemo,
+  MeTTaIL.Semantics.Native, MeTTaIL.Semantics.NativeGrammar, MeTTaIL.Semantics.KnottedUniverse,
+  MeTTaIL.Semantics.RSet, MeTTaIL.Semantics.InteractingTrieMap, MeTTaIL.Semantics.Rho,
+  MeTTaIL.Semantics.RhoKMachine, MeTTaIL.Semantics.RhoCompiler, MeTTaILProofs.ConditionalCP,
+  MeTTaILProofs.CPDemo,
   MeTTaILProofs.ConditionalCPRuntime,
   MeTTaILProofs.ACMatch, MeTTaILProofs.DistributiveLaw
 Trusted boundary: none
@@ -18,6 +19,7 @@ Open obligations: keep this list aligned with the headline claims in the docs an
 import MettaHyperonFull.Operational.Properties
 import MeTTaIL.Semantics.Denotational
 import MeTTaIL.Semantics.Native
+import MeTTaIL.Semantics.NativeGrammar
 import MeTTaIL.Semantics.KnottedUniverse
 import MeTTaIL.Semantics.RSet
 import MeTTaIL.Semantics.InteractingTrieMap
@@ -68,6 +70,16 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.Denotational.NativeCarrier.toFullyAbstractModel
 #print axioms MeTTaIL.Denotational.NativeCarrier.eq_iff_bisimilar
 #print axioms MeTTaIL.Denotational.NativeCarrier.typeOf_eq_of_step
+#print axioms MeTTaIL.Denotational.NativeSurface.SameNative.type_eq
+#print axioms MeTTaIL.Denotational.NativeSurface.SameNative.denote_eq
+#print axioms MeTTaIL.Denotational.NativeSurface.SameNative.bisimilar
+#print axioms MeTTaIL.Denotational.NativeSurface.SameNative.denote_eq_iff_bisimilar
+#print axioms MeTTaIL.Denotational.NativeEvidenceModel.evidence_eq_of_sameNative
+#print axioms MeTTaIL.Denotational.NativeQueryModel.query_eq_of_sameNative
+#print axioms MeTTaIL.Denotational.NativeQueryModel.evidence_eq_of_sameNative
+#print axioms MeTTaIL.Denotational.NativeConstructorView.constructorPredicate_iff
+#print axioms MeTTaIL.Denotational.NativeChecker.sound_of_reading
+#print axioms MeTTaIL.Denotational.NativeGaloisBridge.diamond_le_iff
 #print axioms MeTTaIL.Denotational.PathRSpace.prefix_trans
 #print axioms MeTTaIL.Denotational.PathRSpace.comparable_iff_nonempty_subspaceBranch
 #print axioms MeTTaIL.Denotational.PathRSpace.SubspaceSystem.branch_of_step

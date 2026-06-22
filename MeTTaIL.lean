@@ -59,6 +59,8 @@ import MeTTaIL.Semantics.OSLF
 import MeTTaIL.Semantics.Denotational
 -- Runtime: native-carrier obligations for interpreted types inside MeTTaIL presentations.
 import MeTTaIL.Semantics.Native
+-- Runtime: surface-language invariance for concrete readings over native carriers.
+import MeTTaIL.Semantics.NativeGrammar
 -- Runtime: the red/black reflective-universe and final-coalgebra interfaces.
 import MeTTaIL.Semantics.KnottedUniverse
 -- Runtime: the finitary rset core with red sets whose atoms are black sets, and conversely.

@@ -350,6 +350,18 @@ directions needed by the existing pullback theorem. `NativeCarrier.toFullyAbstra
 such a carrier inherits the source fully abstract model. The file does not instantiate concrete native
 types yet; it states the obligations that a future native-type proof system has to discharge.
 
+`MeTTaIL/Semantics/NativeGrammar.lean` adds the surface-language side suggested by
+`/home/user/Dev/MeTTapedia/papers/native-grammatical-formalism.pdf`. A `NativeSurface` is a parser and
+linearizer over native values. A `Reading` is a concrete surface together with the native value chosen
+for that parse, so parser ambiguity stays visible instead of being erased. `SameNative` is the exact
+condition needed for GF-style translation invariance: two concrete readings can use different surface
+languages, but if they choose the same native value then `SameNative.type_eq`,
+`SameNative.denote_eq`, `SameNative.bisimilar`, `NativeEvidenceModel.evidence_eq_of_sameNative`, and
+`NativeQueryModel.evidence_eq_of_sameNative` say the native type, denotation, bisimilarity, evidence,
+and query-derived evidence agree. The same file also records constructor predicates, checker soundness
+through a reading, and a `NativeGaloisBridge` for diamond-box adjunctions. The file is not a GF parser
+and does not import MeTTapedia. It gives the interface a GF or MeTTaIL frontend has to instantiate.
+
 `MeTTaIL/Semantics/KnottedUniverse.lean` adds the checked red/black surface that the rset, rho, and
 knotted-topoi papers need. It defines the colours, the four visible sorts, the two quote/drop
 equivalences, structure-preserving morphisms between reflective universes, a category of those

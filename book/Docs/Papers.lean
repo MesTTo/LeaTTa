@@ -59,6 +59,18 @@ def lambdapiDocs : Article where
   pages := none
   url := "https://lambdapi.readthedocs.io/en/latest/about.html"
 
+/-- Oruzi; GF and OSLF bridge used as the native surface-invariance pattern. -/
+def nativeGrammaticalFormalism : Article where
+  title := inlines!"Native Grammatical Formalism: Verified Multilingual Semantics via GF and OSLF in Lean 4"
+  authors := #[inlines!"Zar Oruzi"]
+  journal := inlines!"Draft manuscript"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/zariuq/MeTTapedia/blob/main/papers/native-grammatical-formalism.pdf"
+
 /-- Meredith; the red/black reflective set-theory construction used by the rho and topos papers. -/
 def knottedUniverse : Article where
   title := inlines!"A Knotted Universe: a new notion of reflective set theories"

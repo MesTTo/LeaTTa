@@ -279,9 +279,11 @@ The map below states what each source supports in the Lean development, and what
    {citep knottedTopoi}[] support the denotational target. The ITM, CZ2, and Jetta repositories
    {citep itmScalaState}[] {citep cz2Repository}[] {citep jettaRuntime}[] support the store-facing
    interface. Dedukti and Lambdapi are the closest proof-framework comparison points for native types
-   plus rewriting {citep deduktiLogicalFramework}[] {citep lambdapiDocs}[]. The Lean surface is
+   plus rewriting {citep deduktiLogicalFramework}[] {citep lambdapiDocs}[]. The MeTTapedia native
+   grammatical formalism paper supplies the surface-invariance pattern used for native readings
+   {citep nativeGrammaticalFormalism}[]. The Lean surface is
    `MeTTaIL/Semantics/Denotational.lean`, `MeTTaIL/Semantics/Native.lean`,
-   `MeTTaIL/Semantics/KnottedUniverse.lean`,
+   `MeTTaIL/Semantics/NativeGrammar.lean`, `MeTTaIL/Semantics/KnottedUniverse.lean`,
    `MeTTaIL/Semantics/RSet.lean`, `MeTTaIL/Semantics/Rho.lean`,
    `MeTTaIL/Semantics/RhoKMachine.lean`, `MeTTaIL/Semantics/RhoCompiler.lean`, and
    `MeTTaIL/Semantics/InteractingTrieMap.lean`.
@@ -290,7 +292,10 @@ The map below states what each source supports in the Lean development, and what
    `fullyAbstract_of_calibration`, `fullyAbstract_of_observation_calibration`,
    `StepTranslation.bisimilarityPreserving`, `StepTranslation.bisimilarityReflecting`,
    `NativeCarrier.toFullyAbstractModel`, `NativeCarrier.eq_iff_bisimilar`,
-   `NativeCarrier.typeOf_eq_of_step`,
+   `NativeCarrier.typeOf_eq_of_step`, `NativeSurface.SameNative.type_eq`,
+   `NativeSurface.SameNative.denote_eq`, `NativeSurface.SameNative.bisimilar`,
+   `NativeEvidenceModel.evidence_eq_of_sameNative`,
+   `NativeQueryModel.evidence_eq_of_sameNative`, `NativeGaloisBridge.diamond_le_iff`,
    `PathRSpace.comparable_iff_nonempty_subspaceBranch`, `Costed.costedStep_forget`,
    `Costed.Trace.to_reflTransGen`, `eval_rewrite_trace`, `Rho.listener_step`,
    `Rho.RSpace.comm_to_step_one`, `Rho.KMachine.creation_to_struct`, `Rho.KMachine.step_to_rho`,

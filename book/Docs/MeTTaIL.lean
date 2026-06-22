@@ -188,6 +188,18 @@ source fully abstract model. `NativeCarrier.toFullyAbstractModel` pulls full abs
 native surface, and `NativeCarrier.typeOf_eq_of_step` exposes the native preservation obligation. The
 module does not instantiate concrete native MeTTaIL types yet.
 
+The concrete-language side is now factored into `MeTTaIL.Semantics.NativeGrammar`, following the
+native grammatical formalism pattern in the MeTTapedia GF and OSLF paper
+{citep nativeGrammaticalFormalism}[]. A `NativeSurface` gives parse and linearize operations over native
+objects. A `NativeSurface.Reading` keeps the chosen parse explicit, so ambiguity is handled as multiple
+readings rather than as a hidden parser choice. The theorem family under `NativeSurface.SameNative`
+states the exact invariant: if two readings from any two surfaces choose the same native object, then
+their native type, inherited denotation, and native bisimilarity agree. `NativeEvidenceModel` and
+`NativeQueryModel` add the matching evidence and query-evidence invariance statements. The file also
+exports constructor predicates, checker soundness through a reading, and `NativeGaloisBridge` for the
+diamond-box adjunction shape. The module is a target interface for a GF or MeTTaIL frontend. It is not
+a parser implementation.
+
 `MeTTaIL.Semantics.KnottedUniverse` adds the red/black surface that sits under that target. It defines
 the two colours, the four visible sorts, the red and black quote/drop equivalences,
 structure-preserving morphisms between reflective universes, a category of those universes, and the

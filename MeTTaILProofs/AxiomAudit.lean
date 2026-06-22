@@ -83,6 +83,8 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.KnottedUniverse.FinalCoalgebra.identity
 #print axioms MeTTaIL.KnottedUniverse.FinalBehaviourModel.toFullyAbstractModel
 #print axioms MeTTaIL.KnottedUniverse.FinalBehaviourModel.eq_iff_bisimilar
+#print axioms MeTTaIL.KnottedUniverse.FinalBehaviourModel.fullyAbstractFor
+#print axioms MeTTaIL.KnottedUniverse.FinalBehaviourModel.fullyAbstractForObservations
 
 #print axioms MeTTaIL.RSetModel.twoColourAutomaton_no_self_loop
 #print axioms MeTTaIL.RSetModel.RElem.quoteAtom_dropAtom

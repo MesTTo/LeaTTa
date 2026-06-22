@@ -181,8 +181,10 @@ MeTTaIL-to-rho desugaring theorem is supplied.
 the two colours, the four visible sorts, the red and black quote/drop equivalences, and the category of
 coalgebras for a `TypeEndofunctor`. A `FinalCoalgebra` gives a Mathlib `IsTerminal` witness in
 that category. `FinalBehaviourModel.toFullyAbstractModel` connects the coalgebraic reading to the
-existing full-abstraction package. The module still does not construct the knotted topos or prove
-finality for the real rho behaviour functor.
+existing full-abstraction package. `FinalBehaviourModel.fullyAbstractFor` and
+`FinalBehaviourModel.fullyAbstractForObservations` then apply the calibration layer, so a final
+behaviour model can be stated against the object language's observational equivalence. The module still
+does not construct the knotted topos or prove finality for the real rho behaviour functor.
 
 `MeTTaIL.Semantics.RSet` makes the rset paper do more work in this repo. It formalizes the
 hereditarily finite red/black core: red sets contain red nested sets and atoms supplied by black sets,

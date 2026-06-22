@@ -347,8 +347,10 @@ equivalences, a `TypeEndofunctor`, and the category of coalgebras for that funct
 produces `FinalCoalgebra.isTerminal`, a Mathlib `IsTerminal` witness for the terminal
 coalgebra in that category. `FinalBehaviourModel.toFullyAbstractModel` says that once the final
 behaviour map has the right kernel and context congruence proof, it is exactly the existing
-full-abstraction package. The file does not construct the knotted topos or prove that the real rho
-behaviour functor has a final coalgebra.
+full-abstraction package. `FinalBehaviourModel.fullyAbstractFor` and
+`FinalBehaviourModel.fullyAbstractForObservations` then apply the calibration layer, so a final
+behaviour model can be stated against the object language's observational equivalence. The file does not
+construct the knotted topos or prove that the real rho behaviour functor has a final coalgebra.
 
 `MeTTaIL/Semantics/InteractingTrieMap.lean` adds the checked ITM surface. It separates the ITM
 polynomial layer from the reflective fixed point, so Lean can state the equation without a

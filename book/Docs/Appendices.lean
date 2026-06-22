@@ -311,6 +311,8 @@ The map below states what each source supports in the Lean development, and what
    `KnottedUniverse.FinalCoalgebra.identity`,
    `KnottedUniverse.FinalBehaviourModel.toFullyAbstractModel`,
    `KnottedUniverse.FinalBehaviourModel.eq_iff_bisimilar`,
+   `KnottedUniverse.FinalBehaviourModel.fullyAbstractFor`,
+   `KnottedUniverse.FinalBehaviourModel.fullyAbstractForObservations`,
    `RSetModel.twoColourAutomaton_no_self_loop`,
    `RSetModel.RElem.quoteAtom_dropAtom`,
    `RSetModel.RSet.renameAtoms_eq_of_forall_mem_atomsOf`,

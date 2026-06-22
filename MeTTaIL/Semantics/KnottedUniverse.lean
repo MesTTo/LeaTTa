@@ -16,7 +16,8 @@ Main exports: Colour, Colour.swap, Colour.swap_swap, ReflectiveUniverse,
   ReflectiveUniverse.dropBlack_quoteBlack, ReflectiveUniverse.quoteBlack_dropBlack,
   TypeEndofunctor, Coalgebra, CoalgebraHom, Coalgebra.category, FinalCoalgebra,
   FinalCoalgebra.finalHom, FinalCoalgebra.finalHom_unique, FinalCoalgebra.isTerminal,
-  FinalBehaviourModel
+  FinalBehaviourModel, FinalBehaviourModel.fullyAbstractFor,
+  FinalBehaviourModel.fullyAbstractForObservations
 Open obligations: instantiate ReflectiveUniverse with the knotted topos, prove that the behaviour
   functor has the intended final coalgebra there, and connect the resulting denotation to the
   MeTTaIL-to-rho operational correspondence.
@@ -28,7 +29,7 @@ import Mathlib.Logic.Equiv.Basic
 namespace MeTTaIL
 namespace KnottedUniverse
 
-universe u v w z
+universe u v w z r
 
 /-- The two colours used by the red/black reflective universe papers. -/
 inductive Colour where
@@ -294,6 +295,22 @@ theorem eq_iff_bisimilar {State : Type u} {Label : Type v} {Context : Type z}
     (M : FinalBehaviourModel.{u, v, w, z} State Label Context) (s t : State) :
     M.denote s = M.denote t ↔ Denotational.Bisimilar M.lts s t :=
   M.full s t
+
+/-- Calibrate the final-behaviour denotation against a chosen object-language equivalence. -/
+theorem fullyAbstractFor {State : Type u} {Label : Type v} {Context : Type z}
+    {obsEq : State → State → Prop}
+    (M : FinalBehaviourModel.{u, v, w, z} State Label Context)
+    (cal : Denotational.BisimilarityCalibration M.lts obsEq) :
+    Denotational.FullyAbstractFor M.denote obsEq :=
+  Denotational.fullyAbstract_of_calibration M.full cal
+
+/-- Calibrate the final-behaviour denotation against an observation family. -/
+theorem fullyAbstractForObservations {State : Type u} {Label : Type v} {Context : Type z}
+    {Observation : Type r} {observes : Observation → State → Prop}
+    (M : FinalBehaviourModel.{u, v, w, z} State Label Context)
+    (cal : Denotational.ObservationCalibration M.lts observes) :
+    Denotational.FullyAbstractFor M.denote (Denotational.ObservationalEquivalence observes) :=
+  Denotational.fullyAbstract_of_observation_calibration M.full cal
 
 end FinalBehaviourModel
 

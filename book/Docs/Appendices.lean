@@ -309,6 +309,14 @@ The map below states what each source supports in the Lean development, and what
    `RSetModel.RSet.renameAtoms_eq_of_forall_mem_atomsOf`,
    `RSetModel.RSet.renameAtoms_eq_of_supports`,
    `RSetModel.RSet.renameAtoms_id`,
+   `RSetModel.RSet.toExt_eq_of_extEq`,
+   `RSetModel.RSet.mem_union_iff`,
+   `RSetModel.RSet.extEq_union_congr`,
+   `RSetModel.RSet.extEq_empty_union`,
+   `RSetModel.RSet.extEq_union_empty`,
+   `RSetModel.RSet.extEq_union_idem`,
+   `RSetModel.RSet.extEq_union_comm`,
+   `RSetModel.RSet.extEq_union_assoc`,
    `RSetModel.blackToRedSet_redToBlackSet`,
    `RSetModel.redToBlackSet_blackToRedSet`,
    `RSetModel.reflective_dropRed_quoteRed`,
@@ -322,8 +330,9 @@ The map below states what each source supports in the Lean development, and what
    coalgebra has been constructed in Lean. The checked modules state the proof interfaces, COMM
    kernels, the K one-pair creation and ready-pair guarded ordinary and persistent input/output cell
    steps, the packet-level base-rewrite bridge, the red/black quote/drop and final-coalgebra
-   interfaces, the finitary rset atom-supply and finite-support core, the ITM roll/unroll surface,
-   and the packed-binding prefix connector that those constructions must instantiate.
+   interfaces, the finitary rset atom-supply, finite-support, exact-member quotient, and finite-union
+   core, the ITM roll/unroll surface, and the packed-binding prefix connector that those constructions
+   must instantiate.
  * The MeTTa-calculus, Turing-to-rho, and optimal-channel papers {citep mettaCalculus}[]
    {citep rhoViaTuring}[] {citep optimalChannels}[] support the compiler direction from MeTTaIL/GSLT
    presentations to rho/RSpace. The current release uses them as a roadmap, not as completed

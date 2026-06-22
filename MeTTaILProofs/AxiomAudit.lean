@@ -82,6 +82,14 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.RSetModel.RSet.renameAtoms_eq_of_forall_mem_atomsOf
 #print axioms MeTTaIL.RSetModel.RSet.renameAtoms_eq_of_supports
 #print axioms MeTTaIL.RSetModel.RSet.renameAtoms_id
+#print axioms MeTTaIL.RSetModel.RSet.toExt_eq_of_extEq
+#print axioms MeTTaIL.RSetModel.RSet.mem_union_iff
+#print axioms MeTTaIL.RSetModel.RSet.extEq_union_congr
+#print axioms MeTTaIL.RSetModel.RSet.extEq_empty_union
+#print axioms MeTTaIL.RSetModel.RSet.extEq_union_empty
+#print axioms MeTTaIL.RSetModel.RSet.extEq_union_idem
+#print axioms MeTTaIL.RSetModel.RSet.extEq_union_comm
+#print axioms MeTTaIL.RSetModel.RSet.extEq_union_assoc
 #print axioms MeTTaIL.RSetModel.blackToRedSet_redToBlackSet
 #print axioms MeTTaIL.RSetModel.redToBlackSet_blackToRedSet
 #print axioms MeTTaIL.RSetModel.reflective_dropRed_quoteRed

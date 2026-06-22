@@ -10,11 +10,12 @@ Imports: MeTTaIL.Semantics.KnottedUniverse
 Trusted boundary: none
 Main exports: RSet, RElem, RSet.empty, RSet.insert, RSet.union, RSet.nest, RElem.atom,
   RElem.dropAtom, RElem.dropSet, RSet.atomsOf, RElem.atomsOf, RSet.renameAtoms,
-  RSet.renameAtoms_eq_of_forall_mem_atomsOf, redBlackSetEquiv, reflectiveUniverse,
-  ColourAutomaton, twoColourAutomaton
-Open obligations: quotient the syntax by extensional equality, add the FM representation theorem,
-  construct the algebraic-set-theory two-sorted fixpoint, and prove the final behaviour coalgebra
-  in the knotted topos.
+  RSet.renameAtoms_eq_of_forall_mem_atomsOf, RSet.ExtEq, RSet.extSetoid,
+  RSet.extEq_union_comm, RSet.extEq_union_assoc, RSet.extEq_union_idem,
+  redBlackSetEquiv, reflectiveUniverse, ColourAutomaton, twoColourAutomaton
+Open obligations: replace exact-member extensionality with the recursive element quotient needed for
+  the FM representation theorem, construct the algebraic-set-theory two-sorted fixpoint, and prove
+  the final behaviour coalgebra in the knotted topos.
 -/
 import MeTTaIL.Semantics.KnottedUniverse
 
@@ -145,6 +146,172 @@ def union {c : Colour} : RSet c → RSet c → RSet c
 theorem mem_insert_tail {c : Colour} {e x : RElem c} {s : RSet c}
     (h : Mem e s) : Mem e (insert x s) :=
   Mem.tail h
+
+/-- Membership in an inserted element splits into the head case and the old tail. -/
+theorem mem_insert_iff {c : Colour} (e x : RElem c) (s : RSet c) :
+    Mem e (insert x s) ↔ e = x ∨ Mem e s := by
+  constructor
+  · intro h
+    cases h with
+    | head => exact Or.inl rfl
+    | tail htail => exact Or.inr htail
+  · intro h
+    rcases h with rfl | htail
+    · exact Mem.head
+    · exact Mem.tail htail
+
+/-- Membership in a list-like union is membership in one input. -/
+theorem mem_union_iff {c : Colour} :
+    ∀ (s t : RSet c) (e : RElem c), Mem e (union s t) ↔ Mem e s ∨ Mem e t
+  | RSet.empty, t, e => by
+      constructor
+      · intro h
+        exact Or.inr h
+      · intro h
+        rcases h with h | h
+        · cases h
+        · exact h
+  | RSet.insert x s, t, e => by
+      have ih := mem_union_iff s t e
+      constructor
+      · intro h
+        rcases (mem_insert_iff e x (union s t)).mp h with hhead | htail
+        · exact Or.inl ((mem_insert_iff e x s).mpr (Or.inl hhead))
+        · rcases ih.mp htail with hs | ht
+          · exact Or.inl ((mem_insert_iff e x s).mpr (Or.inr hs))
+          · exact Or.inr ht
+      · intro h
+        rcases h with hs | ht
+        · rcases (mem_insert_iff e x s).mp hs with hhead | htail
+          · exact (mem_insert_iff e x (union s t)).mpr (Or.inl hhead)
+          · exact (mem_insert_iff e x (union s t)).mpr (Or.inr (ih.mpr (Or.inl htail)))
+        · exact (mem_insert_iff e x (union s t)).mpr (Or.inr (ih.mpr (Or.inr ht)))
+termination_by s _ _ => sizeOf s
+decreasing_by
+  simp_wf
+  omega
+
+/-- Extensional equality for the current finite syntax: the same exact elements occur. -/
+def ExtEq {c : Colour} (s t : RSet c) : Prop :=
+  ∀ e, Mem e s ↔ Mem e t
+
+/-- Extensional equality is reflexive. -/
+theorem extEq_refl {c : Colour} (s : RSet c) : ExtEq s s := by
+  intro e
+  rfl
+
+/-- Extensional equality is symmetric. -/
+theorem extEq_symm {c : Colour} {s t : RSet c} (h : ExtEq s t) : ExtEq t s := by
+  intro e
+  exact (h e).symm
+
+/-- Extensional equality is transitive. -/
+theorem extEq_trans {c : Colour} {s t u : RSet c} (hst : ExtEq s t) (htu : ExtEq t u) :
+    ExtEq s u := by
+  intro e
+  exact (hst e).trans (htu e)
+
+/-- The setoid that quotients the finite syntax by exact-member extensional equality. -/
+def extSetoid (c : Colour) : Setoid (RSet c) where
+  r := fun s t => ExtEq s t
+  iseqv := {
+    refl := fun s => extEq_refl s
+    symm := fun h => extEq_symm h
+    trans := fun hst htu => extEq_trans hst htu
+  }
+
+/-- The current extensional quotient of finite rsets. -/
+def Extensional (c : Colour) : Type :=
+  Quotient (extSetoid c)
+
+/-- Send syntax into the extensional quotient. -/
+def toExt {c : Colour} (s : RSet c) : Extensional c :=
+  Quotient.mk (extSetoid c) s
+
+/-- Extensionally equal syntax has the same quotient representative. -/
+theorem toExt_eq_of_extEq {c : Colour} {s t : RSet c} (h : ExtEq s t) :
+    toExt s = toExt t :=
+  Quotient.sound h
+
+/-- Union respects extensional equality in both inputs. -/
+theorem extEq_union_congr {c : Colour} {s s' t t' : RSet c}
+    (hs : ExtEq s s') (ht : ExtEq t t') : ExtEq (union s t) (union s' t') := by
+  intro e
+  constructor
+  · intro h
+    rcases (mem_union_iff s t e).mp h with hleft | hright
+    · exact (mem_union_iff s' t' e).mpr (Or.inl ((hs e).mp hleft))
+    · exact (mem_union_iff s' t' e).mpr (Or.inr ((ht e).mp hright))
+  · intro h
+    rcases (mem_union_iff s' t' e).mp h with hleft | hright
+    · exact (mem_union_iff s t e).mpr (Or.inl ((hs e).mpr hleft))
+    · exact (mem_union_iff s t e).mpr (Or.inr ((ht e).mpr hright))
+
+/-- Empty on the left is the identity for union, up to extensional equality. -/
+theorem extEq_empty_union {c : Colour} (s : RSet c) : ExtEq (union RSet.empty s) s := by
+  intro e
+  constructor
+  · intro h
+    rcases (mem_union_iff RSet.empty s e).mp h with hempty | hs
+    · cases hempty
+    · exact hs
+  · intro h
+    exact (mem_union_iff RSet.empty s e).mpr (Or.inr h)
+
+/-- Empty on the right is the identity for union, up to extensional equality. -/
+theorem extEq_union_empty {c : Colour} (s : RSet c) : ExtEq (union s RSet.empty) s := by
+  intro e
+  constructor
+  · intro h
+    rcases (mem_union_iff s RSet.empty e).mp h with hs | hempty
+    · exact hs
+    · cases hempty
+  · intro h
+    exact (mem_union_iff s RSet.empty e).mpr (Or.inl h)
+
+/-- Union is idempotent at the extensional level. -/
+theorem extEq_union_idem {c : Colour} (s : RSet c) : ExtEq (union s s) s := by
+  intro e
+  constructor
+  · intro h
+    rcases (mem_union_iff s s e).mp h with hs | hs <;> exact hs
+  · intro h
+    exact (mem_union_iff s s e).mpr (Or.inl h)
+
+/-- Union is commutative at the extensional level. -/
+theorem extEq_union_comm {c : Colour} (s t : RSet c) : ExtEq (union s t) (union t s) := by
+  intro e
+  constructor
+  · intro h
+    rcases (mem_union_iff s t e).mp h with hs | ht
+    · exact (mem_union_iff t s e).mpr (Or.inr hs)
+    · exact (mem_union_iff t s e).mpr (Or.inl ht)
+  · intro h
+    rcases (mem_union_iff t s e).mp h with ht | hs
+    · exact (mem_union_iff s t e).mpr (Or.inr ht)
+    · exact (mem_union_iff s t e).mpr (Or.inl hs)
+
+/-- Union is associative at the extensional level. -/
+theorem extEq_union_assoc {c : Colour} (s t u : RSet c) :
+    ExtEq (union (union s t) u) (union s (union t u)) := by
+  intro e
+  constructor
+  · intro h
+    rcases (mem_union_iff (union s t) u e).mp h with hst | hu
+    · rcases (mem_union_iff s t e).mp hst with hs | ht
+      · exact (mem_union_iff s (union t u) e).mpr (Or.inl hs)
+      · exact (mem_union_iff s (union t u) e).mpr
+          (Or.inr ((mem_union_iff t u e).mpr (Or.inl ht)))
+    · exact (mem_union_iff s (union t u) e).mpr
+        (Or.inr ((mem_union_iff t u e).mpr (Or.inr hu)))
+  · intro h
+    rcases (mem_union_iff s (union t u) e).mp h with hs | htu
+    · exact (mem_union_iff (union s t) u e).mpr
+        (Or.inl ((mem_union_iff s t e).mpr (Or.inl hs)))
+    · rcases (mem_union_iff t u e).mp htu with ht | hu
+      · exact (mem_union_iff (union s t) u e).mpr
+          (Or.inl ((mem_union_iff s t e).mpr (Or.inr ht)))
+      · exact (mem_union_iff (union s t) u e).mpr (Or.inr hu)
 
 end RSet
 

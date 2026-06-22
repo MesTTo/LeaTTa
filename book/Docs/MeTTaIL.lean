@@ -188,9 +188,10 @@ hereditarily finite red/black core: red sets contain red nested sets and atoms s
 and black sets mirror the same discipline. The module checks the two-state colour automaton, the absence
 of a self-loop, atom quote/drop, same-colour opacity for atoms, red/black colour-swap equivalences, and
 the finite-support theorem that a renaming fixing all atoms occurring in a finite set leaves the set
-unchanged. It does not quotient by extensional equality or prove the FM representation theorem. Those are
-the next rset-specific obligations before the algebraic-set-theory fixpoint can become the actual
-knotted-topos construction.
+unchanged. It also defines exact-member extensional equality, the corresponding quotient type, and the
+finite union laws at that extensional level. It does not yet build the recursive element quotient needed
+for the FM representation theorem. That quotient, then the algebraic-set-theory fixpoint, are the next
+rset-specific obligations before the knotted-topos construction is real.
 
 `MeTTaIL.Semantics.InteractingTrieMap` is the first checked store-side object. The `ITMStep` layer
 records the six summands from the ITM sketch. `RITM` is the reflective specialization with

@@ -52,6 +52,8 @@ import MeTTaILProofs.DistributiveLaw
 
 #print axioms MeTTaIL.Denotational.bisimilar_isBisimulation
 #print axioms MeTTaIL.Denotational.fullyAbstract_of_kernel
+#print axioms MeTTaIL.Denotational.fullyAbstract_of_calibration
+#print axioms MeTTaIL.Denotational.fullyAbstract_of_observation_calibration
 #print axioms MeTTaIL.Denotational.fullyAbstract_of_bisimilarity_translation
 #print axioms MeTTaIL.Denotational.congruence_of_bisimilarity_translation
 #print axioms MeTTaIL.Denotational.FullyAbstractModel.eq_iff_bisimilar

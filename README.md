@@ -265,7 +265,7 @@ What is checked now:
 - the executable reducer generated from a presentation;
 - the AC-aware runtime fragment used by Cordial Miners;
 - the denotational-semantics interface for labelled transition systems, bisimulation, context
-  congruence, and full abstraction;
+  congruence, full abstraction, and observational calibration;
 - the red/black reflective-universe interface: four sorts, quote/drop round trips, a generic
   final-coalgebra surface, and a bridge from final-behaviour models to `FullyAbstractModel`;
 - the interacting trie-map surface: the reflective `RITM ::= ITM[RITM, 1 + RITM, RITM]`
@@ -316,13 +316,14 @@ store index plus an atom path inside that stored expression.
 
 `MeTTaIL/Semantics/Denotational.lean` writes the usable part of that target as Lean definitions and
 transfer theorems. The file defines labelled transition systems, simulations, bisimulations,
-denotational kernels, context congruence, the `FullyAbstract` property, a pullback theorem for
+denotational kernels, context congruence, the `FullyAbstract` property, calibration from
+context-labelled bisimilarity to object-language observational equivalence, a pullback theorem for
 transferring full abstraction along a translation that preserves and reflects bisimilarity,
 `PathRSpace` for path keys and subspace COMM branches, and `Costed` for costed transition systems whose
 traces forget to ordinary behaviour traces. The file does not construct the knotted topos, prove the
 MeTTaIL-to-rho operational correspondence, formalize the trie store, prove the cut distributive law,
-construct the cost endofunctor, or calibrate context bisimilarity against each object language's
-observational equivalence.
+construct the cost endofunctor, or instantiate the observational-calibration theorem for each object
+language.
 
 `MeTTaIL/Semantics/KnottedUniverse.lean` adds the checked red/black surface that the rset, rho, and
 knotted-topoi papers need. It defines the colours, the four visible sorts, the two quote/drop

@@ -162,7 +162,10 @@ The Lean side now states that claim as an interface. `MeTTaIL.Semantics.Denotati
 transition systems, simulations, bisimulations, the kernel relation of a denotation, and `FullyAbstract`,
 the statement `denote s = denote t <-> Bisimilar lts s t`. The theorem `fullyAbstract_of_kernel` packages
 the coalgebraic argument used by the papers: if equality in the behaviour object is exactly the
-bisimulation kernel, the denotation is fully abstract. The packaged `FullyAbstractModel` also records the
+bisimulation kernel, the denotation is fully abstract. `BisimilarityCalibration` records the next
+obligation: the chosen context-labelled bisimilarity must agree with the object language's observational
+equivalence. `fullyAbstract_of_observation_calibration` then turns the internal full-abstraction theorem
+into the user-facing observational one. The packaged `FullyAbstractModel` also records the
 context-congruence obligation, because the papers need context labels to make bisimilarity a congruence
 without a later closure step.
 
@@ -259,9 +262,9 @@ Miners runtime embedding, and the rho COMM/RSpace fragment in `MeTTaIL.Semantics
 desugaring functor, the location-channel operational correspondence, the final
 behaviour coalgebra in a knotted topos, the path-key trie store, the cut distributive law, subspace
 reaction confluence, the set-automaton channel compiler, the cost endofunctor itself, and the calibration
-between context bisimulation and each object language's usual observational equivalence are still not
-formalized. Those are the real next theorems if the claim that a spec gets a denotation automatically is
-to become machine checked.
+language-specific calibrations between context bisimulation and each object language's usual
+observational equivalence are still not formalized. Those are the real next theorems if the claim that a
+spec gets a denotation automatically is to become machine checked.
 
 # Two Calculi from the Papers
 

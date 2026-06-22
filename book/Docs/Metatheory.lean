@@ -21,7 +21,7 @@ tag := "sec-meta"
 %%%
 /- jscpd:ignore-end -/
 
-This chapter walks through the machine-checked metatheory. Every result here is a theorem in Lean's
+The chapter walks through the machine-checked metatheory. Every result here is a theorem in Lean's
 kernel. The development contains no `sorry` or `admit`, and `#print axioms` reports only Mathlib's three
 standard classical axioms (`propext`, `Classical.choice`, `Quot.sound`). The gradual-typing
 non-transitivity result depends on no axioms at all.
@@ -29,7 +29,7 @@ non-transitivity result depends on no axioms at all.
 The headline axiom checks are collected in `MeTTaILProofs/AxiomAudit.lean`, which is imported by the
 proof root and built in CI. The root CI build also fails on any Lean or Lake warning. A proof that starts
 leaning on a placeholder warning cannot slip through as a green build. The book CI separately builds the
-Verso source and generated site. It fails on every book warning except the reviewed upstream Verso
+Verso source and generated site. Book CI fails on every book warning except the reviewed upstream Verso
 v4.31.0 `@[expose]` warning.
 
 # Determinism and Replayability
@@ -45,9 +45,9 @@ the same state always returns the same result list.
 
 # Confluence of the Deterministic Fragment
 
-MeTTa's reduction is intentionally non-confluent. `(superpose (1 2))` reduces to both `1` and `2`, which
-are distinct normal forms, so global confluence is false. What is proved is that the deterministic
-fragment, configurations with a single successor, is confluent (Church-Rosser):
+MeTTa's reduction is non-confluent by design. `(superpose (1 2))` reduces to both `1` and `2`, which are
+distinct normal forms, so global confluence is false. What is proved is that the deterministic fragment,
+configurations with a single successor, is confluent (Church-Rosser):
 
  * `deterministic_confluent` is the general theorem that a functional one-step relation is confluent
    over its reflexive-transitive closure.
@@ -81,9 +81,9 @@ against the real kernel functions:
 
 # First-Argument Indexing: Sound *and* Complete
 
-The interpreter does not scan the whole knowledge base on every reduction. It indexes equality rules by
-the head symbol of their left-hand side and consults only the matching bucket. The optimisation is proved
-both sound and complete:
+The interpreter does not scan the whole knowledge base on every reduction. The interpreter indexes
+equality rules by the head symbol of their left-hand side and consults only the matching bucket. The
+optimisation is proved both sound and complete:
 
  * `candidates_sound`: every candidate is a genuine rule.
  * `candidates_complete`: every rule that could fire is offered.
@@ -104,4 +104,5 @@ The infrastructure results are:
 
  * α-equivalence is an equivalence relation, packaged as a `Setoid`, that coincides with equality on
    variable-free atoms. See the IEEE float caveat in {ref "sec-atoms"}[the object-language chapter].
- * `Subst.apply_compose` establishes the substitution composition law on which the reduction-preservation proofs depend.
+ * `Subst.apply_compose` establishes the substitution composition law on which the reduction-preservation
+   proofs depend.

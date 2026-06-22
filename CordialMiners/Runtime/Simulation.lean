@@ -30,8 +30,8 @@ Main exports: propose_head_modAC, order_head_modAC, qapprove_head_modAC, certify
   trec_step_forward_decode, trec_step_forward_reachable, trec_step_forward_wf,
   scoped_runtime_bridge, propose_second_inbox_modAC
 Open obligations: the modulo-AC backward theorem is generic for field decoders that respect runtime
-  AC-equivalence. A theorem for completely arbitrary raw decoders is intentionally not stated, because
-  such decoders can distinguish AC-equivalent ASTs.
+  AC-equivalence. There is no theorem for completely arbitrary raw decoders, because such decoders can
+  distinguish AC-equivalent ASTs.
 -/
 import CordialMiners.Runtime.Presentation
 import CordialMiners.Trec.Safety
@@ -1899,7 +1899,7 @@ theorem trec_step_forward_decode {Wave Hash : Type*} [DecidableEq Wave] [Decidab
         trec_event_forward_decode eW eH dW dH hW hH s (Event.order hs)
 
 /-- If the coarse source is reachable, the decoded target produced by the runtime forward witness is
-    reachable too. This is the reachability transfer available for the proved forward bridge. -/
+    reachable too. The proved forward bridge gives this reachability transfer. -/
 theorem trec_step_forward_reachable {Wave Hash : Type*} [DecidableEq Wave] [DecidableEq Hash]
     (eW : Wave → AST) (eH : Hash → AST) (dW : AST → Option Wave) (dH : AST → Option Hash)
     (hW : ∀ w, dW (eW w) = some w) (hH : ∀ h, dH (eH h) = some h)
@@ -1936,8 +1936,8 @@ theorem trec_step_forward_wf {Wave Hash : Type*} [DecidableEq Wave] [DecidableEq
 
 The first component is forward completeness for every coarse `TrecState.Step`. The next two components
 are decoded soundness facts for the input-event and derived-rule fragments. The last two components are
-decoded stutter facts for duplicate input events and duplicate derived facts. This is intentionally not
-the full arbitrary-`RewStepModAC` backward theorem. -/
+decoded stutter facts for duplicate input events and duplicate derived facts. The theorem is not the full
+arbitrary-`RewStepModAC` backward theorem. -/
 theorem scoped_runtime_bridge {Wave Hash : Type*} [DecidableEq Wave] [DecidableEq Hash]
     (eW : Wave → AST) (eH : Hash → AST)
     (dW : AST → Option Wave) (dH : AST → Option Hash)

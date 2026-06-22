@@ -45,5 +45,13 @@ import MeTTaILProofs.DistributiveLaw
 
 #print axioms MeTTaIL.Denotational.bisimilar_isBisimulation
 #print axioms MeTTaIL.Denotational.fullyAbstract_of_kernel
+#print axioms MeTTaIL.Denotational.fullyAbstract_of_bisimilarity_translation
+#print axioms MeTTaIL.Denotational.congruence_of_bisimilarity_translation
 #print axioms MeTTaIL.Denotational.FullyAbstractModel.eq_iff_bisimilar
+#print axioms MeTTaIL.Denotational.FullyAbstractModel.pullback
+#print axioms MeTTaIL.Denotational.PathRSpace.prefix_trans
+#print axioms MeTTaIL.Denotational.PathRSpace.comparable_iff_nonempty_subspaceBranch
+#print axioms MeTTaIL.Denotational.PathRSpace.SubspaceSystem.branch_of_step
+#print axioms MeTTaIL.Denotational.Costed.costedStep_forget
+#print axioms MeTTaIL.Denotational.Costed.Trace.to_reflTransGen
 #print axioms MeTTaIL.Denotational.eval_rewrite_trace

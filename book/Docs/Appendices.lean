@@ -21,9 +21,9 @@ tag := "sec-appendices"
 %%%
 /- jscpd:ignore-end -/
 
-This appendix collects the reference material that used to live in separate files at the repository root.
-It states what is machine-checked, where each MeTTa and Hyperon topic is formalized, and how the
-development compares with Hyperon's current implementation.
+The appendix collects the reference material that used to live in separate files at the repository root.
+The appendix states what is machine-checked, where each MeTTa and Hyperon topic is formalized, and how
+the development compares with Hyperon's current implementation.
 
 # Proof Status
 
@@ -85,9 +85,9 @@ are listed so the proof status is not mistaken for covering them.
 
 # Coverage
 
-This section maps MeTTa and Hyperon topics to the files that formalize them. The runtime is a formal
-reference: small enough to inspect and explicit about every host contract. It is not a drop-in replacement
-for the Rust Hyperon runtime and does not cover the full Hyperon feature surface.
+The coverage map points each MeTTa and Hyperon topic to the files that formalize it. The runtime is a
+formal reference: small enough to inspect and explicit about every host contract. The runtime is not a
+drop-in replacement for the Rust Hyperon runtime and does not cover the full Hyperon feature surface.
 
 ## Object language and matching
 
@@ -140,8 +140,8 @@ as evaluation requests, loads `(= L R)` rules, performs directional equality red
 `L` and instantiating `R`, implements `match`, `add-atom`, `remove-atom`, `get-atoms`, the atom and
 math operations, and nondeterministic outputs, and returns result lists to model nondeterminism.
 `Space.transform` (query then instantiate) is a helper in `Core/Space.lean` that the operational
-specification uses for its `transform` and `match` steps (`Operational/Semantics.lean`). It is not an
-instruction of the executable interpreter, whose `match` is implemented by `matchConj`.
+specification uses for its `transform` and `match` steps (`Operational/Semantics.lean`). The helper is
+not an instruction of the executable interpreter, whose `match` is implemented by `matchConj`.
 
 # Improvements over Hyperon
 
@@ -149,9 +149,9 @@ Hyperon's minimal MeTTa interpreter (`hyperon-experimental/lib/src/metta/interpr
 authors' description, in an alpha state. Its source carries a self-described "hack" and several `TODO`
 notes at the points that decide evaluation. The written semantics is prose and pseudocode without proofs.
 
-This development is a companion to that work: a total, machine-checked semantics that agrees with
-Hyperon's own test oracle (270 of 270), replaces mutable and ad-hoc machinery with declarative
-constructs, and proves properties the implementation only asserts.
+LeaTTa is a companion to that work: a total, machine-checked semantics that agrees with Hyperon's own
+test oracle (270 of 270), replaces mutable and ad-hoc machinery with declarative constructs, and proves
+properties the implementation only asserts.
 
 ## What is proved
 
@@ -228,9 +228,10 @@ Here are the sources this development draws on.
  * Mike Stay and Lucius Gregory Meredith, *Logic as a Distributive Law* (arXiv:1610.02247) and
    *Representing operational semantics with enriched Lawvere theories* (arXiv:1704.03080): OSLF,
    spatial/behavioral modalities, and the GSLT route from operational rules to logic.
- * Lucius Gregory Meredith, *A Knotted Universe*, *Quoting is Colour-Swap*, and *Knotted Topoi*:
-   the red/black reflective set-theory route from rho-calculus context bisimulation to a fully abstract
-   denotational semantics for finitely presentable GSLTs.
+ * Lucius Gregory Meredith, *A Knotted Universe*, *Quoting is Colour-Swap*, *Paths are Subspaces*,
+   the cost-accounting manuscripts, and *Knotted Topoi*: the route from rho-calculus context
+   bisimulation to fully abstract denotational semantics for finitely presentable GSLTs, plus the
+   path-key and cost refinements that the runtime story has to respect.
  * Jon Beck, *Distributive laws* (1969), and Ross Street, *The formal theory of monads* (1972):
    the composite-monad theorem and the 2-categorical monad setting formalized in
    `MeTTaILProofs/DistributiveLaw.lean`.
@@ -272,12 +273,26 @@ The map below states what each source supports in the Lean development, and what
    `arrow_eq_diaCtx`, `box_preserved`, and the greatest-fixed-point invariance lemmas. The claim is not
    that every construction in the papers has been mechanized; the mechanized part is the predicate-model
    core used by this runtime story.
- * The rset, rho, and knotted-topoi manuscripts {citep knottedUniverse}[] {citep quotingColourSwap}[]
+ * The rset, rho, path-key RSpace, cost-accounting, and knotted-topoi manuscripts
+   {citep knottedUniverse}[] {citep quotingColourSwap}[] {citep pathsSubspaces}[]
+   {citep continuedGSLTCost}[] {citep costAccountedRho}[] {citep costSpacetime}[]
    {citep knottedTopoi}[] support the denotational target. The Lean surface is
    `MeTTaIL/Semantics/Denotational.lean`. The checked claims include `bisimilar_isBisimulation`,
-   `fullyAbstract_of_kernel`, `FullyAbstractModel.eq_iff_bisimilar`, and `eval_rewrite_trace`. The claim
-   is not that the knotted topos, rho desugaring, or final coalgebra has been constructed in Lean. The
-   checked module states the exact proof interface that those constructions must instantiate.
+   `fullyAbstract_of_kernel`, `FullyAbstractModel.eq_iff_bisimilar`,
+   `PathRSpace.comparable_iff_nonempty_subspaceBranch`, `Costed.costedStep_forget`,
+   `Costed.Trace.to_reflTransGen`, and `eval_rewrite_trace`. The claim is not that the knotted topos,
+   rho desugaring, trie store, cut distributive law, cost endofunctor, causal-set functor, or final
+   coalgebra has been constructed in Lean. The checked module states the proof interfaces that those
+   constructions must instantiate.
+ * The MeTTa-calculus, Turing-to-rho, and optimal-channel papers {citep mettaCalculus}[]
+   {citep rhoViaTuring}[] {citep optimalChannels}[] support the compiler direction from MeTTaIL/GSLT
+   presentations to rho/RSpace. The current release uses them as a roadmap, not as completed
+   mechanization: the set-automaton channel compiler, outermost-preserving channel quotient, and
+   Turing-machine encoding are not yet Lean developments.
+ * The boundaried-monoid and reputation papers {citep boundariedMonoids}[] {citep reputationFramework}[]
+   are adjacent to the current formalization. Boundaried monoids line up with partial composition by
+   matching boundaries, and the reputation paper lines up with evidence-indexed OSLF modalities and the
+   PoR-weighted Cordial Miners motivation. They are not counted as checked claims in this release.
  * Beck and Street {citep beckDistributiveLaws}[] {citep streetFormalTheoryMonads}[] support the
    categorical backbone. The Lean surface is `MeTTaILProofs/DistributiveLaw.lean`; the checked headline
    is `MeTTaIL.Beck.DistributiveLaw.composeMonad`. The claim is not a full formalization of Street's

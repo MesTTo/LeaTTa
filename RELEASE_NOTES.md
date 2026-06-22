@@ -1,20 +1,21 @@
 # LeaTTa 1.0.2
 
-LeaTTa 1.0.2 is a follow-up release for the checked MeTTaIL runtime line. The release adds a
-source-backed denotational-semantics interface, rewrites the release-facing README, and keeps the
-Cordial Miners runtime bridge in the public release path.
+LeaTTa 1.0.2 is a patch release for the checked MeTTaIL runtime line. The release adds the denotational
+interface used by the rset, rho, path-key RSpace, cost-accounting, and knotted-topoi papers, rewrites the
+README, and keeps the Cordial Miners runtime bridge in the public release path.
 
 ## Announcement
 
-LeaTTa 1.0.2 tightens the 1.0 line around exact claims and testable entry points. The root README now
-opens with the main validation commands and expected results, then explains the MeTTaIL runtime,
-Cordial Miners bridge, and current open surface without alpha or work-in-progress framing.
+LeaTTa 1.0.2 makes the 1.0 line easier to check. The root README now starts with the commands to run
+and the output to expect. Then it explains the MeTTaIL runtime, the Cordial Miners bridge, and what is
+still missing.
 
 The MeTTaIL layer now includes `MeTTaIL.Semantics.Denotational`, a checked interface for labelled
-transition systems, simulations, bisimulations, denotational kernels, context congruence, and the
-`FullyAbstract` property. The book connects that interface to the rset, rho-calculus, and knotted-topoi
-manuscripts. The release does not claim the knotted topos, the MeTTaIL-to-rho desugaring, or the final
-coalgebra construction as completed Lean proofs.
+transition systems, simulations, bisimulations, denotational kernels, context congruence, the
+`FullyAbstract` property, path-key RSpace matching, and costed transition systems. The book connects that
+interface to the rset, rho-calculus, path-key RSpace, cost-accounting, and knotted-topoi manuscripts. The
+release does not claim the knotted topos, the MeTTaIL-to-rho desugaring, or the final coalgebra
+construction as completed Lean proofs.
 
 The next step is deepening the bridge between MeTTaIL and Cordial Miners.
 
@@ -28,8 +29,8 @@ The next step is deepening the bridge between MeTTaIL and Cordial Miners.
   without a Lean toolchain.
 - Cordial Miners remains hosted as a MeTTaIL runtime presentation with AC-aware state and inbox
   rewriting.
-- The book cites the rset, rho, and knotted-topoi papers and states which denotational claims are
-  interfaces versus completed proofs.
+- The book cites the rset, rho, path-key RSpace, cost-accounting, and knotted-topoi papers and separates
+  the Lean interface from the proofs that still need to be written.
 - The GitHub Pages workflow builds the Verso book and API docs for the kernel, metatheory, operational
   semantics, MeTTaIL, MeTTaILProofs, and CordialMiners targets.
 
@@ -64,11 +65,13 @@ cd book && lake exe docs
 
 ## Scope
 
-The `--mettail` file format is intentionally small: `sort`, `term`, and base `rewrite` declarations
-over S-expression terms. The format is the release-facing path into the checked runtime, not the full BNFC
-MeTTaIL surface parser. The AC matcher used by the Cordial Miners runtime bridge covers the linear
+The `--mettail` file format covers `sort`, `term`, and base `rewrite` declarations over S-expression
+terms. The format is the CLI path into the checked runtime, not the full BNFC MeTTaIL surface parser.
+The AC matcher used by the Cordial Miners runtime bridge covers the linear
 collection fragment needed by those rules: one fixed payload and one rest variable.
 
-The denotational-semantics addition is an interface and theorem scaffold. The interface states the Lean
-shape of full abstraction for a context-labelled system. The interface does not construct the knotted
-topos or prove the rho desugaring functor.
+The denotational-semantics addition says what a future model has to prove: denotational equality is the
+same as context bisimilarity. The path-key layer records prefix comparability and the two subspace COMM
+branches. The costed layer records costed traces and proves they forget to ordinary behaviour traces. The
+knotted topos, rho desugaring functor, trie store, cut distributive law, and cost endofunctor are still
+not in Lean.

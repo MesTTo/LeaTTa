@@ -59,7 +59,7 @@ support the inductives that nest through `List`.
 A `.module` file is a program in an algebra of theory presentations. You start from `Empty`, extend a
 presentation with sorts, symbols, equations, and rewrites, compose presentations with union,
 intersection, and difference, and apply parameterized theories. The Lean `elaborate` function
-interprets that algebra into a presentation. It is fuel-bounded, because applying a theory expands
+interprets that algebra into a presentation. The elaborator is fuel-bounded, because applying a theory expands
 another theory's body, and that keeps the development free of `partial`.
 
 The trust point is concrete. We built the real Scala tool and ran it. Then we proved, by `decide` in the
@@ -83,7 +83,7 @@ parses a small external dialect format with `sort`, `term`, and `rewrite` declar
 monomorphizes it, and runs a term with the generic reducer. For example, the checked fixture
 `tests/mettail/bool.mettail` declares `tt`, `ff`, and `notOp`; running
 `LeaTTa --mettail tests/mettail/bool.mettail --term '(notOp tt)'` prints `ff`. That file format is not
-the full BNFC MeTTaIL surface. It is the external runtime path for base-rewrite dialects, wired to the
+the full BNFC MeTTaIL surface. The format is the external runtime path for base-rewrite dialects, wired to the
 same verified reducer.
 
 # The Operational Semantics
@@ -136,27 +136,64 @@ The newer F1R3FLY manuscripts add a denotational target for this operational sto
 builds a red/black reflective set theory where each colour's atoms are the other colour's sets
 {citep knottedUniverse}[]. The second paper uses that universe for the rho-calculus: quote and
 dereference become colour-swap operations, rho terms denote RSpace-style tables, and the behavioural
-model identifies equality with context bisimilarity {citep quotingColourSwap}[]. The third paper lifts
-that pattern one categorical level: a finitely presentable GSLT presented in MeTTaIL should desugar to
-rho by installing persistent rewrite listeners at term locations, then inherit the fully abstract rho
-denotation inside the knotted topos {citep knottedTopoi}[].
+model identifies equality with context bisimilarity {citep quotingColourSwap}[]. A follow-up RSpace
+paper makes the store key polymorphic: keys can be paths, the store becomes a trie, and prefix
+comparability changes what a cut matches without allowing ambient store reactions {citep pathsSubspaces}[].
+The knotted-topoi paper then lifts the pattern one categorical level: a finitely presentable GSLT
+presented in MeTTaIL should desugar to rho by installing persistent rewrite listeners at term locations,
+then inherit the fully abstract rho denotation inside the knotted topos {citep knottedTopoi}[].
 
-The checked Lean surface now has a precise hook for this claim. `MeTTaIL.Semantics.Denotational`
-defines labelled transition systems, simulations, bisimulations, the kernel relation of a denotation,
-and `FullyAbstract`, the statement
-`denote s = denote t <-> Bisimilar lts s t`. The theorem `fullyAbstract_of_kernel` packages the
-coalgebraic proof shape used by the papers: if equality in the behaviour object is exactly the
-bisimulation kernel, the denotation is fully abstract. The packaged `FullyAbstractModel` also records
-the context-congruence obligation, because the papers need context labels to make bisimilarity a
-congruence without a later closure step.
+The compilation side has its own source trail. The MeTTa-calculus note describes the RSpace reading of
+MeTTa-style spaces: comprehensions and outputs become keyed entries, parallel composition becomes RSpace
+merge, and opposite-polarity entries at the same key react {citep mettaCalculus}[]. The Turing-to-rho
+note shows the same rho core can host a Turing-machine encoding where tape cells are channels, reads are
+for-comprehensions, writes are outputs, and step and namespace costs transport to rho reductions
+{citep rhoViaTuring}[]. The optimal-channel paper gives the missing compiler-side target for a general
+GSLT-to-rho translation: channel names should be computed from rewrite contexts by set-automaton partial
+evaluation, so outer channels survive inner reductions {citep optimalChannels}[].
+
+The Lean side now states that claim as an interface. `MeTTaIL.Semantics.Denotational` defines labelled
+transition systems, simulations, bisimulations, the kernel relation of a denotation, and `FullyAbstract`,
+the statement `denote s = denote t <-> Bisimilar lts s t`. The theorem `fullyAbstract_of_kernel` packages
+the coalgebraic argument used by the papers: if equality in the behaviour object is exactly the
+bisimulation kernel, the denotation is fully abstract. The packaged `FullyAbstractModel` also records the
+context-congruence obligation, because the papers need context labels to make bisimilarity a congruence
+without a later closure step.
+
+The transfer theorem is there too. `fullyAbstract_of_bisimilarity_translation` says that a source calculus
+inherits full abstraction from a target calculus when the translation preserves and reflects bisimilarity.
+`congruence_of_bisimilarity_translation` adds the context side: if source contexts commute with target
+contexts under the translation, target congruence pulls back to source congruence.
+`FullyAbstractModel.pullback` packages those two facts as a constructor for the pulled-back model. These
+theorems are the part of the knotted-topoi story that can already be stated before the missing
+MeTTaIL-to-rho desugaring theorem is supplied.
+
+The path-key RSpace note adds another interface in the same Lean file. `PathRSpace.Path` is a list of
+names, `PathRSpace.Prefix` and `PathRSpace.Comparable` state the prefix-order matching condition, and
+`PathRSpace.SubspaceBranch` records the two COMM cases: output deeper than input, or input deeper than
+output. The theorem `PathRSpace.comparable_iff_nonempty_subspaceBranch` checks that comparability is
+exactly enough to choose one of those branches. `PathRSpace.SubspaceSystem` records the no-implicit-
+interaction discipline: a concrete model has to prove that every reaction comes from an explicit cut and
+that the cut exposes comparable paths.
+
+The cost-accounting papers add a second interface. `Costed.CostedLTS` is a labelled transition system
+whose steps carry a cost. `Costed.CostedLTS.forget` drops the cost annotation and recovers the ordinary
+behavioural system. The theorem `Costed.Trace.to_reflTransGen` proves that any finite costed trace is an
+ordinary trace after costs are forgotten. That is the checked kernel of the story told by the cost
+endofunctor and cost-accounted rho papers: phlogiston and token stacks refine behaviour, they do not
+replace the behaviour relation {citep continuedGSLTCost}[] {citep costAccountedRho}[]. The spacetime
+paper sits one layer beyond that, reading spent cost as the measure of a causal history
+{citep costSpacetime}[].
 
 The Lean file is an interface, not the knotted topos. The current release proves the operational pieces
 that such a denotation must respect: `RewStep`, `RewStepMany`, executable soundness, OSLF predicates,
 greatest-fixed-point OSLF safety, confluence fragments, AC rewriting, and the Cordial Miners runtime
-embedding. The current release does not yet prove the rho desugaring functor, the location-channel
-operational correspondence, the final behaviour coalgebra in a knotted topos, or the calibration between
-context bisimulation and each object language's usual observational equivalence. Those are the real next
-theorems if the automatic-denotation claim is to become machine checked.
+embedding. The rho desugaring functor, the location-channel operational correspondence, the final
+behaviour coalgebra in a knotted topos, the path-key trie store, the cut distributive law, subspace
+reaction confluence, the set-automaton channel compiler, the cost endofunctor itself, and the calibration
+between context bisimulation and each object language's usual observational equivalence are still not
+formalized. Those are the real next theorems if the claim that a spec gets a denotation automatically is
+to become machine checked.
 
 # Two Calculi from the Papers
 
@@ -181,11 +218,11 @@ Born probability of a superposition is not the classical sum.
 
 # Connecting Back to the Kernel
 
-This book's MeTTa kernel and the MeTTaIL framework meet in a bridge: an embedding of the kernel's
+The book's MeTTa kernel and the MeTTaIL framework meet in a bridge: an embedding of the kernel's
 `Metta.Atom` (the four metatypes) into GSLT terms. A symbol becomes a nullary constructor, a variable
 a GSLT variable, an expression a wild-labelled application, and a grounded atom a keyed nullary
 constructor. The embedding is injective on the grounded-free fragment; grounded atoms inherit the same
-IEEE-754 float caveat the kernel documents for its own equality. This is the precise sense in which
+IEEE-754 float caveat the kernel documents for its own equality. The bridge is the precise sense in which
 MeTTa is a GSLT object language.
 
 The metatheory layer rounds this out: decidable equality and a lawful Boolean equality for the whole
@@ -197,12 +234,12 @@ component).
 
 The deepest layer is still a research target. MeTTaIL's modal type system, the possibility modalities,
 and the recovery of arrow types in the design notes are sketched in the source, but the release does not
-claim that typing theorem. The rho and knotted-topoi papers give the denotational route, and the new
-Lean interface states the proof shape, but the knotted topos and the MeTTaIL-to-rho desugaring are not
-yet formalized. We formalize the determinate fragments and mark the open parts in place. The Scala
-tool's own `--hypercube` pass omits the modal types too, and our type-lift matches the tool, not the
-unfinished note. The per-variable category-consistency check of the elaborator's type checker remains
-future work; the category-match and bound-variable checks are in place.
+claim that typing theorem. The rho and knotted-topoi papers give the denotational route, and the new Lean
+interface states the theorem to prove, but the knotted topos and the MeTTaIL-to-rho desugaring are not yet
+formalized. We formalize the determinate fragments and mark the open parts in place. The Scala tool's own
+`--hypercube` pass omits the modal types too, and our type-lift matches the tool, not the unfinished note.
+The per-variable category-consistency check of the elaborator's type checker remains future work; the
+category-match and bound-variable checks are in place.
 
 Building a faithful model is also a good way to find bugs in the thing you are modeling, and we found a
 few in the tool's rename and checking code. Where the Scala does something wrong, an export rename that

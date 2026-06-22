@@ -15,8 +15,8 @@ Main exports: Event, eNat, dNat, sexprToAST, encodeListA, decodeListA, encodeFac
   NoEmbeddedConfig, RuntimeConfigShape, noEmbeddedConfig_encodeFactA,
   noEmbeddedConfig_encodeEventA, runtimeConfigShape_encConfigList, runtimeConfigShape_encConfig,
   astToInbox_encConfigList, astToInbox_encConfig, astToState_encConfig
-Open obligations: `astToState` intentionally ignores malformed leaves and collapses duplicates through
-  `Finset`; the simulation layer states the exact abstraction theorem that uses this decoder.
+Open obligations: `astToState` drops malformed leaves and collapses duplicates through `Finset`; the
+  simulation layer states the exact abstraction theorem that uses this decoder.
 -/
 import CordialMiners.Extract.MettaIL
 import MeTTaIL.Syntax
@@ -167,7 +167,7 @@ def inboxOp : Label := .id "inbox"
 /-- The top-level runtime configuration label. -/
 def cmOp : Label := .id "cm"
 
-/-- Sentinel leaf for right-nested AC collections. It is not an identity law. -/
+/-- Sentinel leaf for right-nested AC collections. The sentinel is not an identity law. -/
 def cmNil : AST := symA "nil"
 
 /-- A binary collection node. -/
@@ -196,11 +196,12 @@ theorem decodeEventA_encodeEventA (eW : Wave → AST) (eH : Hash → AST)
   | order hs =>
       simp [encodeEventA, decodeEventA, appA, decodeOrderedPayloadA_encodeListA eH dH hH hs]
 
-/-- Encode a list of coarse facts as a right-nested `state` collection. This is the executable encoder. -/
+/-- Encode a list of coarse facts as a right-nested `state` collection. Executable scenarios use this
+    encoder. -/
 def encStateList (eW : Wave → AST) (eH : Hash → AST) (facts : List (TrecFact Wave Hash)) : AST :=
   (facts.map (encodeFactA eW eH)).foldr (fun f rest => consA stateOp f rest) cmNil
 
-/-- Encode a finite coarse state as a right-nested `state` collection. This wrapper is noncomputable
+/-- Encode a finite coarse state as a right-nested `state` collection. The wrapper is noncomputable
     because `Finset` forgets order; executable scenarios use `encStateList`. -/
 noncomputable def encState [DecidableEq Wave] [DecidableEq Hash]
     (eW : Wave → AST) (eH : Hash → AST) (s : TrecState Wave Hash) : AST :=
@@ -210,7 +211,7 @@ noncomputable def encState [DecidableEq Wave] [DecidableEq Hash]
 def encInbox (eW : Wave → AST) (eH : Hash → AST) (events : List (Event Wave Hash)) : AST :=
   (events.map (encodeEventA eW eH)).foldr (fun ev rest => consA inboxOp ev rest) cmNil
 
-/-- Encode a full runtime configuration from an ordered fact list. This is the executable encoder. -/
+/-- Encode a full runtime configuration from an ordered fact list. Executable scenarios use this encoder. -/
 def encConfigList (eW : Wave → AST) (eH : Hash → AST) (events : List (Event Wave Hash))
     (facts : List (TrecFact Wave Hash)) : AST :=
   .sexp cmOp [encInbox eW eH events, encStateList eW eH facts]
@@ -222,7 +223,8 @@ noncomputable def encConfig [DecidableEq Wave] [DecidableEq Hash]
   .sexp cmOp [encInbox eW eH events, encState eW eH s]
 
 mutual
-  /-- Payloads are clean when they do not contain an embedded runtime configuration head. This is the
+  /-- Payloads are clean when they do not contain an embedded runtime configuration head. Payload
+      cleanliness is the
       syntactic side condition needed by the later backward classifier: protocol rules should fire at the
       configuration boundary, not inside encoded field payloads. -/
   def NoEmbeddedConfig : AST → Prop

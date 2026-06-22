@@ -21,14 +21,14 @@ tag := "sec-cordial-miners"
 Cordial Miners is a leaderless DAG-based BFT consensus protocol {citep cordialMiners}[]. Participants
 gossip signed blocks that point back at the blocks they have seen, the blocks form a growing DAG (a
 *blocklace*), and each participant reads a total order of events out of its own local copy of that DAG,
-with no leader and no extra voting rounds. This chapter is about a third Lean development in this book,
+with no leader and no extra voting rounds. The chapter covers a third Lean development in this book,
 built alongside the MeTTa kernel and {ref "sec-mettail"}[the MeTTaIL framework], that formalizes the
 *PoR-weighted* (Proof-of-Reputation) variant of the protocol, following a blueprint by Ben Goertzel.
 
-The earlier chapters formalize languages. This one formalizes the layer underneath a language on a
-chain: the part that lets many nodes agree on one order of events. The motivation is the same thread
-that runs through the rest of the book. The MeTTa operational-semantics paper {citep mops}[] and the
-Hyperon program {citep goertzelMetagraph}[] call for a machine-checked specification that an
+The earlier chapters formalize languages. The consensus chapter formalizes the layer underneath a
+language on a chain: the part that lets many nodes agree on one order of events. The motivation is the
+same thread that runs through the rest of the book. The MeTTa operational-semantics paper {citep mops}[]
+and the Hyperon program {citep goertzelMetagraph}[] call for a machine-checked specification that an
 implementation can be certified against. For a consensus protocol the property you most want certified
 is *safety*: two honest nodes never commit conflicting orders. That is what we prove, and we prove it
 down to a small set of named assumptions a consensus engineer already expects.
@@ -50,7 +50,10 @@ following parent pointers, is the reflexive-transitive closure of the parent edg
 a reputation projection the framework treats as an abstract nonnegative parameter, and a set of
 participants is *heavy* when its total weight crosses a rational threshold of the committee weight. We
 keep all arithmetic over the natural numbers and compare cross-products, so a heaviness test is an
-integer inequality with no division and no rounding.
+integer inequality with no division and no rounding. The separate identity-indexed reputation note
+explains how signed capability judgments and observed traces can justify such weights
+{citep reputationFramework}[]. The Lean development here does not formalize that reputation calculus; it
+takes the weight function as input and proves what the consensus protocol needs from it.
 
 The whole safety story rests on one arithmetic fact about heavy sets. If two sets are each heavier than
 the threshold, their overlap is heavier than twice the threshold minus the whole, so under a Byzantine
@@ -85,7 +88,7 @@ safety of leader selection.
 For all nodes to agree, the function that reads an order out of a blocklace must be deterministic and
 must respect causality. We give a concrete, computable one: a topological sort of the present hashes by
 the parent graph, in the style of Kahn's algorithm, choosing the least available hash at each step for
-canonical tie-breaking. It is written as structural recursion on a fuel counter equal to the vertex
+canonical tie-breaking. The algorithm is written as structural recursion on a fuel counter equal to the vertex
 count, so it is total without `partial`.
 
 We prove the order is deterministic (it is a pure function), has no duplicates, lists only hashes that
@@ -159,10 +162,10 @@ A runtime configuration is the AST node:
 ```
 
 The `inbox` and `state` fields are binary collections. Their labels are flagged as associative and
-commutative, and both collections end in a `nil` sentinel. This follows the rewriting-logic view of a
+commutative, and both collections end in a `nil` sentinel. The encoding follows the rewriting-logic view of a
 system as equations plus rules
 {citep meseguerRewritingLogic}[] and the Maude execution pattern for rewriting modulo structural
-equations {citep maudeBook}[]. It also follows the Chemical Abstract Machine's multiset picture
+equations {citep maudeBook}[]. The same choice matches the Chemical Abstract Machine's multiset picture
 {citep chemicalAbstractMachine}[]: the facts form a soup, and a rule fires when the soup contains the
 pieces it needs.
 
@@ -192,10 +195,10 @@ payload. The finality example consumes one proposal and reaches `final-leader` i
 Theorems `buriedProposal_eval_modAC`, `order_eval_modAC`, and `finality_eval_run_modAC` give relation
 witnesses for those computed results.
 
-The AC matcher is intentionally scoped. Full AC matching has hard cases even in restricted elementary
-forms {citep ekerSingleACMatching}[], and variadic matching with sequence variables needs a larger theory
-{citep variadicACMatching}[]. The runtime rules need a smaller fragment: one fixed subpattern and one
-rest variable under a binary AC collection. That is the fragment proved in `MeTTaILProofs/ACMatch.lean`.
+The AC matcher has a narrow scope. Full AC matching has hard cases even in restricted elementary forms
+{citep ekerSingleACMatching}[], and variadic matching with sequence variables needs a larger theory
+{citep variadicACMatching}[]. The runtime rules need one fixed subpattern and one rest variable under a
+binary AC collection. That is the fragment proved in `MeTTaILProofs/ACMatch.lean`.
 
 The theorem `matchPatAC_acRest_sound` says that a successful fragment match has an AC-equivalent
 representative accepted by ordinary matching. `matchPatAC_acRest_complete_of_flat_split` proves
@@ -216,8 +219,8 @@ TrecState.Step s s' ->
 
 The target is compared through `astToState`, not by literal AST equality. The runtime state is an AC
 multiset with a `nil` sentinel. The protocol state is a `Finset`. Re-firing a rule can add a duplicate AST
-fact, while the decoded finite set is unchanged. This is the stuttering abstraction used in TLA-style
-refinement arguments {citep lamportTLA}[].
+fact, while the decoded finite set is unchanged. That equality branch is the stuttering abstraction used
+in TLA-style refinement arguments {citep lamportTLA}[].
 
 The duplicate cases are explicit. `decodeStateA_cons_encodeFactA_stutter` and
 `astToState_cons_encodeFactA_stutter` state the basic fact-insertion stutter. `event_forward_stutter` and
@@ -225,8 +228,8 @@ The duplicate cases are explicit. `decodeStateA_cons_encodeFactA_stutter` and
 `event_inbox_mem_forward_stutter` and `derived_state_mem_forward_stutter`. The theorem
 `decodeStateA_stateA_none` covers inserted leaves that are invisible to the selected decoder.
 
-The backward theorem is the local step refinement in the other direction. It is phrased for field decoders
-that respect `ACEq acOpCM`:
+The backward theorem is the local step refinement in the other direction. The theorem is phrased for
+field decoders that respect `ACEq acOpCM`:
 
 ```
 runtime_step_backward_of_decoders_acEq :
@@ -247,7 +250,7 @@ The proof first moves to the representative chosen by `RewStepModAC`.
 `runtime_root_step_backward` classifies the six rules. The generic transport lemma
 `astToState_acEq_of_decoders_acEq` supplies the final AC-invariance step.
 
-For the executable Nat/Nat instance, the field decoder proof is `dNat_acEq`. It gives
+For the executable Nat/Nat instance, the field decoder proof is `dNat_acEq`. The proof gives
 `astToState_dNat_acEq` and the concrete theorem `runtime_step_backward_nat`. That theorem is the runtime
 claim most directly tied to the build-checked examples.
 
@@ -260,7 +263,7 @@ corollaries: `finality_runtime_trec_reachable`, `finality_runtime_wf`, and
 # What Remains Open
 
 The boundaries are stated as explicit hypotheses. Finality permanence enters the top theorem as a
-hypothesis. It is the blocklace-only-grows discipline applied to finality certificates.
+hypothesis. Finality permanence is the blocklace-only-grows discipline applied to finality certificates.
 
 Liveness remains conditional on network and scheduler fairness. The development proves the structural
 cores, FIFO fair-lane progress and bounded-service credit, but it does not prove a temporal dissemination

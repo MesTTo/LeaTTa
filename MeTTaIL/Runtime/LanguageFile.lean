@@ -3,13 +3,13 @@ Module: MeTTaIL.Runtime.LanguageFile
 Layer: Runtime
 Purpose: A small external file format for runnable MeTTaIL dialects. A file declares sorts, prefix
   syntax constructors, and base rewrites, then the CLI can run a term through the verified generic
-  runtime. This is the product-facing surface for the "tweak the LanguageDef, get a runtime" path:
-  edit a file, run `LeaTTa --mettail FILE --term TERM`, and the result is computed by `runInstMono`.
+  runtime. The product-facing path is: edit a file, run `LeaTTa --mettail FILE --term TERM`, and the
+  result is computed by `runInstMono`.
 Imports: MeTTaIL.Runtime.Generic
 Trusted boundary: none
 Main exports: parseInst, parsePresentation, runSource
-Open obligations: this is not the full BNFC MeTTaIL parser. It is an intentionally small external
-  dialect format for base-rewrite presentations; richer syntax can elaborate to the same `TheoryInst`.
+Open obligations: this is not the full BNFC MeTTaIL parser. The file format covers the CLI runtime path:
+  sorts, prefix constructors, and base rewrites. Richer syntax can elaborate to the same `TheoryInst`.
 -/
 import MeTTaIL.Runtime.Generic
 

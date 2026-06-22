@@ -14,9 +14,9 @@ The release has three active layers.
 - The Cordial Miners layer formalizes the PoR-weighted coarse protocol, proves the top-level safety
   theorem, and hosts the protocol as a MeTTaIL runtime presentation.
 
-LeaTTa 1.0.2 is a research release with an exact checked surface. The release does not claim the full
-Hyperon module system, MeTTa on Rholang, or the remaining MeTTaIL denotational goals. The theorems named
-in this README are checked by Lean's kernel with no `sorry`, no `admit`, no `native_decide`, no
+LeaTTa 1.0.2 is a research release with a fixed list of checked claims. The release does not claim the
+full Hyperon module system, MeTTa on Rholang, or the remaining MeTTaIL denotational goals. The theorems
+named in this README are checked by Lean's kernel with no `sorry`, no `admit`, no `native_decide`, no
 `partial`, and no `unsafe`. The full comparison with Hyperon is in the book's Improvements over Hyperon
 appendix at [mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/).
 
@@ -247,13 +247,13 @@ presenting graph-structured lambda theories. A presentation gives the sorts, con
 and rewrites of an object calculus. LeaTTa checks that presentation pipeline and then runs the resulting
 rewrite system with a verified reducer.
 
-The practical claim is narrow and tested: for the external runtime format shipped here, you can edit a
-small dialect file, run the `LeaTTa` binary on a term, and get the normal form produced by the checked
-evaluator. The deeper research claim, that every finitely presentable MeTTaIL/GSLT should inherit a
-fully abstract denotational semantics by desugaring to rho and then into a knotted topos, is recorded as
-a formal interface and a documented proof target. That denotational claim remains open.
+The runtime claim is the part you can run today: edit a small dialect file, run the `LeaTTa` binary on a
+term, and get the normal form produced by the checked evaluator. The larger research claim is still open.
+The repo now states the Lean interface that claim has to satisfy: a finitely presentable MeTTaIL/GSLT
+should desugar to rho, inherit a fully abstract denotation from the knotted-topoi model, and prove that
+denotational equality is exactly context bisimilarity.
 
-The checked surface includes:
+What is checked now:
 
 - the elaborate, desugar, type-lift, and monomorphize pipeline, pinned by kernel `decide` against
   output captured from the real Scala tool on `Rholang.module`;
@@ -272,24 +272,36 @@ The MeTTaIL layer builds with 0 `sorry`, 0 `admit`, 0 `native_decide`, 0 `partia
 axiom audit shows only the three standard axioms used elsewhere in the project: `propext`,
 `Classical.choice`, and `Quot.sound`.
 
-The open surface is explicit. The release does not claim the modal hypercube typing theorem for binder
-calculi, the rho-calculus full-abstraction theorem, spice and mq as full reduction theories, a standalone
-rho-calculus reduction development, the per-variable category-consistency check in the elaborator, or an
-operational bisimulation against the four-register machine. The module headers and the book state these
-boundaries directly.
+What is still missing is also stated directly. The release does not claim the modal hypercube typing
+theorem for binder calculi, the rho-calculus full-abstraction theorem, spice and mq as full reduction
+theories, a standalone rho-calculus reduction development, the per-variable category-consistency check in
+the elaborator, or an operational bisimulation against the four-register machine. The module headers and
+the book keep those boundaries visible.
 
-The denotational target is source-backed. The target comes from three F1R3FLY manuscripts: the rset
-knotted-universe paper (<https://github.com/F1R3FLY-io/publications/tree/main/rset>), the rho-calculus
+The denotational and compiler target comes from the F1R3FLY publication set. The core route uses the
+rset knotted-universe paper (<https://github.com/F1R3FLY-io/publications/tree/main/rset>), the rho
 model (<https://github.com/F1R3FLY-io/publications/blob/main/denotational-semantics-for-rho/knot-rho.pdf>),
 and the knotted-topoi lift
-(<https://github.com/F1R3FLY-io/publications/blob/main/knotted-topoi/knotted-topoi.pdf>). The route is:
-a finitely presentable MeTTaIL/GSLT presentation desugars to rho by persistent listeners at term
-locations; rho receives a context-labelled behavioural semantics; equality in the final behaviour object
-is context bisimilarity. `MeTTaIL/Semantics/Denotational.lean` states that proof shape in Lean. The file
-defines labelled transition systems, simulations, bisimulations, denotational kernels, context
-congruence, and the `FullyAbstract` property. The file does not construct the knotted topos, prove the
-MeTTaIL-to-rho operational correspondence, or calibrate context bisimilarity against each object
-language's observational equivalence.
+(<https://github.com/F1R3FLY-io/publications/blob/main/knotted-topoi/knotted-topoi.pdf>): a finitely
+presentable MeTTaIL/GSLT presentation desugars to rho by persistent listeners at term locations, rho
+receives a context-labelled behavioural semantics, and equality in the final behaviour object is context
+bisimilarity. The path-key RSpace paper
+(<https://github.com/F1R3FLY-io/publications/blob/main/polymorphic-rspace/paths-subspaces.pdf>) refines
+the store key from names to paths, so prefix comparability becomes part of the matching story. The cost
+papers
+(<https://github.com/F1R3FLY-io/publications/blob/main/cost-accounting-as-monad/continued-gslt-cost-v2.pdf>,
+<https://github.com/F1R3FLY-io/publications/blob/main/cost-accounting/cost-accounted-rho.pdf>) give the
+phlogiston/token-stack refinement.
+
+`MeTTaIL/Semantics/Denotational.lean` writes the usable part of that target as Lean definitions and
+transfer theorems. The file defines labelled transition systems, simulations, bisimulations,
+denotational kernels, context congruence, the `FullyAbstract` property, a pullback theorem for
+transferring full abstraction along a translation that preserves and reflects bisimilarity,
+`PathRSpace` for path keys and subspace COMM branches, and `Costed` for costed transition systems whose
+traces forget to ordinary behaviour traces. The file does not construct the knotted topos, prove the
+MeTTaIL-to-rho operational correspondence, formalize the trie store, prove the cut distributive law,
+construct the cost endofunctor, or calibrate context bisimilarity against each object language's
+observational equivalence.
 
 Formalizing the tool also turned up several bugs in it. They are written up for the F1R3FLY team in
 [`MeTTaIL/HYPERON_IMPROVEMENTS.md`](MeTTaIL/HYPERON_IMPROVEMENTS.md). The full treatment is the MeTTaIL
@@ -302,11 +314,11 @@ lake build MeTTaIL MeTTaILProofs MeTTaILTests
 
 ### A verified spec-to-runtime
 
-The formalization carries a presentation all the way to a running reducer. Change the dialect
-declarations in the small release-facing format, and the `LeaTTa` binary parses the file, monomorphizes
-the presentation, and runs the term through the checked evaluator. The one-step engine is sound and, for
-base rewriting, complete. The engine terminates under a measure and is confluent by Newman's lemma, with
-unique normal forms when the usual termination and local-confluence hypotheses are supplied.
+The formalization carries a presentation all the way to a running reducer. Change the declarations in the
+small CLI format, and the `LeaTTa` binary parses the file, monomorphizes the presentation, and runs the
+term through the checked evaluator. The one-step engine is sound and, for base rewriting, complete. The
+engine terminates under a measure and is confluent by Newman's lemma, with unique normal forms when the
+usual termination and local-confluence hypotheses are supplied.
 
 The shipped binary now exposes the path directly for a small editable dialect format with `sort`,
 `term`, and `rewrite` declarations. The quick-test section near the top of this README shows the CLI
@@ -319,8 +331,8 @@ decides AC-equivalence (`AC`), a modulo-AC engine sound for the `R/AC` relation 
 Church-Rosser modulo AC (`ACNormal`): AC-equivalent terms normalize to the identical term.
 
 `ACMatch` adds the executable AC-aware matcher used by Cordial Miners. Its proved fragment is the linear
-collection pattern with one fixed subpattern and one rest variable. That scope is intentional. Full AC
-matching has hard cases even in small formulations, and variadic AC matching with sequence variables
+collection pattern with one fixed subpattern and one rest variable. That scope matches the protocol. Full
+AC matching has hard cases even in small formulations, and variadic AC matching with sequence variables
 needs a larger algorithm than the protocol uses. The scoped matcher follows Steven Eker's "Single
 Elementary Associative-Commutative Matching" and Dundua, Kutsia, and Marin's "Variadic equational
 matching in associative and commutative theories."
@@ -362,10 +374,10 @@ confluence. Supporting results include the congruence of rewriting (a step, and 
 any context).
 
 The compile path `runInst`/`runInstMono` (elaborate, monomorphize, run) connects the front end to the
-reducer, with monomorphization proved behavior-preserving. `MeTTaIL/Runtime/LanguageFile.lean` is the
-product-facing file parser for that path; it is intentionally smaller than the full BNFC MeTTaIL
-surface. Everything is axiom-clean (no `sorry`, the three standard axioms only). The remaining research
-items are listed in the module headers and the proof-status appendix.
+reducer, with monomorphization proved behavior-preserving. `MeTTaIL/Runtime/LanguageFile.lean` is the CLI
+file parser for that path and covers the release format, not the full BNFC MeTTaIL surface. Everything is
+axiom-clean (no `sorry`, the three standard axioms only). The remaining research items are listed in the
+module headers and the proof-status appendix.
 
 ## Cordial Miners (PoR-weighted consensus)
 
@@ -383,7 +395,7 @@ equivocation detection, final-leader ratification, verified topological sorting,
 simulation, lossless extraction to MeTTaIL atoms, executable demos, and the runtime bridge below.
 
 The reader-facing overview is [`CordialMiners/README.md`](CordialMiners/README.md). The book chapter
-gives the source-backed explanation.
+gives the explanation with the paper links.
 
 ```bash
 lake build CordialMiners
@@ -489,7 +501,7 @@ make release                                         # package dist/leatta-<vers
 ## Where it improves on the current implementation
 
 The minimal interpreter in `hyperon-experimental` is openly provisional. Its source carries a
-self-described "hack" and several `TODO` notes at the points that decide evaluation. This
+self-described "hack" and several `TODO` notes at the points that decide evaluation. The
 formalization replaces those with declarative, total constructs. The full table is in the book's
 Improvements over Hyperon appendix at [mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/):
 

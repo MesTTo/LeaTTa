@@ -61,6 +61,90 @@ def quotingColourSwap : Article where
   pages := none
   url := "https://github.com/F1R3FLY-io/publications/blob/main/denotational-semantics-for-rho/knot-rho.pdf"
 
+/-- Meredith; the path-key refinement of the RSpace store and its cut-triggered subspace dynamics. -/
+def pathsSubspaces : Article where
+  title := inlines!"Paths are Subspaces: a cut-triggered polymorphism of RSpace over path-keys, and its distributive law"
+  authors := #[inlines!"Lucius Gregory Meredith"]
+  journal := inlines!"Manuscript"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/F1R3FLY-io/publications/blob/main/polymorphic-rspace/paths-subspaces.pdf"
+
+/-- Meredith; Turing-machine encoding into rho and the complexity reading of rho reductions. -/
+def rhoViaTuring : Article where
+  title := inlines!"From Turing's Machine to the Rho Calculus: An Introduction by Translation"
+  authors := #[inlines!"Lucius Gregory Meredith"]
+  journal := inlines!"Manuscript"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/F1R3FLY-io/publications/blob/main/FromTuringToRHO/rho_via_turing.pdf"
+
+/-- Meredith; channel naming for compiling GSLT rewrite contexts into rho. -/
+def optimalChannels : Article where
+  title := inlines!"Optimal Channel Naming for Compositional Rewrite Translations via Set Automaton Partial Evaluation"
+  authors := #[inlines!"Lucius Gregory Meredith"]
+  journal := inlines!"Manuscript"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/F1R3FLY-io/publications/blob/main/optimal-channels/optimal-channels.pdf"
+
+/-- Meredith; the cost endofunctor on continued interactive GSLTs. -/
+def continuedGSLTCost : Article where
+  title := inlines!"Continued Interactive GSLTs and the Cost Endofunctor"
+  authors := #[inlines!"Lucius Gregory Meredith"]
+  journal := inlines!"Manuscript"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/F1R3FLY-io/publications/blob/main/cost-accounting-as-monad/continued-gslt-cost-v2.pdf"
+
+/-- Meredith; the rho instance of the cost-accounting construction. -/
+def costAccountedRho : Article where
+  title := inlines!"Cost-Accounted Rho Calculus: A Spectral Decomposition of Phlogiston"
+  authors := #[inlines!"Lucius Gregory Meredith"]
+  journal := inlines!"Manuscript"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/F1R3FLY-io/publications/blob/main/cost-accounting/cost-accounted-rho.pdf"
+
+/-- Meredith; the causal-set reading of cost-accounted GSLT histories. -/
+def costSpacetime : Article where
+  title := inlines!"Spacetime from Cost: A functor from cost-accounted ciGSLTs to measured causal sets"
+  authors := #[inlines!"Lucius Gregory Meredith"]
+  journal := inlines!"Manuscript"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/F1R3FLY-io/publications/blob/main/cost-spacetime/spacetime-functor.pdf"
+
+/-- Meredith; partial composition as boundary-aware algebra. -/
+def boundariedMonoids : Article where
+  title := inlines!"Boundaried Monoids via Comprehension: A purely equational theory"
+  authors := #[inlines!"Lucius Gregory Meredith"]
+  journal := inlines!"Manuscript"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/F1R3FLY-io/publications/blob/main/category-theory-via-monads/boundaried-monoids.pdf"
+
 /-- Meredith; the categorical lift from the rho model to finitely presentable GSLTs. -/
 def knottedTopoi : Article where
   title := inlines!"Knotted Topoi: the lift of the knotted set-theoretic universe, and fully abstract denotational semantics for the category of graph-structured lambda theories"
@@ -72,6 +156,30 @@ def knottedTopoi : Article where
   number := inlines!""
   pages := none
   url := "https://github.com/F1R3FLY-io/publications/blob/main/knotted-topoi/knotted-topoi.pdf"
+
+/-- Meredith; the MeTTa-calculus note and its RSpace compilation story. -/
+def mettaCalculus : Article where
+  title := inlines!"The MeTTa calculus"
+  authors := #[inlines!"Lucius Gregory Meredith"]
+  journal := inlines!"Manuscript"
+  year := 2024
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/F1R3FLY-io/publications/blob/main/metta-calculus/metta-calculus.pdf"
+
+/-- Meredith; identity-indexed judgments and evidence-indexed OSLF modalities for reputation. -/
+def reputationFramework : Article where
+  title := inlines!"Identity-Indexed Typing Judgments and the Adjudication of Capability"
+  authors := #[inlines!"Lucius Gregory Meredith"]
+  journal := inlines!"Manuscript"
+  year := 2026
+  month := none
+  volume := inlines!""
+  number := inlines!""
+  pages := none
+  url := "https://github.com/F1R3FLY-io/publications/blob/main/Reputation/reputation.pdf"
 
 /-- Beck; the classical composite-monad theorem for distributive laws. -/
 def beckDistributiveLaws : InProceedings where
@@ -184,7 +292,7 @@ def lean4 : InProceedings where
   title := inlines!"The Lean 4 Theorem Prover and Programming Language"
   authors := #[inlines!"Leonardo de Moura", inlines!"Sebastian Ullrich"]
   year := 2021
-  booktitle := inlines!"Automated Deduction – CADE 28"
+  booktitle := inlines!"Automated Deduction - CADE 28"
   url := "https://doi.org/10.1007/978-3-030-79876-5_37"
 
 /-- The Lean mathematical library (Mathlib). -/

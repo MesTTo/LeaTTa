@@ -112,6 +112,8 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.Denotational.Costed.costedStep_forget
 #print axioms MeTTaIL.Denotational.Costed.Trace.to_reflTransGen
 #print axioms MeTTaIL.Denotational.Costed.costDeadlocked_iff_forget_deadlocked
+#print axioms MeTTaIL.Denotational.Costed.Trace.to_stepCount
+#print axioms MeTTaIL.Denotational.Costed.Trace.to_stepCount_of_unitTokenCosted
 #print axioms MeTTaIL.Denotational.Costed.ContinuedCostSystem.starved_costDeadlocked
 #print axioms MeTTaIL.Denotational.Costed.ContinuedCostSystem.starved_deadlocked
 #print axioms MeTTaIL.Denotational.Costed.ContinuedCostSystem.wrapped_trace_preserved

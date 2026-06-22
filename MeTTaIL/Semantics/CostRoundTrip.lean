@@ -9,6 +9,7 @@ Purpose: Abstract cost round trips for continued interactive GSLTs.
 Imports: MeTTaIL.Semantics.Denotational
 Trusted boundary: none
 Main exports: Denotational.Costed.ContinuedCostSystem,
+  Denotational.Costed.Trace.to_stepCount_of_unitTokenCosted,
   Denotational.Costed.ContinuedCostSystem.starved_deadlocked,
   Denotational.Costed.ContinuedCostSystem.wrapped_trace_preserved,
   Denotational.Costed.CostRoundTrip, Denotational.Costed.CostRoundTrip.image_iff_fixed
@@ -42,6 +43,42 @@ theorem costDeadlocked_iff_forget_deadlocked {State : Type u} {Label : Type v} {
     exact h t ((costedStep_forget clts).2 hstep)
   · intro h t hstep
     exact h t ((costedStep_forget clts).1 hstep)
+
+/-- A costed trace with an explicit number of forced steps. -/
+inductive StepCount {State : Type u} {Label : Type v} {Cost : Type w}
+    (clts : CostedLTS State Label Cost) : State → Nat → State → Prop where
+  | refl (s : State) : StepCount clts s 0 s
+  | tail {s t u : State} (label : Label) (cost : Cost) (n : Nat) :
+      clts.step s label cost t → StepCount clts t n u → StepCount clts s (Nat.succ n) u
+
+/-- Every costed trace has some finite step count. -/
+theorem Trace.to_stepCount {State : Type u} {Label : Type v} {Cost : Type w}
+    [Zero Cost] [Add Cost] {clts : CostedLTS State Label Cost} {s t : State} {total : Cost}
+    (h : Trace clts s total t) : ∃ n, StepCount clts s n t := by
+  induction h with
+  | refl s =>
+      exact ⟨0, StepCount.refl s⟩
+  | tail label cost total hstep _ ih =>
+      rcases ih with ⟨n, hn⟩
+      exact ⟨Nat.succ n, StepCount.tail label cost n hstep hn⟩
+
+/-- Every step consumes exactly one token in the Nat-cost presentation. -/
+def UnitTokenCosted {State : Type u} {Label : Type v}
+    (clts : CostedLTS State Label Nat) : Prop :=
+  ∀ {s label cost t}, clts.step s label cost t → cost = 1
+
+/-- In a unit-token system, the Nat trace cost is the number of forced steps. -/
+theorem Trace.to_stepCount_of_unitTokenCosted {State : Type u} {Label : Type v}
+    {clts : CostedLTS State Label Nat} (hunit : UnitTokenCosted clts)
+    {s t : State} {total : Nat} (h : Trace clts s total t) :
+    StepCount clts s total t := by
+  induction h with
+  | refl s =>
+      exact StepCount.refl s
+  | tail label cost total hstep _ ih =>
+      have hcost : cost = 1 := hunit hstep
+      subst cost
+      simpa [Nat.succ_eq_add_one, Nat.add_comm] using StepCount.tail label 1 total hstep ih
 
 /-- The abstract cost-accounted system supplied by a continued interactive GSLT instance. -/
 structure ContinuedCostSystem (State : Type u) (Label : Type v) (Cost : Type w)

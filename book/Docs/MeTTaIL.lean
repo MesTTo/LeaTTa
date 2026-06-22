@@ -317,9 +317,11 @@ paper sits one layer beyond that, reading spent cost as the measure of a causal 
 The theorem `Costed.ContinuedCostSystem.starved_deadlocked` says that if no gate token is available,
 then the forgotten behavioural system has no step. The theorem
 `Costed.ContinuedCostSystem.wrapped_trace_preserved` says that the wrapper invariant is preserved along
-finite costed traces. `Costed.CostRoundTrip` then packages the abstract endomorphism `T ◦ C`; when it
-respects bisimilarity and is idempotent up to bisimulation, `Costed.CostRoundTrip.image_iff_fixed`
-identifies the image sublanguage with the fixed points up to bisimulation.
+finite costed traces. The theorem `Costed.Trace.to_stepCount_of_unitTokenCosted` states the unit-token
+case of the modulus claim: when each forced step costs one token, the Nat cost of the trace is exactly
+its step count. `Costed.CostRoundTrip` then packages the abstract endomorphism `T ◦ C`; when it respects
+bisimilarity and is idempotent up to bisimulation, `Costed.CostRoundTrip.image_iff_fixed` identifies the
+image sublanguage with the fixed points up to bisimulation.
 
 The Lean files are interfaces and small kernels, not the knotted topos. The current release proves the
 operational pieces that such a denotation must respect: `RewStep`, `RewStepMany`, executable soundness,

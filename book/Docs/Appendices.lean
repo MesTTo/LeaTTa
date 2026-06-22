@@ -309,6 +309,7 @@ The map below states what each source supports in the Lean development, and what
    `Bisimilar.trans`,
    `PathRSpace.comparable_iff_nonempty_subspaceBranch`, `Costed.costedStep_forget`,
    `Costed.Trace.to_reflTransGen`, `Costed.costDeadlocked_iff_forget_deadlocked`,
+   `Costed.Trace.to_stepCount`, `Costed.Trace.to_stepCount_of_unitTokenCosted`,
    `Costed.ContinuedCostSystem.starved_deadlocked`,
    `Costed.ContinuedCostSystem.wrapped_trace_preserved`,
    `Costed.CostRoundTrip.image_iff_fixed`, `eval_rewrite_trace`, `Rho.listener_step`,

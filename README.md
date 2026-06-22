@@ -318,9 +318,10 @@ quoted atoms round-trip through `dropAtom`, atoms stay opaque to same-colour mem
 finite sets are equivalent by colour swap, and any atom renaming that fixes the atoms occurring in a set
 leaves that set unchanged. The file also defines exact-member extensional equality, the corresponding
 quotient type, and the finite union laws at that extensional level: empty is neutral, union is
-idempotent, commutative, and associative. The file still does not build the recursive element quotient
-needed for the FM representation theorem, construct the algebraic-set-theory fixpoint, or build the
-final behaviour coalgebra in the knotted topos.
+idempotent, commutative, and associative. The `reflective_*` bridge theorems pin the generic
+`ReflectiveUniverse` fields to the concrete rset quote/drop and colour-swap functions. The file still
+does not build the recursive element quotient needed for the FM representation theorem, construct the
+algebraic-set-theory fixpoint, or build the final behaviour coalgebra in the knotted topos.
 
 The store side also has implementation sources. The ITM sketch
 (<https://github.com/F1R3FLY-io/itm/blob/main/src/main/scala/syntax/state.scala>) writes the domain

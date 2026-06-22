@@ -100,7 +100,13 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.RSetModel.blackToRedSet_redToBlackSet
 #print axioms MeTTaIL.RSetModel.redToBlackSet_blackToRedSet
 #print axioms MeTTaIL.RSetModel.reflective_dropRed_quoteRed
+#print axioms MeTTaIL.RSetModel.reflective_quoteRed_dropRed
 #print axioms MeTTaIL.RSetModel.reflective_dropBlack_quoteBlack
+#print axioms MeTTaIL.RSetModel.reflective_quoteBlack_dropBlack
+#print axioms MeTTaIL.RSetModel.reflective_redBlackSetSwap
+#print axioms MeTTaIL.RSetModel.reflective_blackRedSetSwap
+#print axioms MeTTaIL.RSetModel.reflective_redBlackAtomSwap
+#print axioms MeTTaIL.RSetModel.reflective_blackRedAtomSwap
 
 #print axioms MeTTaIL.InteractingTrieMap.RITM.ofStep_toStep
 #print axioms MeTTaIL.InteractingTrieMap.RITM.toStep_ofStep

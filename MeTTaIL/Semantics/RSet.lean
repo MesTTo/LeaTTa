@@ -12,7 +12,9 @@ Main exports: RSet, RElem, RSet.empty, RSet.insert, RSet.union, RSet.nest, RElem
   RElem.dropAtom, RElem.dropSet, RSet.atomsOf, RElem.atomsOf, RSet.renameAtoms,
   RSet.renameAtoms_eq_of_forall_mem_atomsOf, RSet.ExtEq, RSet.extSetoid,
   RSet.extEq_union_comm, RSet.extEq_union_assoc, RSet.extEq_union_idem,
-  redBlackSetEquiv, reflectiveUniverse, ColourAutomaton, twoColourAutomaton
+  redBlackSetEquiv, reflectiveUniverse, reflective_redBlackSetSwap,
+  reflective_blackRedSetSwap, reflective_redBlackAtomSwap, reflective_blackRedAtomSwap,
+  ColourAutomaton, twoColourAutomaton
 Open obligations: replace exact-member extensionality with the recursive element quotient needed for
   the FM representation theorem, construct the algebraic-set-theory two-sorted fixpoint, and prove
   the final behaviour coalgebra in the knotted topos.
@@ -507,10 +509,40 @@ theorem reflective_dropRed_quoteRed (x : RSet Colour.black) :
     reflectiveUniverse.dropRed (reflectiveUniverse.quoteRed x) = x :=
   ReflectiveUniverse.dropRed_quoteRed reflectiveUniverse x
 
+/-- In the rset instance, quoting a dropped red atom returns the same black finite set. -/
+theorem reflective_quoteRed_dropRed (x : RSet Colour.black) :
+    reflectiveUniverse.quoteRed (reflectiveUniverse.dropRed x) = x :=
+  ReflectiveUniverse.quoteRed_dropRed reflectiveUniverse x
+
 /-- In the rset instance, dropping a quoted black atom is definitionally the red set it sealed. -/
 theorem reflective_dropBlack_quoteBlack (x : RSet Colour.red) :
     reflectiveUniverse.dropBlack (reflectiveUniverse.quoteBlack x) = x :=
   ReflectiveUniverse.dropBlack_quoteBlack reflectiveUniverse x
+
+/-- In the rset instance, quoting a dropped black atom returns the same red finite set. -/
+theorem reflective_quoteBlack_dropBlack (x : RSet Colour.red) :
+    reflectiveUniverse.quoteBlack (reflectiveUniverse.dropBlack x) = x :=
+  ReflectiveUniverse.quoteBlack_dropBlack reflectiveUniverse x
+
+/-- The reflective-universe red-to-black set swap is the concrete rset colour swap. -/
+theorem reflective_redBlackSetSwap (x : RSet Colour.red) :
+    reflectiveUniverse.redBlackSetSwap x = redToBlackSet x :=
+  rfl
+
+/-- The reflective-universe black-to-red set swap is the inverse concrete rset colour swap. -/
+theorem reflective_blackRedSetSwap (x : RSet Colour.black) :
+    reflectiveUniverse.redBlackSetSwap.symm x = blackToRedSet x :=
+  rfl
+
+/-- The reflective-universe red-atom-to-black-atom swap is the concrete black-to-red set swap. -/
+theorem reflective_redBlackAtomSwap (x : RSet Colour.black) :
+    reflectiveUniverse.redBlackAtomSwap x = blackToRedSet x :=
+  rfl
+
+/-- The reflective-universe black-atom-to-red-atom swap is the concrete red-to-black set swap. -/
+theorem reflective_blackRedAtomSwap (x : RSet Colour.red) :
+    reflectiveUniverse.redBlackAtomSwap.symm x = redToBlackSet x :=
+  rfl
 
 end RSetModel
 end MeTTaIL

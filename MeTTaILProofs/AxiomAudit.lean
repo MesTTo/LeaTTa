@@ -65,6 +65,8 @@ import MeTTaILProofs.DistributiveLaw
 #print axioms MeTTaIL.Rho.RSpace.comm_to_step_one
 #print axioms MeTTaIL.Rho.listener_step
 #print axioms MeTTaIL.Rho.payloadForwarder_emits
+#print axioms MeTTaIL.Rho.KMachine.readyPair_of_output_records_input
+#print axioms MeTTaIL.Rho.KMachine.readyPair_of_input_records_output
 #print axioms MeTTaIL.Rho.KMachine.creation_to_struct
 #print axioms MeTTaIL.Rho.KMachine.step_to_rho
 #print axioms MeTTaIL.Rho.KMachine.ordinaryReceive_to_rho

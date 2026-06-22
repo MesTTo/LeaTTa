@@ -11,7 +11,8 @@ Imports: MeTTaIL.Semantics.Rho
 Trusted boundary: none
 Main exports: Rho.KMachine.InCell, Rho.KMachine.OutCell, Rho.KMachine.Config,
   Rho.KMachine.CreationStep, Rho.KMachine.CandidatePair, Rho.KMachine.MatchedOne,
-  Rho.KMachine.ReadyPair, Rho.KMachine.Step, Rho.KMachine.creation_to_struct, Rho.KMachine.step_to_rho,
+  Rho.KMachine.ReadyPair, Rho.KMachine.acceptAny, Rho.KMachine.acceptExact,
+  Rho.KMachine.Step, Rho.KMachine.creation_to_struct, Rho.KMachine.step_to_rho,
   Rho.KMachine.ordinaryReceive_to_rho, Rho.KMachine.persistentOutput_to_rho,
   Rho.KMachine.persistentReceive_to_rho, Rho.KMachine.persistentBoth_to_rho
 Open obligations: add full multi-cell ID maintenance, arity and pattern matching, and the full
@@ -64,6 +65,24 @@ def MatchedOne (input : InCell) (output : OutCell) : Prop :=
 /-- A candidate pair is ready to fire after the one-message matcher has accepted the payload. -/
 def ReadyPair (input : InCell) (output : OutCell) : Prop :=
   CandidatePair input output ∧ MatchedOne input output
+
+/-- A matcher predicate for a payload already accepted by an earlier layer. -/
+def acceptAny (_msg : Proc) : Prop :=
+  True
+
+/-- A matcher predicate for the one-message exact-payload case. -/
+def acceptExact (expected : Proc) (msg : Proc) : Prop :=
+  msg = expected
+
+theorem readyPair_of_output_records_input {input : InCell} {output : OutCell}
+    (hcand : input.id ∈ output.candidates) (hmatch : MatchedOne input output) :
+    ReadyPair input output :=
+  ⟨Or.inl hcand, hmatch⟩
+
+theorem readyPair_of_input_records_output {input : InCell} {output : OutCell}
+    (hcand : output.id ∈ input.candidates) (hmatch : MatchedOne input output) :
+    ReadyPair input output :=
+  ⟨Or.inr hcand, hmatch⟩
 
 /-- Replace the candidate set recorded in an input cell. -/
 def InCell.withCandidates (cell : InCell) (candidates : List CellId) : InCell :=

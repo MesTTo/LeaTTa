@@ -203,7 +203,8 @@ the matcher sends the computed contractum as a packet. The theorem
 real MeTTaIL `Reduces` step and that the rho listener emits `encodeAST` of the contractum at the source
 term location. The theorem is packet-level. The file also proves `Rho.Compiler.contractum_kstep`, so the
 same packet exchange is a K-machine persistent-receive step whose `ReadyPair` proof comes from the
-packet channel, and `Rho.Compiler.contractum_kstep_to_rho`, so that K step reifies back to rho
+packet channel, and uses `Rho.KMachine.acceptAny` because `applyBaseRewrite` has already produced the
+matched contractum. `Rho.Compiler.contractum_kstep_to_rho` says that K step reifies back to rho
 reduction. It does not prove the full matcher/router, contextual channel compiler, binder freshness
 discipline, or two-direction operational correspondence.
 

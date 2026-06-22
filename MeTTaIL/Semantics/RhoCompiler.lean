@@ -57,7 +57,7 @@ def contractumInputCell (rd : RewriteDecl) (source : AST) : KMachine.InCell wher
   body := .out (termLocation source) (.drop (.var (contractumBinder rd)))
   persistent := true
   candidates := [1]
-  matchReady := fun _ => True
+  matchReady := KMachine.acceptAny
 
 /-- K output cell carrying the matched contractum packet. Candidate `0` is the listener. -/
 def contractumOutputCell (rd : RewriteDecl) (contractum : AST) : KMachine.OutCell where
@@ -72,9 +72,11 @@ theorem contractum_kstep (rd : RewriteDecl) (source contractum : AST) :
     KMachine.Step
       (KMachine.receiveSource (contractumInputCell rd source) (contractumOutputCell rd contractum))
       (KMachine.receiveTarget (contractumInputCell rd source) (contractumOutputCell rd contractum)) := by
-  exact KMachine.Step.persistentReceive rfl (by
-    simp [KMachine.ReadyPair, KMachine.CandidatePair, KMachine.MatchedOne, contractumInputCell,
-      contractumOutputCell]) rfl rfl
+  exact KMachine.Step.persistentReceive rfl
+    (KMachine.readyPair_of_input_records_output
+      (by simp [contractumInputCell, contractumOutputCell])
+      (by simp [KMachine.MatchedOne, KMachine.acceptAny, contractumInputCell, contractumOutputCell]))
+    rfl rfl
 
 /-- The compiler K-step reifies to rho reduction modulo parallel-structure laws. -/
 theorem contractum_kstep_to_rho (rd : RewriteDecl) (source contractum : AST) :

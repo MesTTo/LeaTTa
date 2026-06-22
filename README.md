@@ -1,11 +1,11 @@
 # LeaTTa: machine-checked MeTTa semantics in Lean 4
 
-LeaTTa is a Lean 4 formalization of Hyperon's minimal MeTTa interpreter, the small "assembly language"
-that the rest of MeTTa is built on. The standard library is written in MeTTa on top of those
-instructions, following `hyperon-experimental`. The executable kernel is total and has no Mathlib or
-Batteries dependency.
+LeaTTa is a Lean 4 development for MeTTa, MeTTaIL, and a checked Cordial Miners runtime. It starts from
+Hyperon's minimal MeTTa interpreter, the small instruction set that the rest of MeTTa is built on. The
+standard library is written in MeTTa on top of those instructions, following `hyperon-experimental`.
+The executable kernel is total and has no Mathlib or Batteries dependency.
 
-The current release has three active layers.
+The release has three active layers.
 
 - The minimal interpreter and standard library run Hyperon's own oracle corpus: 270 passing assertions
   across 22 files.
@@ -14,10 +14,31 @@ The current release has three active layers.
 - The Cordial Miners layer formalizes the PoR-weighted coarse protocol, proves the top-level safety
   theorem, and hosts the protocol as a MeTTaIL runtime presentation.
 
-This is still an alpha release. The remaining MeTTaIL research targets, the full module system, and
-MeTTa on Rholang are not claimed here. The stated theorems are kernel-checked with no `sorry`, no
-`admit`, no `native_decide`, no `partial`, and no `unsafe`. The full comparison with Hyperon is in the
-book's Improvements over Hyperon appendix at [mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/).
+LeaTTa 1.0.1 is a research release with an exact checked surface. The release does not claim the full
+Hyperon module system, MeTTa on Rholang, or the remaining MeTTaIL denotational goals. The theorems named
+in this README are checked by Lean's kernel with no `sorry`, no `admit`, no `native_decide`, no
+`partial`, and no `unsafe`. The full comparison with Hyperon is in the book's Improvements over Hyperon
+appendix at [mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/).
+
+## Start here
+
+These commands exercise the main public surfaces. They are the fastest way to check that a checkout or
+release archive is healthy.
+
+```bash
+lake build
+./scripts/run-oracle.sh
+./scripts/run-regression.sh
+lake build MeTTaIL MeTTaILProofs MeTTaILTests
+lake build CordialMiners CordialMiners.Runtime.Run
+```
+
+Expected results:
+
+- `lake build` ends with `Build completed successfully`.
+- `./scripts/run-oracle.sh` reports `ORACLE OK` with 270 passing assertions.
+- `./scripts/run-regression.sh` reports `REGRESSION OK`.
+- the MeTTaIL and Cordial Miners targets build without forbidden placeholders.
 
 ## Quick test: editable MeTTaIL runtime
 
@@ -207,7 +228,7 @@ The metatheory layer lives in `MettaHyperonFull/Proofs/`. It uses Mathlib and ke
   the transition relation, which is what replayability needs;
 - its deterministic fragment is confluent;
 - first-argument rule indexing is sound and complete, so it offers exactly the rules that can fire.
-  This is the same-head case where Hyperon's `Space::visit` undercounts (issue #1079);
+  The theorem covers the same-head case where Hyperon's `Space::visit` undercounts (issue #1079);
 - the gradual type checker is total, and reports `BadArgType` faithfully and only with a real argument
   type, so it never invents an error;
 - α-equivalence is an equivalence relation.
@@ -220,11 +241,17 @@ correspondence chapters at [mestto.github.io/LeaTTa](https://mestto.github.io/Le
 
 ## MeTTaIL and the checked runtime
 
-`MeTTaIL/` is a first machine-checked formalization of F1R3FLY's MeTTaIL, the meta-language that turns a
-presentation of a graph-structured lambda theory into a calculus's grammar, equations, and rewrites. It
-is built from the F1R3FLY MeTTaIL repository (<https://github.com/F1R3FLY-io/MeTTaIL>). The release
-covers the determinate core, the presentation-to-runtime path, and the proof surface needed to audit the
-runtime steps it executes.
+`MeTTaIL/` formalizes the determinate part of F1R3FLY's Meta Type Talk Intermediate Language, built from
+the public MeTTaIL repository (<https://github.com/F1R3FLY-io/MeTTaIL>). MeTTaIL is a language for
+presenting graph-structured lambda theories. A presentation gives the sorts, constructors, equations,
+and rewrites of an object calculus. LeaTTa checks that presentation pipeline and then runs the resulting
+rewrite system with a verified reducer.
+
+The practical claim is narrow and tested: for the external runtime format shipped here, you can edit a
+small dialect file, run the `LeaTTa` binary on a term, and get the normal form produced by the checked
+evaluator. The deeper research claim, that every finitely presentable MeTTaIL/GSLT should inherit a
+fully abstract denotational semantics by desugaring to rho and then into a knotted topos, is recorded as
+a formal interface and a documented proof target. That denotational claim remains open.
 
 The checked surface includes:
 
@@ -237,16 +264,32 @@ The checked surface includes:
 - the MeTTa-to-GSLT bridge and the presentation lattice laws;
 - the executable reducer generated from a presentation;
 - the AC-aware runtime fragment used by Cordial Miners;
+- the denotational-semantics interface for labelled transition systems, bisimulation, context
+  congruence, and full abstraction;
 - the axiom-audited theorem surface for those claims.
 
 The MeTTaIL layer builds with 0 `sorry`, 0 `admit`, 0 `native_decide`, 0 `partial`, and 0 `unsafe`. The
-axiom audit shows only the three standard axioms: `propext`, `Classical.choice`, and `Quot.sound`.
+axiom audit shows only the three standard axioms used elsewhere in the project: `propext`,
+`Classical.choice`, and `Quot.sound`.
 
-The open surface is also explicit. The release does not claim the modal hypercube typing theorem for
-binder calculi, the rho-calculus full-abstraction result, spice and mq as full reduction theories, a
-standalone rho-calculus reduction development, the per-variable category-consistency check in the
-elaborator, or an operational bisimulation against the four-register machine. The module headers and
-the book state these boundaries directly.
+The open surface is explicit. The release does not claim the modal hypercube typing theorem for binder
+calculi, the rho-calculus full-abstraction theorem, spice and mq as full reduction theories, a standalone
+rho-calculus reduction development, the per-variable category-consistency check in the elaborator, or an
+operational bisimulation against the four-register machine. The module headers and the book state these
+boundaries directly.
+
+The denotational target is source-backed. It comes from three F1R3FLY manuscripts: the rset
+knotted-universe paper (<https://github.com/F1R3FLY-io/publications/tree/main/rset>), the rho-calculus
+model (<https://github.com/F1R3FLY-io/publications/blob/main/denotational-semantics-for-rho/knot-rho.pdf>),
+and the knotted-topoi lift
+(<https://github.com/F1R3FLY-io/publications/blob/main/knotted-topoi/knotted-topoi.pdf>). The route is:
+a finitely presentable MeTTaIL/GSLT presentation desugars to rho by persistent listeners at term
+locations; rho receives a context-labelled behavioural semantics; equality in the final behaviour object
+is context bisimilarity. `MeTTaIL/Semantics/Denotational.lean` states that proof shape in Lean. The file
+defines labelled transition systems, simulations, bisimulations, denotational kernels, context
+congruence, and the `FullyAbstract` property. The file does not construct the knotted topos, prove the
+MeTTaIL-to-rho operational correspondence, or calibrate context bisimilarity against each object
+language's observational equivalence.
 
 Formalizing the tool also turned up several bugs in it. They are written up for the F1R3FLY team in
 [`MeTTaIL/HYPERON_IMPROVEMENTS.md`](MeTTaIL/HYPERON_IMPROVEMENTS.md). The full treatment is the MeTTaIL

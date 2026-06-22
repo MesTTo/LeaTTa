@@ -32,8 +32,6 @@ leaning on a placeholder warning cannot slip through as a green build. The book 
 Verso source and generated site. It fails on every book warning except the reviewed upstream Verso
 v4.31.0 `@[expose]` warning.
 
-The headline axiom checks are now collected in `MeTTaILProofs/AxiomAudit.lean`, which is imported by the proof root and built in CI. The root CI build also fails on any Lean or Lake warning, so a proof that starts leaning on a placeholder warning cannot slip through as a green build. The book CI separately builds the Verso source and generated site, failing on every book warning except the reviewed upstream Verso v4.31.0 `@[expose]` warning.
-
 # Determinism and Replayability
 
 The abstract machine `interpretStack1` / `mettaEval` is a Lean *total function*: give it equal inputs and

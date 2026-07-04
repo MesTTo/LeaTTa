@@ -115,10 +115,10 @@ def subtractionAtomOp : List Atom → ReduceResult
   | _ => ReduceResult.incorrectArgument "subtraction-atom expects two expressions"
 
 /-- Hyperon's `result_items` (`stdlib/debug.rs`), operating on the children of a collapsed bag.
-    A collapsed bag is a comma-tuple `(, x …)`, so a leading `,` child is stripped to recover the
-    bare item list `x …`; any other children list is returned unchanged. Stripping the `,` lets
-    `(collapse …)` (which yields `(, …)`) compare and re-spread against the bare tuples that
-    assertions and `superpose` work with. -/
+    Current Hyperon (v0.2.10) yields a bare bag `(x …)`; older versions used an explicit comma
+    tuple `(, x …)`. A leading `,` child is stripped to recover the bare item list `x …` (a no-op
+    on today's bare bags); any other children list is returned unchanged. This keeps `(collapse …)`
+    comparing and re-spreading against the bare tuples that assertions and `superpose` work with. -/
 def resultItems : List Atom → List Atom
   | Atom.sym "," :: rest => rest
   | xs => xs
@@ -129,13 +129,15 @@ def superposeOp : List Atom → ReduceResult
   | [Atom.expr xs] => ReduceResult.ok (resultItems xs)
   | _ => ReduceResult.incorrectArgument "superpose expects one expression"
 
-/-- Extract the atoms from a `collapse-bind` result `((a ()) (b ()) ...)` → the **explicit comma
-    tuple** `(, a b ...)` (empty → `(,)`), exactly as Hyperon's `collapse`. The `,` head keeps the
-    bag from being re-reduced as an application (cf. Hyperon's own test
-    `metta_collapse_uses_comma_tuple_to_avoid_reducing_tuple_head`); `resultItems`/`superpose` strip
-    it again on the way back, so a collapsed bag compares as its bare item list. -/
+/-- Extract the atoms from a `collapse-bind` result `((a ()) (b ()) ...)` → the bare tuple
+    `(a b ...)` (empty → `()`), as Hyperon's `collapse` does in v0.2.10, where
+    `(= (collapse $atom) … (foldl-atom $eval () …))` folds the bag up from `()` with no `,` head
+    and is documented `@return "Tuple"`. Older Hyperon emitted an explicit comma tuple
+    `(, a b ...)`; that was dropped, so the user-visible bag is a plain expression and
+    `(size-atom (collapse x))` counts the results, not a leading `,`. `resultItems`/`superpose`
+    still strip a leading `,` for backward compatibility, but none is produced here. -/
 def collapseExtractOp : List Atom → ReduceResult
-  | [Atom.expr pairs] => ReduceResult.ok [Atom.expr (Atom.sym "," :: pairs.map fun p => match p with
+  | [Atom.expr pairs] => ReduceResult.ok [Atom.expr (pairs.map fun p => match p with
       | Atom.expr (a :: _) => a
       | other => other)]
   | _ => ReduceResult.incorrectArgument "collapse-extract expects one expression"

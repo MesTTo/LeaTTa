@@ -12,8 +12,9 @@ Purpose: Active Lean model of the distributed atomspace slice: vector clocks, mu
 Imports: MettaHyperonFull.Core.Space
 Trusted boundary: none. Network fairness and ordered replay are theorem parameters, not Lean axioms.
 Main exports: VectorClock, MutationEvent, Replica, System, Step, StepStar, FairDeliveryFrom,
-  readOwnWrites, midFlightDivergence, eventualDelivery, barrierExtensionViaEventualDelivery,
-  dasConvergence, sigmaConvergence, convergedMatchingBehavior
+  vcGet_vcMax, vcLeMaxLeft, vcLeMaxRight, vcMaxLub, readOwnWrites, midFlightDivergence,
+  eventualDelivery, barrierExtensionViaEventualDelivery, dasConvergence, sigmaConvergence,
+  convergedMatchingBehavior
 Open obligations: directional happens-before ordering and unordered CRDT quotient convergence remain
   future theorem refinements.
 -/
@@ -74,6 +75,43 @@ theorem vcLeAntisym {replicaCount : Nat} {vc1 vc2 : VectorClock}
     vcEq replicaCount vc1 vc2 := by
   intro i hi
   exact Nat.le_antisymm (h12 i hi) (h21 i hi)
+
+/-- Reading a component of the pairwise max is the max of the two component reads. Missing
+    components read as zero on both sides. -/
+theorem vcGet_vcMax (vc1 vc2 : VectorClock) (i : ReplicaId) :
+    vcGet (vcMax vc1 vc2) i = Nat.max (vcGet vc1 i) (vcGet vc2 i) := by
+  induction vc1 generalizing vc2 i with
+  | nil =>
+      cases vc2 <;> cases i <;> simp [vcGet, vcMax]
+  | cons n1 rest1 ih =>
+      cases vc2 with
+      | nil =>
+          cases i <;> simp [vcGet, vcMax]
+      | cons n2 rest2 =>
+          cases i with
+          | zero => simp [vcGet, vcMax]
+          | succ i => exact ih rest2 i
+
+theorem vcLeMaxLeft (replicaCount : Nat) (vc1 vc2 : VectorClock) :
+    vcLe replicaCount vc1 (vcMax vc1 vc2) := by
+  intro i _
+  rw [vcGet_vcMax]
+  exact Nat.le_max_left _ _
+
+theorem vcLeMaxRight (replicaCount : Nat) (vc1 vc2 : VectorClock) :
+    vcLe replicaCount vc2 (vcMax vc1 vc2) := by
+  intro i _
+  rw [vcGet_vcMax]
+  exact Nat.le_max_right _ _
+
+/-- Pairwise max is the least upper bound for the vector-clock component order. -/
+theorem vcMaxLub {replicaCount : Nat} {vc1 vc2 vc3 : VectorClock}
+    (h1 : vcLe replicaCount vc1 vc3) (h2 : vcLe replicaCount vc2 vc3) :
+    vcLe replicaCount (vcMax vc1 vc2) vc3 := by
+  intro i hi
+  rw [vcGet_vcMax]
+  rw [Nat.max_le]
+  exact ⟨h1 i hi, h2 i hi⟩
 
 /-- Mutation kinds modeled by the distributed atomspace state machine. Replacement can be modeled as
     remove then add. -/

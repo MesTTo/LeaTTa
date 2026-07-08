@@ -67,6 +67,7 @@ proofs.
 | Inserting a structurally reflexive atom makes it visible to `contains`. | Checked | `Metta.Space.insert_contains_self` | Grounded floats can break host equality reflexivity, so the theorem names the condition. |
 | Inserting a matcher-reflexive atom makes it visible to `query` with the empty binding. | Checked | `Metta.Space.query_insert_self` | Uses the exact `matchAtoms a a` condition required by executable query. |
 | Removing the atom just inserted restores the previous multiset. | Checked | `Metta.Space.removeOne_insert_self` | The theorem uses the list-backed `removeOne` semantics. |
+| Querying after removing the atom just inserted matches the original space query. | Checked | `Metta.Space.query_removeOne_insert_self` | Query-facing consequence of exact single-copy removal. |
 | Inserting `(: a ty)` makes `ty` visible in `typeAssignments a`. | Checked | `Metta.Space.typeAssignments_insert_visible` | Requires structural reflexivity of the subject atom. |
 | Inserting `(= lhs rhs)` makes the rule visible in `equalityRules`. | Checked | `Metta.Space.equalityRules_insert_visible` | Plain list membership over the current space. |
 | Updating a state cell makes the new value visible. | Checked | `Metta.World.setStore_visible` | Visibility through `World.store`. |
@@ -107,6 +108,9 @@ clocks, local issue, remote delivery, and the proof boundary around fairness and
 | Vector-clock order is reflexive. | Checked | `Metta.Distributed.vcLeRefl` | Component order over the configured replica count. |
 | Vector-clock order is transitive. | Checked | `Metta.Distributed.vcLeTrans` | Component order over the configured replica count. |
 | Mutual vector-clock order gives component equality. | Checked | `Metta.Distributed.vcLeAntisym` | Equality is componentwise over the configured replica count. |
+| Pairwise vector-clock max reads componentwise. | Checked | `Metta.Distributed.vcGet_vcMax` | Missing components read as zero. |
+| Pairwise vector-clock max is an upper bound. | Checked | `Metta.Distributed.vcLeMaxLeft`, `Metta.Distributed.vcLeMaxRight` | Component order over the configured replica count. |
+| Pairwise vector-clock max is the least upper bound. | Checked | `Metta.Distributed.vcMaxLub` | Requires the candidate clock to bound both inputs. |
 | A replica reads its own issued mutation immediately. | Checked | `Metta.Distributed.readOwnWrites` | Requires the issuing replica to be in range. |
 | A single issued event can be visible at its origin before remote delivery. | Checked | `Metta.Distributed.midFlightDivergence` | This is the no-global-snapshot witness. |
 | Existing log events are preserved by later steps. | Checked | `Metta.Distributed.logMonotoneStep`, `Metta.Distributed.logMonotoneStar` | The global log is append-only. |
@@ -152,8 +156,10 @@ The theorem-level observation bridge is now checked in `MettaHyperonFull.Minimal
 | Claim | Status | Lean evidence | Boundary |
 | --- | --- | --- | --- |
 | One directive observation records input, fuel, results, errors, stack-overflow status, and world delta. | Checked | `Metta.Minimal.DirectiveObservation`, `Metta.Minimal.WorldDelta` | It wraps the existing evaluator. |
+| Observed fuel is exactly the requested fuel budget. | Checked | `Metta.Minimal.observeQuery_fuel` | The bridge records the budget by value. |
 | Observed results are exactly the atom projection of `mettaEval`. | Checked | `Metta.Minimal.observeQuery_results` | No new evaluator is introduced. |
 | Observed errors are exactly `results.filter Atom.isError`. | Checked | `Metta.Minimal.observeQuery_errors` | Error classification follows `Atom.isError`. |
+| Observed exhaustion is exactly stack-overflow detection over observed results. | Checked | `Metta.Minimal.observeQuery_exhausted` | Current executable signal for fuel exhaustion is the stack-overflow error atom. |
 | Observed world before/after fields match the threaded state. | Checked | `Metta.Minimal.observeQuery_worldBefore`, `Metta.Minimal.observeQuery_worldAfter` | State deltas are recorded by value. |
 
 ## R.1 To R.4 Correspondence Presentation

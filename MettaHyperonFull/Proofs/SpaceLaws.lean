@@ -11,7 +11,8 @@ Purpose: Basic atomspace mutation laws for the list-backed `Space`: inserting a 
 Imports: MettaHyperonFull.Proofs.Basic
 Trusted boundary: none
 Main exports: Space.insert_contains_self, Space.query_insert_self, Space.removeOne_insert_self,
-  Space.typeAssignments_insert_visible, Space.equalityRules_insert_visible
+  Space.query_removeOne_insert_self, Space.typeAssignments_insert_visible,
+  Space.equalityRules_insert_visible
 Open obligations: named-space and state-cell visibility are proved at the interpreter/world layer.
 -/
 import MettaHyperonFull.Proofs.Basic
@@ -40,6 +41,13 @@ theorem removeOne_insert_self (s : Space) (a : Atom) (h : Atom.StructurallyRefle
   have hbeq : (a == a) = true := h
   cases s
   simp [Space.insert, Space.removeOne, Space.removeOne.removeFirst, hbeq]
+
+/-- Querying after removing the exact atom just inserted is the same as querying the original
+    space. This is the query-facing form of `removeOne_insert_self`. -/
+theorem query_removeOne_insert_self (s : Space) (a pattern : Atom)
+    (h : Atom.StructurallyReflexive a) :
+    ((s.insert a).removeOne a).query pattern = s.query pattern := by
+  rw [removeOne_insert_self s a h]
 
 /-- A freshly inserted `(: a ty)` declaration is visible when the subject is structurally reflexive. -/
 theorem typeAssignments_insert_visible (s : Space) (a ty : Atom)

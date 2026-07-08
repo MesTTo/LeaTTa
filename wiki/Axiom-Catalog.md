@@ -30,6 +30,11 @@ ordered replay are ordinary theorem parameters.
 | Quiescent per-event coverage | `Metta.Distributed.Quiescent` | `dasConvergence` | Explicit theorem parameter. |
 | Ordered replay of applied logs into local atom storage | `Metta.Distributed.OrderedReplayAssumptions` | `sigmaConvergence`, `convergedMatchingBehavior` | Explicit theorem parameter. |
 
+Current vector-clock consumers in the audit include `Metta.Distributed.vcGet_vcMax`,
+`Metta.Distributed.vcLeMaxLeft`, `Metta.Distributed.vcLeMaxRight`, and
+`Metta.Distributed.vcMaxLub`. These expose the componentwise max and least-upper-bound facts used by
+the causal-order model.
+
 The audit target is:
 
 ```bash
@@ -127,6 +132,8 @@ The checked bridge is `Metta.Minimal.DirectiveObservation`. Its current consumer
 | Consumer | What it proves |
 | --- | --- |
 | `Metta.Minimal.observeQuery_results` | Results are exactly the atom projection of `mettaEval`. |
+| `Metta.Minimal.observeQuery_fuel` | The observation records the requested fuel budget. |
 | `Metta.Minimal.observeQuery_errors` | Error atoms are exactly `results.filter Atom.isError`. |
+| `Metta.Minimal.observeQuery_exhausted` | The exhausted flag is exactly stack-overflow detection over observed results. |
 | `Metta.Minimal.observeQuery_worldBefore` | The observation records the input world. |
 | `Metta.Minimal.observeQuery_worldAfter` | The observation records the evaluator's output world. |

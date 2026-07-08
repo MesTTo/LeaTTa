@@ -17,6 +17,10 @@ import MettaHyperonFull.Distributed.DAS
 #print axioms Metta.Distributed.vcLeRefl
 #print axioms Metta.Distributed.vcLeTrans
 #print axioms Metta.Distributed.vcLeAntisym
+#print axioms Metta.Distributed.vcGet_vcMax
+#print axioms Metta.Distributed.vcLeMaxLeft
+#print axioms Metta.Distributed.vcLeMaxRight
+#print axioms Metta.Distributed.vcMaxLub
 #print axioms Metta.Distributed.readOwnWrites
 #print axioms Metta.Distributed.eventualDelivery
 #print axioms Metta.Distributed.barrierExtensionViaEventualDelivery

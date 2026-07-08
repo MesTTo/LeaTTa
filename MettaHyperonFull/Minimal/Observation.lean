@@ -11,7 +11,8 @@ Purpose: Theorem-facing observation bridge for one top-level directive. It recor
 Imports: MettaHyperonFull.Minimal.Stdlib
 Trusted boundary: none
 Main exports: WorldDelta, DirectiveObservation, observedEnv, observeQuery,
-  observeQuery_results, observeQuery_errors, observeQuery_worldBefore, observeQuery_worldAfter
+  observeQuery_fuel, observeQuery_results, observeQuery_errors, observeQuery_exhausted,
+  observeQuery_worldBefore, observeQuery_worldAfter
 Open obligations: richer trace-sensitive observations can extend this record when a theorem needs
   step-by-step evidence.
 -/
@@ -64,6 +65,13 @@ def observeQuery (kbAtoms : List Atom) (fuel : Nat) (st : St) (q : Atom)
     worldDelta := { before := st.world, after := st'.world } }
 
 open Std in
+theorem observeQuery_fuel (kbAtoms : List Atom) (fuel : Nat) (st : St) (q : Atom)
+    (imports : HashMap String (List Atom) := HashMap.emptyWithCapacity)
+    (importDeps : HashMap String (List String) := HashMap.emptyWithCapacity) :
+    (observeQuery kbAtoms fuel st q imports importDeps).fuel = fuel := by
+  simp [observeQuery]
+
+open Std in
 theorem observeQuery_results (kbAtoms : List Atom) (fuel : Nat) (st : St) (q : Atom)
     (imports : HashMap String (List Atom) := HashMap.emptyWithCapacity)
     (importDeps : HashMap String (List String) := HashMap.emptyWithCapacity) :
@@ -77,6 +85,14 @@ theorem observeQuery_errors (kbAtoms : List Atom) (fuel : Nat) (st : St) (q : At
     (importDeps : HashMap String (List String) := HashMap.emptyWithCapacity) :
     (observeQuery kbAtoms fuel st q imports importDeps).errors =
       (observeQuery kbAtoms fuel st q imports importDeps).results.filter Atom.isError := by
+  simp [observeQuery]
+
+open Std in
+theorem observeQuery_exhausted (kbAtoms : List Atom) (fuel : Nat) (st : St) (q : Atom)
+    (imports : HashMap String (List Atom) := HashMap.emptyWithCapacity)
+    (importDeps : HashMap String (List String) := HashMap.emptyWithCapacity) :
+    (observeQuery kbAtoms fuel st q imports importDeps).exhausted =
+      (observeQuery kbAtoms fuel st q imports importDeps).results.any isStackOverflowAtom := by
   simp [observeQuery]
 
 open Std in

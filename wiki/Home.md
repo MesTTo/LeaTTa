@@ -4,8 +4,9 @@
 # LeaTTa
 
 LeaTTa is a Lean 4 formalization of Hyperon's minimal MeTTa interpreter, the small
-"assembly language" that the rest of MeTTa is built on, together with a machine-checked
-metatheory layer.
+"assembly language" that the rest of MeTTa is built on, together with machine-checked
+kernel metatheory, the published operational semantics, a distributed atomspace model,
+MeTTaIL, and the Cordial Miners runtime presentation.
 
 ## Documentation
 

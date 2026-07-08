@@ -27,14 +27,15 @@ work.
 # What Is Established
 
 LeaTTa gives you an executable minimal-MeTTa kernel and standard library that pass Hyperon's test corpus
-at 270 of 270 assertions. It also gives a metatheory layer where every theorem is checked by Lean's
-kernel with no `sorry`, `admit`, `native_decide`, `partial`, or `unsafe`. `#print axioms` reports only
-the three standard classical axioms of Mathlib.
+at 270 of 270 assertions. It also gives proof targets where every theorem is checked by Lean's kernel
+with no `sorry`, `admit`, `native_decide`, `partial`, or `unsafe`. The public audit files report only
+the three standard classical axioms of Mathlib where those library paths require them.
 
 The metatheory proves determinism, confluence of the deterministic fragment, soundness and completeness
-of first-argument indexing, gradual-type soundness, non-transitivity of consistency for both the relation
-and the executable matcher, and a bisimulation tying the indexed kernel to the published operational
-semantics at the level of rule firing.
+of first-argument indexing, gradual-type soundness, non-transitivity of consistency for both the
+relation and the executable matcher, binding and atomspace visibility laws, observation and host-law
+boundaries, distributed delivery and convergence boundaries, and a bisimulation tying the indexed
+kernel to the published operational semantics at the level of rule firing.
 
 # Current Limitations
 

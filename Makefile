@@ -12,7 +12,7 @@ PREFIX   ?= $(HOME)/.local
 build:            ## Build just the interpreter binary
 	lake build LeaTTa
 
-all:              ## Build the kernel, the binary, and the Mathlib metatheory
+all:              ## Build the kernel, binary, proof targets, and runtime presentations
 	lake build
 
 release:          ## Package a self-contained tarball under dist/

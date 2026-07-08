@@ -3,25 +3,32 @@
 
 # LeaTTa: machine-checked MeTTa semantics in Lean 4
 
-LeaTTa is a Lean 4 development for MeTTa, MeTTaIL, and a checked Cordial Miners runtime. LeaTTa starts
-from Hyperon's minimal MeTTa interpreter, the small instruction set that the rest of MeTTa is built on. The
-standard library is written in MeTTa on top of those instructions, following `hyperon-experimental`.
-The executable kernel is total and has no Mathlib or Batteries dependency.
+LeaTTa is a Lean 4 development for MeTTa, the MeTTaIL runtime path, a distributed atomspace model, and
+PoR-weighted Cordial Miners. LeaTTa starts from Hyperon's minimal MeTTa interpreter, the small
+instruction set that the rest of MeTTa is built on. The standard library is written in MeTTa on top of
+those instructions, following `hyperon-experimental`. The executable kernel is total and has no Mathlib
+or Batteries dependency.
 
-The release has three active layers.
+The current branch has five public surfaces.
 
 - The minimal interpreter and standard library run Hyperon's own oracle corpus: 270 passing assertions
   across 22 files.
+- The kernel metatheory and operational-semantics targets prove determinism, confluence of the
+  deterministic fragment, type soundness, indexing soundness and completeness, query correspondence,
+  observation facts, and the published four-register machine properties.
+- The distributed atomspace target models replica-local atoms, mutation events, vector clocks, fair
+  delivery as a theorem parameter, ordered replay assumptions, and matching convergence.
 - The MeTTaIL layer formalizes the determinate presentation pipeline and ships a small editable dialect
   format that runs through the checked reducer.
 - The Cordial Miners layer formalizes the PoR-weighted coarse protocol, proves the top-level safety
   theorem, and hosts the protocol as a MeTTaIL runtime presentation.
 
-LeaTTa 1.0.6 is a research release with a fixed list of checked claims. The release does not claim the
-full Hyperon module system, MeTTa on Rholang, or the remaining MeTTaIL denotational goals. The theorems
-named in this README are checked by Lean's kernel with no `sorry`, no `admit`, no `native_decide`, no
-`partial`, and no `unsafe`. The full comparison with Hyperon is in the book's Improvements over Hyperon
-appendix at [mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/).
+The package version is 1.0.6. This branch carries a fixed list of checked claims. It does not claim the
+full Hyperon module system, MeTTa on Rholang, unordered distributed convergence without replay
+assumptions, or the remaining MeTTaIL denotational goals. The theorems named in this README are checked
+by Lean's kernel with no `sorry`, no `admit`, no `native_decide`, no `partial`, and no `unsafe`. The
+full comparison with Hyperon is in the book's Improvements over Hyperon appendix at
+[mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/).
 
 ## Start here
 
@@ -30,6 +37,7 @@ release archive is healthy.
 
 ```bash
 lake build
+lake build Distributed Metatheory Operational
 ./scripts/run-oracle.sh
 ./scripts/run-regression.sh
 lake build MeTTaIL MeTTaILProofs MeTTaILTests
@@ -39,6 +47,7 @@ lake build CordialMiners CordialMiners.Runtime.Run
 Expected results:
 
 - `lake build` ends with `Build completed successfully`.
+- the `Distributed`, `Metatheory`, and `Operational` targets build directly from their public roots.
 - `./scripts/run-oracle.sh` reports `ORACLE OK` with 270 passing assertions.
 - `./scripts/run-regression.sh` reports `REGRESSION OK`.
 - the MeTTaIL and Cordial Miners targets build without forbidden placeholders.
@@ -224,8 +233,9 @@ All of this is built on the minimal interpreter and follows Hyperon:
 
 ## The proofs
 
-The metatheory layer lives in `MettaHyperonFull/Proofs/`. The layer uses Mathlib and keeps 0 `sorry`, 0
-`admit`, and 0 `native_decide`. The layer proves what an on-chain MeTTa needs:
+The kernel metatheory layer lives in `MettaHyperonFull/Proofs/`. The layer uses Mathlib and keeps
+0 `sorry`, 0 `admit`, 0 `native_decide`, 0 `partial`, and 0 `unsafe`. The layer proves what an
+on-chain MeTTa needs:
 
 - the abstract machine is deterministic, with all nondeterminism kept in the result list rather than
   the transition relation, which is what replayability needs;
@@ -234,13 +244,35 @@ The metatheory layer lives in `MettaHyperonFull/Proofs/`. The layer uses Mathlib
   The theorem covers the same-head case where Hyperon's `Space::visit` undercounts (issue #1079);
 - the gradual type checker is total, and reports `BadArgType` faithfully and only with a real argument
   type, so it never invents an error;
-- α-equivalence is an equivalence relation.
+- alpha-equivalence is an equivalence relation;
+- executable binding merge laws expose the successful, conflicting, and unification-mediated cases;
+- list-backed atomspace laws state insert, remove, query, type-assignment, equality-rule, and
+  threaded-world visibility facts;
+- substitution-cycle audit facts state exactly where direct-loop checks stop and where recursive
+  resolution needs an acyclicity condition;
+- host-law records make external grounded equality, matching, typing, execution, and display
+  assumptions explicit;
+- observation records expose input, fuel, results, error atoms, exhaustion status, and before/after
+  worlds without adding a second evaluator;
+- arrow-constructor laws pin `Atom.mkArrow` and `TypeEnv.arrowParts?` to the executable splitter.
 
 A separate `MettaHyperonFull.Operational.*` library machine-checks the published Meta-MeTTa
 operational semantics (arXiv 2305.17218): the four-register machine ⟨i,k,w,o⟩, its barbed
 bisimulation, and a resource-bounded (gas) extension. The bridge between the indexed kernel and that
 specification is in `Proofs/Correspondence.lean`, covered in the book's operational-semantics and
 correspondence chapters at [mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/).
+
+`MettaHyperonFull.Distributed.*` is a separate distributed atomspace proof target. It is not the
+Cordial Miners consensus proof. It models replica-local atom storage, add/remove events, vector clocks,
+local issue, remote delivery, and the boundary between fairness, ordered replay, and convergence. The
+target checks read-your-own-writes, mid-flight divergence, log monotonicity, fair delivery as an
+explicit theorem parameter, barrier extension, quiescent coverage, vector-clock max as a least upper
+bound, ordered atom-set convergence under `OrderedReplayAssumptions`, and matching convergence after
+ordered replay. Its axiom audit is built by:
+
+```bash
+lake build Distributed
+```
 
 ## MeTTaIL and the checked runtime
 
@@ -666,7 +698,7 @@ Full install, usage, and build-from-source notes are in [INSTALL.md](INSTALL.md)
 To build from source instead:
 
 ```bash
-lake build                                           # kernel + exe + Mathlib metatheory; 0 sorry
+lake build                                           # kernel, executable, proof targets, and runtime presentations
 lake exe LeaTTa --min '!(+ 1 (* 2 (- 10 4)))'    # [13]
 lake exe LeaTTa --min '!(map-atom (1 2 3) $x (* $x $x))'  # [(1 4 9)]
 lake exe LeaTTa --min '!(case (+ 1 1) ((1 one) (2 two)))' # [two]
@@ -692,15 +724,16 @@ Improvements over Hyperon appendix at [mestto.github.io/LeaTTa](https://mestto.g
 ## Layout and scope
 
 - Active: `Core` (the object language), `Runtime.Parser`, `Minimal.Interpreter`, `Minimal.Stdlib`.
-  `Proofs` and `Operational` are the metatheory and the published semantics. `MeTTaIL` (with
-  `MeTTaILProofs` and `MeTTaILTests`) is the checked MeTTaIL formalization and runtime layer.
-  `CordialMiners` is the PoR-weighted Cordial Miners consensus formalization, with its safety
-  metatheory.
+  `Proofs` and `Operational` are the kernel metatheory and the published semantics. `Distributed` is
+  the distributed atomspace model and axiom audit. `MeTTaIL` (with `MeTTaILProofs` and
+  `MeTTaILTests`) is the checked MeTTaIL formalization and runtime layer. `CordialMiners` is the
+  PoR-weighted Cordial Miners consensus formalization, with its safety metatheory.
 - Archived and not built: earlier exploratory models, including a four-register runtime, categorical
   metagraph rewriting, a Ruliad sketch, and an earlier approximate standard library. They live under
   [archive/](archive/) with their own README, kept for reference and not part of the verified work.
 - In scope: the minimal interpreter, the standard library (computation, control, lists, sets,
   asserts), the runtime type system, mixed arithmetic, mutable spaces and state, conjunctive match,
-  and the metatheory layer.
+  the metatheory layer, the published operational-semantics model, and the distributed atomspace
+  proof target.
 - Open: the full module system is not yet covered. The remaining MeTTaIL research targets are listed in
   the MeTTaIL section above and in the proof-status appendix.

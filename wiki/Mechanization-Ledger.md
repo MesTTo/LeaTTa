@@ -190,6 +190,7 @@ The current focused checks are:
 ```bash
 lake build Distributed
 lake build Metatheory
+lake build Operational
 ```
 
 `Distributed` also prints the axiom surface through `MettaHyperonFull.Distributed.AxiomAudit`.

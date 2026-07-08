@@ -41,8 +41,8 @@ shortTitle := "LeaTTa"
 :::paragraph
 *Alpha.* This is an early, alpha-stage release and a starting foundation. It currently formalises
 Hyperon Experimental's minimal interpreter and standard library, the published MeTTa operational
-semantics, the MeTTaIL formalization, and the Cordial Miners safety core. The limitations chapter
-states the remaining gaps directly.
+semantics, a distributed atomspace slice, the MeTTaIL formalization, and the Cordial Miners safety
+core. The limitations chapter states the remaining gaps directly.
 :::
 
 {index}[LeaTTa]
@@ -56,18 +56,21 @@ kernel verifies. The formalization covers:
  * the standard library;
  * the gradual type system;
  * the published four-register operational semantics;
+ * the distributed atomspace proof target;
  * the MeTTaIL formalization;
  * a body of machine-checked *metatheory*: determinism, confluence of the deterministic fragment,
-   type soundness, gradual-typing consistency, soundness *and* completeness of first-argument
-   indexing, and a bisimulation connecting the kernel's rule-firing core to the published
+   type soundness, gradual-typing consistency, binding and atomspace laws, observation facts,
+   soundness *and* completeness of first-argument indexing, distributed delivery and convergence
+   boundaries, and a bisimulation connecting the kernel's rule-firing core to the published
    operational semantics of MeTTa at the level of which rules fire {citep mops}[].
 
 Every theorem in this book is checked by Lean's kernel. The development contains *no* `sorry`,
-`admit`, `native_decide`, `partial`, or `unsafe`; the central axiom audit reports only the three
-standard classical axioms of Mathlib {citep mathlib}[], and the gradual-typing non-transitivity
-result depends on no axioms at all. The executable interpreter is validated against Hyperon's own
-test corpus (270/270 assertions). CI fails on root Lean/Lake warnings and on any unreviewed book
-warning; the only allowed book warning is the known upstream Verso v4.31.0 `@[expose]` warning.
+`admit`, `native_decide`, `partial`, or `unsafe`; the public axiom audit files report only the three
+standard classical axioms of Mathlib {citep mathlib}[] where those library paths require them, and the
+gradual-typing non-transitivity result depends on no axioms at all. The executable interpreter is
+validated against Hyperon's own test corpus (270/270 assertions). CI fails on root Lean/Lake warnings
+and on any unreviewed book warning; the only allowed book warning is the known upstream Verso v4.31.0
+`@[expose]` warning.
 
 :::paragraph
 LeaTTa is written for two audiences:

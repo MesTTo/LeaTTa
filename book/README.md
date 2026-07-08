@@ -9,8 +9,9 @@ Verso on Mathlib and the Illuminate diagram library, which the kernel does not i
 
 The book root is `Docs.lean` and the chapters are in `Docs/`. They cover the object language, the
 minimal interpreter, the gradual type system, the metatheory, the operational semantics, the
-kernel-to-specification correspondence, the blockchain-oriented guarantees, the MeTTaIL runtime path,
-the Cordial Miners safety core, future work, and current limitations.
+kernel-to-specification correspondence, the blockchain-oriented guarantees, the distributed atomspace
+proof surface, the MeTTaIL runtime path, the Cordial Miners safety core, future work, and current
+limitations.
 
 ## Build
 

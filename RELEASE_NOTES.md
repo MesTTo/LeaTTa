@@ -3,6 +3,16 @@
 
 # LeaTTa 1.0.6
 
+## Current Metatheory Branch
+
+The `metatheory` branch now carries additional proof-surface documentation beyond the 1.0.6 release
+archive. The README, wiki source, and book source describe the active `Distributed`, `Metatheory`, and
+`Operational` targets, the distributed atomspace axiom audit, binding merge laws, atomspace and world
+visibility laws, substitution-cycle audit facts, host-law records, observation facts, and arrow
+constructor laws.
+
+The package version remains 1.0.6 until the next release archive is cut.
+
 LeaTTa 1.0.6 adds the next checked piece of the generated-hypercube layer. Modal sites, spatial heads,
 slot families, rule schemes, and judgment footprints were already represented in Lean. This release
 adds explicit slot constraints and connects them to the finite equational-center checker.
@@ -64,6 +74,7 @@ From a source checkout:
 
 ```bash
 lake build
+lake build Distributed Metatheory Operational
 lake build MeTTaIL MeTTaILProofs MeTTaILTests
 lake build CordialMiners CordialMiners.Runtime.Run
 ./scripts/run-oracle.sh

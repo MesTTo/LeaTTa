@@ -47,7 +47,7 @@ exact toolchain version is pinned in `lean-toolchain`.
 
 ```bash
 elan toolchain install $(cat lean-toolchain)   # if you do not already have it
-lake exe cache get                             # prebuilt Mathlib, used by the metatheory layer only
+lake exe cache get                             # prebuilt Mathlib, used by proof targets only
 lake build LeaTTa                              # builds just the interpreter binary
 ```
 
@@ -57,8 +57,8 @@ The binary lands at `.lake/build/bin/LeaTTa` (`LeaTTa.exe` on Windows). Install 
 make install                                   # copies it to ~/.local/bin
 ```
 
-Mathlib backs the metatheory proofs only. The interpreter binary does not link Mathlib,
-so once `LeaTTa` is built it runs anywhere without the proof layer.
+Mathlib backs the proof targets only. The interpreter binary does not link Mathlib, so once `LeaTTa`
+is built it runs anywhere without the proof layer.
 
 ## Usage
 

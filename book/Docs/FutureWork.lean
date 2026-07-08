@@ -23,10 +23,10 @@ tag := "sec-future"
 
 The development has two branches. The `metatheory` branch covers MeTTa as it stands today: the
 minimal-MeTTa kernel and standard library, validated against Hyperon's corpus, with the machine-checked
-metatheory and no `sorry`. The `future-work` branch prototypes the directions the minimal-MeTTa
-specification lists under "future work", together with a fuller module system. A feature is admitted to
-the branch only once the metatheory still goes through, or its interaction with the metatheory is
-documented precisely.
+metatheory, the published operational-semantics model, the distributed atomspace proof target, and no
+`sorry`. The `future-work` branch prototypes the directions the minimal-MeTTa specification lists under
+"future work", together with a fuller module system. A feature is admitted to the branch only once the
+metatheory still goes through, or its interaction with the metatheory is documented precisely.
 
 # A Feature, and a Finding
 

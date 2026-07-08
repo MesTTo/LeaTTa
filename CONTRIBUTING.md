@@ -31,12 +31,13 @@ Invariants the project keeps. Any change must keep them too:
   270 / 270. `./scripts/run-regression.sh` covers the added-feature tests and must stay at PASS.
 - Comments and docs are written in plain prose, with no em dashes.
 - The executable kernel (`Core`, `Minimal`, `Runtime`) stays free of Mathlib. Mathlib is only for
-  the `Proofs` and `Operational` layers.
+  proof targets such as `Proofs`, `Operational`, `Distributed`, `MeTTaILProofs`, and
+  `CordialMiners`.
 
 ## Building and checking
 
 ```bash
-lake build                          # kernel, the LeaTTa executable, and the Mathlib metatheory
+lake build                          # kernel, executable, proof targets, and runtime presentations
 make oracle                         # differential oracle against Hyperon's corpus, 270 / 270
 make regression                     # the added-feature regression tests
 scripts/ci/check-no-forbidden.sh    # the no-placeholder invariant

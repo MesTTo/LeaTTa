@@ -19,10 +19,10 @@ For the concepts themselves, read the [documentation](Home).
 
 ## Libraries and the computability split
 
-- **Mathlib** is pinned to the release whose toolchain matches ours. It backs the
-  metatheory layer only: `MettaHyperonFull/Proofs/` and `MettaHyperonFull/Operational/`.
-  Use it freely there for orders, `Multiset`, `Relation.ReflTransGen`, decidability
-  infrastructure, and `aesop`.
+- **Mathlib** is pinned to the release whose toolchain matches ours. It backs proof targets only:
+  `MettaHyperonFull/Proofs/`, `MettaHyperonFull/Operational/`, `MettaHyperonFull/Distributed/`,
+  `MeTTaILProofs/`, and `CordialMiners/`. Use it freely there for orders, `Multiset`,
+  `Relation.ReflTransGen`, decidability infrastructure, and `aesop`.
 - **The executable kernel does not import Mathlib.** `Multiset`, `Finset`, and `Real` are
   noncomputable, so the interpreter that must `lake exe` stays on `List` and
   `Std.HashMap`. Keep this split: computable code under `Core`, `Runtime`, and `Minimal`
@@ -51,9 +51,10 @@ For the concepts themselves, read the [documentation](Home).
 - `MettaHyperonFull/Runtime/Parser` parses surface MeTTa.
 - `MettaHyperonFull/Minimal/Interpreter` and `Minimal/Stdlib` are the faithful kernel and
   the standard library written over its thirteen instructions. This is the computable heart.
-- `MettaHyperonFull/Proofs` is the Mathlib-backed metatheory: determinism, confluence of
+- `MettaHyperonFull/Proofs` is the Mathlib-backed kernel metatheory: determinism, confluence of
   the deterministic fragment, sound and complete first-argument indexing, type soundness,
-  alpha-equivalence, and space mutation laws.
+  alpha-equivalence, binding merge laws, space and world mutation laws, substitution-cycle audits,
+  observation facts, host-law boundaries, arrow-constructor laws, and query correspondence.
 - `MettaHyperonFull/Operational` machine-checks the published Meta-MeTTa operational
   semantics: the four-register machine, its barbed bisimulation, and the gas extension.
 - `MettaHyperonFull/Distributed` machine-checks the distributed atomspace slice: vector
@@ -63,8 +64,8 @@ For the concepts themselves, read the [documentation](Home).
 ## Contributing
 
 See [CONTRIBUTING.md](https://github.com/MesTTo/LeaTTa/blob/metatheory/CONTRIBUTING.md).
-Keep the kernel Mathlib free, put new theorems under `Proofs`, and run `make oracle`
-against Hyperon's corpus before proposing a change.
+Keep the kernel Mathlib free, put new theorems under the matching proof target, and run
+`make oracle` against Hyperon's corpus before proposing a change.
 
 Use the [Mechanization Ledger](Mechanization-Ledger) and [Axiom Catalog](Axiom-Catalog) when changing
 public theorem claims.

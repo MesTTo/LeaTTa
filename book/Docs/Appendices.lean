@@ -38,8 +38,9 @@ The development separates three things that are easy to conflate:
 
 ## Machine-checked in the active build
 
-Every theorem named here is checked by Lean's kernel in `MettaHyperonFull/Proofs/` or
-`MettaHyperonFull/Operational/`, with no `sorry`, `admit`, `native_decide`, `partial`, or `unsafe`.
+Every theorem named here is checked by Lean's kernel in `MettaHyperonFull/Proofs/`,
+`MettaHyperonFull/Operational/`, or `MettaHyperonFull/Distributed/`, with no `sorry`, `admit`,
+`native_decide`, `partial`, or `unsafe`.
 
  * *Determinism.* The abstract machine is a function; all nondeterminism is reified in the result
    list, not the transition relation: `interpretStack1_deterministic`, `interpretFuel_deterministic`,
@@ -57,11 +58,38 @@ Every theorem named here is checked by Lean's kernel in `MettaHyperonFull/Proofs
    `Consistent.not_transitive` and `matchType_not_transitive` (`Proofs/Gradual.lean`).
  * *Alpha-equivalence* is an equivalence relation, preserves size, and coincides with `=` on closed
    atoms: `alphaEq_equivalence`, `AlphaEq.size_eq`, `alphaEq_iff_eq_of_closed` (`Proofs/Alpha.lean`).
- * *Substitution laws* used by binding propagation and preservation (`Proofs/Substitution.lean`).
+ * *Substitution laws and cycle audits* used by binding propagation and preservation:
+   `Subst.apply_compose` (`Proofs/Substitution.lean`), plus
+   `cyclicSubst_apply_x_once`, `cyclicSubst_apply_x_twice`,
+   `cyclicBindingsXY_not_direct_loop`, and `cyclicResolve_not_fuel_stable`
+   (`Proofs/SubstitutionAudit.lean`).
+ * *Binding merge laws* expose fresh, same-value, conflict, and unification-mediated direct-binding
+   cases: `Bindings.addVarBinding_fresh`, `Bindings.addVarBinding_same`,
+   `Bindings.addVarBinding_conflict`, `Bindings.addVarBinding_unifies`,
+   `Bindings.merge_one_val_fresh`, and `Bindings.merge_one_val_conflict`
+   (`Proofs/BindingLaws.lean`).
+ * *Atomspace and world visibility laws* state the executable list-backed insert, query, remove,
+   type-assignment, equality-rule, named-space, state-cell, token, `&self`, and hidden-import facts:
+   `Space.query_insert_self`, `Space.query_removeOne_insert_self`, and the `World.*_visible`
+   theorems (`Proofs/SpaceLaws.lean`, `Proofs/WorldLaws.lean`).
+ * *Observation and host boundaries* are named theorem surfaces rather than implicit assumptions:
+   `observeQuery_results`, `observeQuery_errors`, `observeQuery_exhausted`,
+   `NativeCarrierLaws.typeOf_sound`, `NativeCarrierLaws.matchWith_sound`,
+   `GroundingLaws.impl_sound`, and `GroundingLaws.typeSig_sound_of_some`
+   (`Minimal/Observation.lean`, `Core/HostLaws.lean`).
+ * *Arrow constructor laws* pin the executable type helpers:
+   `Atom.isArrow_mkArrow` and `TypeEnv.arrowParts?_mkArrow`
+   (`Proofs/TypeConstructors.lean`).
  * *Operational semantics.* The four-register machine, append-only knowledge-base auditability, and
    gas non-creation (`Operational/Properties.lean`), with a bisimulation tying the indexed kernel to
    the published semantics at the level of rule firing: `kernel_mops_bisim`
    (`Proofs/Correspondence.lean`).
+ * *Distributed atomspace.* The active distributed target proves vector-clock order laws, pairwise max
+   as a least upper bound, read-your-own-writes, mid-flight divergence, log monotonicity, fair-delivery
+   consequences, barrier extension, quiescent per-event coverage, ordered atom-set convergence, and
+   matching convergence: `vcMaxLub`, `readOwnWrites`, `midFlightDivergence`, `logMonotoneStar`,
+   `eventualDelivery`, `barrierExtensionViaEventualDelivery`, `dasConvergence`,
+   `sigmaConvergence`, and `convergedMatchingBehavior` (`Distributed/DAS.lean`).
 
 ## Archived exploration, not part of the verified build
 
@@ -72,7 +100,7 @@ are listed so the proof status is not mistaken for covering them.
  * Single-pushout and double-pushout graph rewriting, metagraph homomorphism, and the
    expression-to-DAG encoding (`archive/Metagraph/`).
  * Quotation and self-modification, trace history, and the Ruliad perspective (`archive/Reflection/`).
- * Host contracts and distributed-atomspace (DAS) matching (`archive/Interop/`).
+ * Earlier host contracts and distributed-atomspace matching sketches (`archive/Interop/`).
  * Well-formedness metatheory over the earlier four-register runtime (`archive/MetaTheory/`,
    `archive/Runtime/`).
 
@@ -135,6 +163,8 @@ drop-in replacement for the Rust Hyperon runtime and does not cover the full Hyp
    execution traces: `Operational/Semantics.lean`, `Operational/Bisimulation.lean`,
    `Operational/ResourceBounded.lean`, `Operational/Trace.lean`.
  * The metatheory results listed under Proof Status above: `Proofs/`.
+ * The active distributed atomspace model, vector clocks, event delivery, and convergence boundaries:
+   `Distributed/DAS.lean`, with audit output in `Distributed/AxiomAudit.lean`.
 
 ## Runtime spine
 
@@ -159,9 +189,10 @@ properties the implementation only asserts.
 ## What is proved
 
 The metatheory proves what the implementation asserts in comments. The full list with theorem names is
-under Proof Status above. In short, the proved surface covers determinism, confluence of the deterministic
-fragment, sound and complete first-argument indexing, gradual-type permissiveness and faithful errors,
-alpha-equivalence, and the kernel-to-specification bisimulation.
+under Proof Status above. In short, the proved surface covers determinism, confluence of the
+deterministic fragment, sound and complete first-argument indexing, gradual-type permissiveness and
+faithful errors, alpha-equivalence, binding and atomspace laws, observation and host-law boundaries,
+distributed delivery and convergence boundaries, and the kernel-to-specification bisimulation.
 
 One foundational choice matters for the proofs. `Atom`'s `BEq` is hand-written and structural rather than
 derived, so it is kernel-reducible and the indexing and type proofs go through. The derived instance

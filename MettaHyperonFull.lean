@@ -30,6 +30,7 @@ import MettaHyperonFull.Core.Matching
 import MettaHyperonFull.Core.Space
 import MettaHyperonFull.Core.Types
 import MettaHyperonFull.Core.Grounding
+import MettaHyperonFull.Core.HostLaws
 import MettaHyperonFull.Core.Builtins
 
 -- Parser: text to atoms.
@@ -38,5 +39,6 @@ import MettaHyperonFull.Runtime.Parser
 -- The faithful core: minimal MeTTa interpreter (assembly) plus the stdlib written over it.
 import MettaHyperonFull.Minimal.Interpreter
 import MettaHyperonFull.Minimal.Stdlib
+import MettaHyperonFull.Minimal.Observation
 
 -- `Operational.*` is its own verified `lean_lib «Operational»` target; see the header above.

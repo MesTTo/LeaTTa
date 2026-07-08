@@ -8,8 +8,9 @@ Purpose: Aggregator for the metatheory layer. Pulls together every proof module 
   the executable kernel without taking part in execution. The collected results target what matters
   for on-chain use: determinism, type soundness, confluence of the deterministic fragment, sound and
   complete rule indexing, and interpreter-to-specification correspondence.
-Imports: every module under MettaHyperonFull.Proofs (Basic, Substitution, Alpha, Indexing,
-  IndexingComplete, Results, TypeSoundness, Confluence, Preservation, Gradual, Correspondence)
+Imports: every module under MettaHyperonFull.Proofs (Basic, Substitution, SubstitutionAudit, Alpha,
+  Indexing, IndexingComplete, SpaceLaws, WorldLaws, Results, TypeSoundness, Confluence,
+  Preservation, Gradual, Correspondence, CorrespondenceR14)
 Trusted boundary: none (fully proved)
 Main exports: re-exports of the proof modules; no new declarations of its own
 Open obligations: none. The 4-register MOPS semantics, its bisimulation, and the gas model live in
@@ -17,16 +18,19 @@ Open obligations: none. The 4-register MOPS semantics, its bisimulation, and the
 -/
 import MettaHyperonFull.Proofs.Basic
 import MettaHyperonFull.Proofs.Substitution
+import MettaHyperonFull.Proofs.SubstitutionAudit
 import MettaHyperonFull.Proofs.Alpha
 import MettaHyperonFull.Proofs.Indexing
 import MettaHyperonFull.Proofs.IndexingComplete
 import MettaHyperonFull.Proofs.SpaceLaws
+import MettaHyperonFull.Proofs.WorldLaws
 import MettaHyperonFull.Proofs.Results
 import MettaHyperonFull.Proofs.TypeSoundness
 import MettaHyperonFull.Proofs.Confluence
 import MettaHyperonFull.Proofs.Preservation
 import MettaHyperonFull.Proofs.Gradual
 import MettaHyperonFull.Proofs.Correspondence
+import MettaHyperonFull.Proofs.CorrespondenceR14
 
 /-!
 # Metatheory of the minimal-MeTTa semantics
@@ -48,6 +52,10 @@ and that the implementation's optimisations don't change behaviour. Those drive 
 * `Proofs/Substitution.lean`: foundational `Subst.apply` / `instantiate` lemmas: empty-substitution
                                identity, closed atoms are fixed, size monotonicity, and the
                                substitution **composition law** `Subst.apply_compose`.
+* `Proofs/SubstitutionAudit.lean`: cyclic substitution audit: one-pass substitution does not chase
+                               `$x <- $y <- $x`; repeated resolution is fuel-bounded and can fail
+                               fuel-stability without an acyclicity side condition
+                               (`cyclicResolve_not_fuel_stable`).
 * `Proofs/Alpha.lean`:         α-equivalence is an **equivalence relation**; preserves `Atom.size`;
                                coincides with `=` on variable-free atoms. Documents the Float/IEEE
                                caveat on the Boolean decider.
@@ -68,7 +76,9 @@ and that the implementation's optimisations don't change behaviour. Those drive 
                                `cartesian` branching-factor law.
 * `Proofs/TypeSoundness.lean`: the gradual type system is **permissive** (undeclared ops / extra
                                args / `%Undefined%`/`Atom` never rejected), **total** (`getTypes`
-                               assigns every atom a type, `getTypes_ne_nil`), reports `BadArgType`
+                               assigns every atom a type, `getTypes_ne_nil`), unique modulo
+                               permutation as a computed type list
+                               (`getTypes_unique_modulo_permutation`), reports `BadArgType`
                                **faithfully** (`mettaEval_badArgType`) and only with a **real** actual
                                type (`typeCheckArgs_act_real`: no fabricated errors), and **preserves
                                types on the grounded core**: arithmetic is closed on `Number`
@@ -112,6 +122,12 @@ and that the implementation's optimisations don't change behaviour. Those drive 
                                `candidates_complete`. This is the GSLT "interpreter ⇔ semantics"
                                correspondence the 2025 Hyperon Whitepaper (§3.4.1) describes, at the QUERY step,
                                the bridge between the efficient on-chain evaluator and the spec.
+* `Proofs/CorrespondenceR14.lean`: the same QUERY correspondence packaged as four public obligations:
+                               initial agreement, step matching, observation compatibility, and
+                               termination preservation (`queryCorrespondenceR14`).
+* `Proofs/SpaceLaws.lean` and `Proofs/WorldLaws.lean`: basic list-backed atomspace and threaded-world
+                               visibility laws for insert/remove, named spaces, state cells, tokens,
+                               `&self`, and imports.
 
 (The published 4-register MOPS operational semantics, its barbed **bisimulation**, and the
 resource-bounded **gas** model live in the sibling `MettaHyperonFull.Operational.*` library; see

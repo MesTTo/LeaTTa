@@ -13,7 +13,8 @@ Imports: MettaHyperonFull.Proofs.Basic
 Trusted boundary: none (fully proved)
 Main exports: typeMismatch_undeclared, matchType_undefined_left, matchType_undefined_right,
   matchType_atom_left, matchType_atom_right, typeCheckArgs_no_param, mettaEval_badArgType,
-  getTypes_ne_nil, typeCheckArgs_act_real, numBin_isNumber, numCmp_isBool, eqAtom_isBoolOrError
+  getTypes_ne_nil, getTypes_unique_modulo_permutation, typeCheckArgs_act_real, numBin_isNumber,
+  numCmp_isBool, eqAtom_isBoolOrError
 Open obligations: none. Subject reduction over user-defined =-rewriting is proved in Preservation.lean.
 -/
 import MettaHyperonFull.Proofs.Basic
@@ -122,6 +123,13 @@ or `%Undefined%`, never the empty set. (Proved by the generated functional-induc
 theorem getTypes_ne_nil (env : MinEnv) (a : Atom) : getTypes env a ≠ [] := by
   fun_induction getTypes env a <;>
     simp_all <;> (try split) <;> simp_all <;> (try split) <;> simp_all
+
+/-- `getTypes` is a function, so any two computed type lists for the same atom are the same up to
+permutation. This is the theorem-level uniqueness surface available before introducing a separate
+relational type-synthesis judgment. -/
+theorem getTypes_unique_modulo_permutation (env : MinEnv) (a : Atom) {ts₁ ts₂ : List Atom}
+    (h₁ : getTypes env a = ts₁) (h₂ : getTypes env a = ts₂) : ts₁.Perm ts₂ := by
+  rw [← h₁, ← h₂]
 
 /-- **No fabricated type errors.** The *actual* type reported in a `BadArgType` is a genuine type of
 the offending argument: it is one of `getTypes` of that argument (its head). So the checker never

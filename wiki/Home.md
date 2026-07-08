@@ -17,9 +17,12 @@ correspondence to the kernel, and the blockchain angle. Start there.
 - **Repository and README:** https://github.com/MesTTo/LeaTTa
 - **Install and run:** [INSTALL.md](https://github.com/MesTTo/LeaTTa/blob/metatheory/INSTALL.md)
 
-This wiki has two pages. Everything conceptual is in the links above.
+This wiki keeps the short operational pages here. Everything broader is in the links above.
 
 ## Lean development
 
 See the [Developer Guide](Developer-Guide) for the Lean toolchain, libraries, and proof
 machinery to use when contributing to LeaTTa.
+
+The [Mechanization Ledger](Mechanization-Ledger) maps public claims to checked Lean declarations. The
+[Axiom Catalog](Axiom-Catalog) names the current assumption surface.

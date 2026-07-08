@@ -9,6 +9,8 @@ can be reviewed alongside the code.
 - `Home.md` is the wiki landing page. It points readers to the documentation.
 - `Developer-Guide.md` covers the Lean toolchain, libraries, and proof machinery for
   contributors.
+- `Mechanization-Ledger.md` maps public claims to checked Lean declarations.
+- `Axiom-Catalog.md` records the human-readable assumption surface.
 
 ## Publishing to the GitHub wiki
 
@@ -18,6 +20,6 @@ After that, publish these pages with:
 
 ```bash
 git clone https://github.com/MesTTo/LeaTTa.wiki.git
-cp wiki/Home.md wiki/Developer-Guide.md LeaTTa.wiki/
+cp wiki/Home.md wiki/Developer-Guide.md wiki/Mechanization-Ledger.md wiki/Axiom-Catalog.md LeaTTa.wiki/
 cd LeaTTa.wiki && git add -A && git commit -m "Sync wiki pages" && git push
 ```

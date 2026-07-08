@@ -53,12 +53,18 @@ For the concepts themselves, read the [documentation](Home).
   the standard library written over its thirteen instructions. This is the computable heart.
 - `MettaHyperonFull/Proofs` is the Mathlib-backed metatheory: determinism, confluence of
   the deterministic fragment, sound and complete first-argument indexing, type soundness,
-  and alpha-equivalence.
+  alpha-equivalence, and space mutation laws.
 - `MettaHyperonFull/Operational` machine-checks the published Meta-MeTTa operational
   semantics: the four-register machine, its barbed bisimulation, and the gas extension.
+- `MettaHyperonFull/Distributed` machine-checks the distributed atomspace slice: vector
+  clocks, mutation events, local issue, remote delivery, fairness as an explicit theorem
+  parameter, and convergence boundaries.
 
 ## Contributing
 
 See [CONTRIBUTING.md](https://github.com/MesTTo/LeaTTa/blob/metatheory/CONTRIBUTING.md).
 Keep the kernel Mathlib free, put new theorems under `Proofs`, and run `make oracle`
 against Hyperon's corpus before proposing a change.
+
+Use the [Mechanization Ledger](Mechanization-Ledger) and [Axiom Catalog](Axiom-Catalog) when changing
+public theorem claims.

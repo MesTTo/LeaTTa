@@ -1,56 +1,50 @@
 <!-- SPDX-FileCopyrightText: 2026 MesTTo -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# LeaTTa 1.0.6
+# LeaTTa 1.0.7
 
-## Current Metatheory Branch
-
-The `metatheory` branch now carries additional proof-surface documentation beyond the 1.0.6 release
-archive. The README, wiki source, and book source describe the active `Distributed`, `Metatheory`, and
-`Operational` targets, the distributed atomspace axiom audit, binding merge laws, atomspace and world
-visibility laws, substitution-cycle audit facts, host-law records, observation facts, and arrow
-constructor laws.
-
-The package version remains 1.0.6 until the next release archive is cut.
-
-LeaTTa 1.0.6 adds the next checked piece of the generated-hypercube layer. Modal sites, spatial heads,
-slot families, rule schemes, and judgment footprints were already represented in Lean. This release
-adds explicit slot constraints and connects them to the finite equational-center checker.
+LeaTTa 1.0.7 is the metatheory and distributed-atomspace release. It keeps the executable minimal
+MeTTa interpreter aligned with Hyperon's oracle corpus, adds a checked distributed atomspace target,
+and expands the public proof ledger for the kernel boundary.
 
 ## Announcement
 
-LeaTTa 1.0.6 moves the generated-hypercube work one step closer to the center construction described
-by Stay, Meredith, and Wells.
+The new `Distributed` target models the active distributed atomspace slice. It is separate from
+Cordial Miners consensus. It covers replica-local atom storage, add/remove mutation events, vector
+clocks, local issue, remote delivery, and the proof boundary around fairness and replay order.
 
-`MeTTaIL.Semantics.Hypercube` now defines `SlotConstraint`, the explicit equality that says two
-generated slots must receive the same sort. The file also adds nullary slot expressions, so those
-equalities can be seen by the generic equation checker already used for the hypercube center.
+The checked claims include vector-clock order laws, pairwise max as a least upper bound,
+read-your-own-writes, mid-flight divergence before remote delivery, append-only global logs, fair
+delivery as an explicit theorem parameter, barrier extension under that fairness parameter, quiescent
+per-event coverage, ordered atom-set convergence under `OrderedReplayAssumptions`, and matching
+convergence after ordered replay.
 
-The new `constrainedCenter` and `Presentation.hypercubeConstrainedCenter` functions compute the center
-under a list of explicit slot constraints. The theorem `mem_constrainedCenter_iff` states the exact
-meaning of that computation: a member is a raw slot assignment that satisfies every listed slot
-equality. The bridge theorems are included in the axiom audit and in the Verso theorem register.
+The kernel proof surface is also wider. The release adds executable binding merge laws, query
+visibility laws, atomspace and threaded-world visibility laws, substitution-cycle audit facts,
+theorem-facing observation records, host-law records for native grounded callbacks, arrow-constructor
+laws, and a four-obligation packaging of the query correspondence theorem.
 
-The checked claim is precise. The release checks explicit slot constraints. It does not yet
-derive every constraint automatically from source equations and rewrite laws, and it does not yet turn
-the recorded judgment footprints into the full generated typing system. Those are the next hypercube
-obligations.
+The release also keeps the runtime behavior aligned with the current Hyperon oracle expectations. The
+minimal interpreter and standard library pass 270 assertions across 22 vendored corpus files, and the
+added regression suite stays green.
 
 ## Highlights
 
-- The minimal MeTTa interpreter and standard library still pass Hyperon's vendored oracle corpus:
-  270 assertions across 22 files.
-- `LeaTTa --mettail FILE --term TERM [--fuel N]` still runs a term through a small editable MeTTaIL
-  dialect file.
-- Cordial Miners remains hosted as a MeTTaIL runtime presentation with AC-aware state and inbox
-  rewriting.
-- `MeTTaIL.Semantics.Hypercube` now has checked explicit slot constraints, the constrained center, and
-  the membership theorem connecting that center to direct constraint satisfaction.
-- The denotational files still provide checked interfaces and small kernels for the rset, rho/RSpace,
-  and knotted-universe route. They do not claim the knotted topos or full rho operational
-  correspondence.
-- The release bundles include `examples/bool.mettail`, so the MeTTaIL runtime path can be tested
-  without a Lean toolchain.
+- `MettaHyperonFull.Distributed` is now a public build target with an axiom audit.
+- `MettaHyperonFull.Proofs.BindingLaws` records fresh, same-value, conflicting, and unifying binding
+  merge cases.
+- `MettaHyperonFull.Proofs.SpaceLaws` and `MettaHyperonFull.Proofs.WorldLaws` record insert, query,
+  remove, type-assignment, equality-rule, named-space, state-cell, token, `&self`, and hidden-import
+  visibility facts.
+- `MettaHyperonFull.Proofs.SubstitutionAudit` records the boundary around cyclic bindings and
+  fuel-bounded recursive resolution.
+- `MettaHyperonFull.Minimal.Observation` records input, fuel, result atoms, error atoms, exhaustion,
+  and before/after world state for one observed query.
+- `MettaHyperonFull.Core.HostLaws` makes native carrier and grounded-function assumptions explicit.
+- `MettaHyperonFull.Proofs.TypeConstructors` pins `Atom.mkArrow` and `TypeEnv.arrowParts?` to the
+  executable arrow representation.
+- The wiki source now includes a mechanization ledger and an axiom catalog for the checked public
+  theorem surface.
 
 ## Quick Checks
 
@@ -84,16 +78,11 @@ cd book && lake exe docs
 
 ## Scope
 
-The `--mettail` file format covers `sort`, `term`, and base `rewrite` declarations over S-expression
-terms. The format is the CLI path into the checked runtime, not the full BNFC MeTTaIL surface parser.
-The AC matcher used by the Cordial Miners runtime bridge covers the linear collection fragment needed
-by those rules: one fixed payload and one rest variable.
+The distributed atomspace target proves replica-local mutation and delivery claims. It does not prove
+Cordial Miners consensus, and it does not derive ordered atom-list equality from quiescence alone.
+List-backed atom storage is order-sensitive, so the equality and matching-convergence theorems require
+explicit ordered-replay assumptions.
 
-The hypercube layer now checks explicit slot constraints through the finite center machinery. The
-automatic derivation of those constraints from source equations and rewrite laws remains open, as does
-the full generated typing theorem for binder calculi.
-
-The rho and denotational additions say what the future model has to prove and check the pieces already
-in reach. The release does not claim the knotted topos, the full MeTTaIL-to-rho desugaring theorem, the
-trie store, the cut distributive law, the cost endofunctor, or a language-specific
-observational-calibration theorem.
+The release still does not claim the full Hyperon module system, MeTTa on Rholang, the knotted topos,
+the full MeTTaIL-to-rho desugaring theorem, the trie store, the cut distributive law, the cost
+endofunctor, or a language-specific observational-calibration theorem.

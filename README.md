@@ -23,7 +23,7 @@ The current branch has five public surfaces.
 - The Cordial Miners layer formalizes the PoR-weighted coarse protocol, proves the top-level safety
   theorem, and hosts the protocol as a MeTTaIL runtime presentation.
 
-The package version is 1.0.6. This branch carries a fixed list of checked claims. It does not claim the
+The package version is 1.0.7. This branch carries a fixed list of checked claims. It does not claim the
 full Hyperon module system, MeTTa on Rholang, unordered distributed convergence without replay
 assumptions, or the remaining MeTTaIL denotational goals. The theorems named in this README are checked
 by Lean's kernel with no `sorry`, no `admit`, no `native_decide`, no `partial`, and no `unsafe`. The
@@ -688,8 +688,8 @@ the Lean toolchain. Download an archive from the [releases page](https://github.
 then:
 
 ```bash
-tar xzf leatta-1.0.6-linux-x86_64.tar.gz
-cd leatta-1.0.6-linux-x86_64 && ./install.sh   # installs to ~/.local/bin
+tar xzf leatta-1.0.7-linux-x86_64.tar.gz
+cd leatta-1.0.7-linux-x86_64 && ./install.sh   # installs to ~/.local/bin
 LeaTTa --min '!(+ 1 (* 2 (- 10 4)))'             # [13]
 ```
 

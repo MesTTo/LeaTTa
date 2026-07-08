@@ -173,6 +173,9 @@ The query correspondence theorem is now packaged as four obligations.
 | --- | --- | --- | --- |
 | `getTypes` is total. | Checked | `Metta.getTypes_ne_nil` | Every atom receives at least one type. |
 | Computed type synthesis is unique modulo permutation. | Checked | `Metta.getTypes_unique_modulo_permutation` | This is the function-level theorem. A future relational synthesis judgment can strengthen it. |
+| `Atom.mkArrow args ret` is recognized as an arrow type. | Checked | `Metta.Atom.isArrow_mkArrow` | Exact executable arrow constructor. |
+| `TypeEnv.arrowParts?` recovers the arguments and return type from `Atom.mkArrow`. | Checked | `Metta.TypeEnv.arrowParts?_mkArrow` | Direct splitter law for `(-> A1 ... An R)`. |
+| Non-arrow atoms and `(->)` without a return type do not split as arrow types. | Checked | `Metta.TypeEnv.arrowParts?_sym`, `Metta.TypeEnv.arrowParts?_var`, `Metta.TypeEnv.arrowParts?_gnd`, `Metta.TypeEnv.arrowParts?_empty_expr`, `Metta.TypeEnv.arrowParts?_arrow_no_return` | Negative cases for the executable splitter. |
 
 ## Verification Commands
 

@@ -10,7 +10,7 @@ Purpose: Aggregator for the metatheory layer. Pulls together every proof module 
   complete rule indexing, and interpreter-to-specification correspondence.
 Imports: every module under MettaHyperonFull.Proofs (Basic, Substitution, SubstitutionAudit, Alpha,
   BindingLaws, Indexing, IndexingComplete, SpaceLaws, WorldLaws, Results, TypeSoundness, Confluence,
-  Preservation, Gradual, Correspondence, CorrespondenceR14)
+  Preservation, TypeConstructors, Gradual, Correspondence, CorrespondenceR14)
 Trusted boundary: none (fully proved)
 Main exports: re-exports of the proof modules; no new declarations of its own
 Open obligations: none. The 4-register MOPS semantics, its bisimulation, and the gas model live in
@@ -29,6 +29,7 @@ import MettaHyperonFull.Proofs.Results
 import MettaHyperonFull.Proofs.TypeSoundness
 import MettaHyperonFull.Proofs.Confluence
 import MettaHyperonFull.Proofs.Preservation
+import MettaHyperonFull.Proofs.TypeConstructors
 import MettaHyperonFull.Proofs.Gradual
 import MettaHyperonFull.Proofs.Correspondence
 import MettaHyperonFull.Proofs.CorrespondenceR14
@@ -108,6 +109,9 @@ and that the implementation's optimisations don't change behaviour. Those drive 
                                a well-typed rule" (MeTTa never checks `type(L)=type(R)`), and the
                                type is fixed at the rule's `T`, the correct statement for MeTTa's
                                set-valued typing (a rule preserves the type it is written for).
+* `Proofs/TypeConstructors.lean`: executable arrow-type helper laws: `Atom.mkArrow` is recognized as
+                               an arrow, and `TypeEnv.arrowParts?` recovers exactly the argument and
+                               return types.
 * `Proofs/Gradual.lean`:       **gradual type consistency** as a relation: MeTTa's type compatibility
                                (Hyperon's `match_types`) is Siek–Taha's `~`, **reflexive and symmetric**
                                (`Consistent.refl`, `Consistent.symm`) but pointedly **NOT transitive**

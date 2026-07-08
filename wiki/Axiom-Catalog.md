@@ -48,7 +48,7 @@ The current checked laws include `Atom.StructurallyReflexive` for atom equality 
 mutation proofs require it. The predicate is intentionally not automatic for every grounded value,
 because host values can include non-reflexive equality cases.
 
-The missing public interface should be a small host-law contract with these fields:
+The public interface is `Metta.NativeCarrier` with laws in `Metta.NativeCarrierLaws`. It covers:
 
 | Law | Reason |
 | --- | --- |
@@ -60,6 +60,17 @@ The missing public interface should be a small host-law contract with these fiel
 
 Concrete builtins should prove these laws directly. External native callbacks should pass the contract
 as an explicit theorem parameter.
+
+Current consumers are:
+
+| Consumer | Law field |
+| --- | --- |
+| `Metta.NativeCarrierLaws.typeOf_sound` | `type_sound` |
+| `Metta.NativeCarrierLaws.matchWith_sound` | `match_sound` |
+| `Metta.NativeCarrierLaws.executeSound` | `execute_sound` |
+| `Metta.NativeCarrierLaws.displaySound` | `display_sound` |
+| `Metta.GroundingLaws.impl_sound` | `execution_sound` |
+| `Metta.GroundingLaws.typeSig_sound_of_some` | `typeSig_sound` |
 
 ## Substitution And Cycles
 
@@ -77,8 +88,14 @@ claim, it should require one of these conditions:
 | Occurs-check invariant | No binding places a variable under a term that can later expand back to it. |
 | Decreasing measure | Every expansion step reduces a named well-founded measure. |
 
-The current audit action is to add theorem names for this boundary once the substitution file exposes
-the exact fuel theorem that needs it.
+Current checked audit facts are:
+
+| Consumer | What it proves |
+| --- | --- |
+| `Metta.cyclicSubst_apply_x_once` | One-pass substitution follows only one edge of a two-variable cycle. |
+| `Metta.cyclicSubst_apply_x_twice` | Repeated application can change the result again. |
+| `Metta.cyclicBindingsXY_not_direct_loop` | The direct-loop filter does not reject a longer cycle. |
+| `Metta.cyclicResolve_not_fuel_stable` | Recursive resolution is not fuel-stable on cyclic bindings. |
 
 ## Observation Boundary
 
@@ -93,5 +110,11 @@ record or named tuple for:
 | World delta | Named-space, state-cell, token, or import delta where modeled. |
 | Fuel status | Whether the result is complete or fuel-exhausted. |
 
-Once this record exists, public behavior checks can cite theorem names instead of relying on runner
-text alone.
+The checked bridge is `Metta.Minimal.DirectiveObservation`. Its current consumers are:
+
+| Consumer | What it proves |
+| --- | --- |
+| `Metta.Minimal.observeQuery_results` | Results are exactly the atom projection of `mettaEval`. |
+| `Metta.Minimal.observeQuery_errors` | Error atoms are exactly `results.filter Atom.isError`. |
+| `Metta.Minimal.observeQuery_worldBefore` | The observation records the input world. |
+| `Metta.Minimal.observeQuery_worldAfter` | The observation records the evaluator's output world. |

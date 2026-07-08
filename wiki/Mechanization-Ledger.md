@@ -51,6 +51,12 @@ proofs.
 | Removing the atom just inserted restores the previous multiset. | Checked | `Metta.Space.removeOne_insert_self` | The theorem uses the list-backed `removeOne` semantics. |
 | Inserting `(: a ty)` makes `ty` visible in `typeAssignments a`. | Checked | `Metta.Space.typeAssignments_insert_visible` | Requires structural reflexivity of the subject atom. |
 | Inserting `(= lhs rhs)` makes the rule visible in `equalityRules`. | Checked | `Metta.Space.equalityRules_insert_visible` | Plain list membership over the current space. |
+| Updating a state cell makes the new value visible. | Checked | `Metta.World.setStore_visible` | Visibility through `World.store`. |
+| Creating a named space makes it visible as an empty atom list. | Checked | `Metta.World.newSpace_visible` | Visibility through `World.spaces`. |
+| Appending to a named space is visible at that name. | Checked | `Metta.World.appendSpace_visible` | Existing atoms are preserved and new atoms append. |
+| Binding a token makes the value visible at that token name. | Checked | `Metta.World.bindTok_visible` | Visibility through `World.tokens`. |
+| Appending to `&self` and hidden imports updates the corresponding world lists. | Checked | `Metta.World.appendSelf_visible`, `Metta.World.appendSelfImport_visible` | These are exact list equations. |
+| Removing from `&self` uses the executable list erase behavior. | Checked | `Metta.World.eraseSelf_visible` | Duplicate-sensitive list behavior is stated directly. |
 
 The structural-reflexivity predicate is deliberate:
 
@@ -90,30 +96,55 @@ semilattice or canonical-log theorem.
 
 ## Open Proof Boundaries
 
-Substitution cyclicity needs a named audit. The current substitution file proves identity,
-closed-atom stability, size monotonicity, lookup append, and composition. It should also record whether
-any fuel-stability statement exists, and if so whether it requires acyclicity, closed codomains, or an
-occurs-check invariant.
+## Substitution And Binding Cycles
 
-Grounded host laws need a named interface. Concrete builtins can be proved directly, but external
-native callbacks should sit behind a small contract for equality, typing, matching, execution, and
-observation.
+The substitution audit is now checked in `MettaHyperonFull.Proofs.SubstitutionAudit`.
 
-The observation bridge should be named at theorem level. The executable already has observed
-sequential evaluation, but the proof layer should expose the tuple that public checks compare:
-directive input, returned atoms, error mode, world delta where modeled, and fuel status.
+| Claim | Status | Lean evidence | Boundary |
+| --- | --- | --- | --- |
+| One-pass substitution does not recursively chase a two-variable cycle. | Checked | `Metta.cyclicSubst_apply_x_once`, `Metta.cyclicSubst_apply_x_twice` | The core `Subst.apply` has no fuel parameter. |
+| The direct-loop filter catches self loops. | Checked | `Metta.directValueLoop_hasLoop`, `Metta.directAliasLoop_hasLoop` | It is a direct-loop check. |
+| The direct-loop filter does not reject a length-two binding cycle. | Checked | `Metta.cyclicBindingsXY_not_direct_loop` | Longer cycles need a separate acyclicity invariant. |
+| Recursive resolution is not fuel-stable on cyclic bindings. | Checked | `Metta.cyclicResolve_not_fuel_stable` | Any future fuel-stability theorem needs acyclicity, closed codomains, or a decreasing measure. |
 
-The query correspondence theorem should also be presented in four obligations: initial agreement, step
-matching, observation compatibility, and termination preservation. The existing theorem is the proof
-substance. The missing work is a small presentation layer that lets readers see which obligation is
-covered by which declaration.
+## Host Laws
 
-Type synthesis uniqueness modulo permutation is still open. `getTypes` totality is checked, but a
-separate theorem should say when multiple type derivations are the same set up to ordering.
+The host/native law interface is now checked in `MettaHyperonFull.Core.HostLaws`.
 
-Named-space and state-cell mutation laws are still open at theorem level. The executable world state
-models them. The proof layer should add small visibility theorems analogous to the new list-backed
-`Space` laws.
+| Claim | Status | Lean evidence | Boundary |
+| --- | --- | --- | --- |
+| Native carriers can expose equality, matching, type, execution, and display contracts. | Checked | `Metta.NativeCarrier`, `Metta.NativeCarrierLaws` | These records introduce no inhabitants or axioms. |
+| Carrier type, matcher, executor, and display consumers use explicit law records. | Checked | `Metta.NativeCarrierLaws.typeOf_sound`, `Metta.NativeCarrierLaws.matchWith_sound`, `Metta.NativeCarrierLaws.executeSound`, `Metta.NativeCarrierLaws.displaySound` | External callbacks must pass the law record. |
+| Individual grounded functions can expose implementation and type-signature laws. | Checked | `Metta.GroundingLaws`, `Metta.GroundingLaws.impl_sound`, `Metta.GroundingLaws.typeSig_sound_of_some` | Concrete builtin law instances can be added when needed. |
+
+## Observation Bridge
+
+The theorem-level observation bridge is now checked in `MettaHyperonFull.Minimal.Observation`.
+
+| Claim | Status | Lean evidence | Boundary |
+| --- | --- | --- | --- |
+| One directive observation records input, fuel, results, errors, stack-overflow status, and world delta. | Checked | `Metta.Minimal.DirectiveObservation`, `Metta.Minimal.WorldDelta` | It wraps the existing evaluator. |
+| Observed results are exactly the atom projection of `mettaEval`. | Checked | `Metta.Minimal.observeQuery_results` | No new evaluator is introduced. |
+| Observed errors are exactly `results.filter Atom.isError`. | Checked | `Metta.Minimal.observeQuery_errors` | Error classification follows `Atom.isError`. |
+| Observed world before/after fields match the threaded state. | Checked | `Metta.Minimal.observeQuery_worldBefore`, `Metta.Minimal.observeQuery_worldAfter` | State deltas are recorded by value. |
+
+## R.1 To R.4 Correspondence Presentation
+
+The query correspondence theorem is now packaged as four obligations.
+
+| Obligation | Status | Lean evidence | Boundary |
+| --- | --- | --- | --- |
+| R.1 initial agreement. | Checked | `Metta.QueryCorrespondenceR14.initialAgreement` through `Metta.queryCorrespondenceR14` | Identity relation on atoms. |
+| R.2 step matching. | Checked | `Metta.QueryCorrespondenceR14.stepMatching` through `Metta.queryCorrespondenceR14` | Same `KernelStep` and `MopsStep` scope as the base theorem. |
+| R.3 observation compatibility. | Checked | `Metta.QueryCorrespondenceR14.observationCompatibility` through `Metta.queryCorrespondenceR14` | Reduct membership compatibility. |
+| R.4 termination preservation. | Checked | `Metta.QueryCorrespondenceR14.terminationPreservation` through `Metta.queryCorrespondenceR14` | Empty reduct set compatibility. |
+
+## Type Synthesis
+
+| Claim | Status | Lean evidence | Boundary |
+| --- | --- | --- | --- |
+| `getTypes` is total. | Checked | `Metta.getTypes_ne_nil` | Every atom receives at least one type. |
+| Computed type synthesis is unique modulo permutation. | Checked | `Metta.getTypes_unique_modulo_permutation` | This is the function-level theorem. A future relational synthesis judgment can strengthen it. |
 
 ## Verification Commands
 

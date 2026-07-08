@@ -9,7 +9,7 @@ Purpose: Aggregator for the metatheory layer. Pulls together every proof module 
   for on-chain use: determinism, type soundness, confluence of the deterministic fragment, sound and
   complete rule indexing, and interpreter-to-specification correspondence.
 Imports: every module under MettaHyperonFull.Proofs (Basic, Substitution, SubstitutionAudit, Alpha,
-  Indexing, IndexingComplete, SpaceLaws, WorldLaws, Results, TypeSoundness, Confluence,
+  BindingLaws, Indexing, IndexingComplete, SpaceLaws, WorldLaws, Results, TypeSoundness, Confluence,
   Preservation, Gradual, Correspondence, CorrespondenceR14)
 Trusted boundary: none (fully proved)
 Main exports: re-exports of the proof modules; no new declarations of its own
@@ -20,6 +20,7 @@ import MettaHyperonFull.Proofs.Basic
 import MettaHyperonFull.Proofs.Substitution
 import MettaHyperonFull.Proofs.SubstitutionAudit
 import MettaHyperonFull.Proofs.Alpha
+import MettaHyperonFull.Proofs.BindingLaws
 import MettaHyperonFull.Proofs.Indexing
 import MettaHyperonFull.Proofs.IndexingComplete
 import MettaHyperonFull.Proofs.SpaceLaws
@@ -59,6 +60,10 @@ and that the implementation's optimisations don't change behaviour. Those drive 
 * `Proofs/Alpha.lean`:         α-equivalence is an **equivalence relation**; preserves `Atom.size`;
                                coincides with `=` on variable-free atoms. Documents the Float/IEEE
                                caveat on the Boolean decider.
+* `Proofs/BindingLaws.lean`:   executable `Bindings` merge laws: fresh value bindings extend, equal
+                               structurally reflexive values keep the binding set, incompatible
+                               non-unifiable values fail, and unifiable values extend through the
+                               explicit `Unify.unifyTop` boundary.
 * `Proofs/Indexing.lean`:      **first-argument rule indexing is sound**: matching forces head
                                agreement (`matchAtoms_headKey`), so the head bucket never hides a
                                firing rule. (Rigorous form of Hyperon improvement #9.)

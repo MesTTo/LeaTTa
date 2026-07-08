@@ -75,8 +75,8 @@ Current consumers are:
 
 ## Substitution And Cycles
 
-The active substitution theorems are ordinary Lean theorems, not axioms. The open issue is not axiom
-use. The issue is theorem shape.
+The active substitution and binding theorems are ordinary Lean theorems, not axioms. The open issue is
+not axiom use. The issue is theorem shape.
 
 The proof layer should avoid any unconditional claim that a fuel-bounded substitution expansion is
 stable across higher fuel when the substitution can contain cycles. If a future theorem needs such a
@@ -97,6 +97,17 @@ Current checked audit facts are:
 | `Metta.cyclicSubst_apply_x_twice` | Repeated application can change the result again. |
 | `Metta.cyclicBindingsXY_not_direct_loop` | The direct-loop filter does not reject a longer cycle. |
 | `Metta.cyclicResolve_not_fuel_stable` | Recursive resolution is not fuel-stable on cyclic bindings. |
+
+Current checked binding-merge facts include:
+
+| Consumer | What it proves |
+| --- | --- |
+| `Metta.Bindings.addVarBinding_fresh` | A fresh direct binding extends the binding set. |
+| `Metta.Bindings.addVarBinding_same` | Re-adding the same structurally reflexive direct value keeps the binding set. |
+| `Metta.Bindings.addVarBinding_conflict` | A direct value merge fails only with explicit inequality and unification failure. |
+| `Metta.Bindings.addVarBinding_unifies` | A direct value merge extends when the old and new values unify. |
+| `Metta.Bindings.merge_one_val_fresh` | One-step merge exposes the fresh direct-binding case. |
+| `Metta.Bindings.merge_one_val_conflict` | One-step merge exposes the conflict boundary. |
 
 ## Observation Boundary
 

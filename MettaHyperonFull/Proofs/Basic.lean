@@ -6,10 +6,12 @@ Module: MettaHyperonFull.Proofs.Basic
 Layer: Proofs
 Purpose: Shared infrastructure for the metatheory layer. Supplies a structural induction principle
   for the nested inductive Atom, tagged so plain `induction a` uses it everywhere downstream, plus
-  the structural lemmas about variable renaming that the rest of the proofs reuse.
+  the atom reflexivity predicates and structural lemmas about variable renaming that the rest of the
+  proofs reuse.
 Imports: Mathlib, MettaHyperonFull
 Trusted boundary: none (fully proved)
-Main exports: Atom.recAux, renameVars_nil, size_renameVars
+Main exports: Atom.recAux, Atom.StructurallyReflexive, Atom.MatchReflexive, renameVars_nil,
+  size_renameVars
 Open obligations: none
 -/
 import Mathlib
@@ -54,6 +56,26 @@ def recAux {motive : Atom → Prop}
     have h : Atom.size a ≤ (xs.map Atom.size).sum :=
       List.single_le_sum (by intro _ _; exact Nat.zero_le _) _ (List.mem_map_of_mem _ha)
     omega
+
+/-- Atoms whose structural equality is reflexive. Grounded floats can include values whose host
+    equality is not reflexive, so proof laws name this host-side condition explicitly. -/
+def StructurallyReflexive (a : Atom) : Prop := Atom.beq a a = true
+
+/-- Atoms that match themselves with no bindings under the executable default matcher. This is the
+    exact condition needed for direct `Space.query` visibility. -/
+def MatchReflexive (a : Atom) : Prop := [] ∈ matchAtoms a a
+
+theorem sym_structurallyReflexive (s : String) : StructurallyReflexive (Atom.sym s) := by
+  simp [StructurallyReflexive, Atom.beq]
+
+theorem var_structurallyReflexive (v : VarName) : StructurallyReflexive (Atom.var v) := by
+  simp [StructurallyReflexive, Atom.beq]
+
+theorem sym_matchReflexive (s : String) : MatchReflexive (Atom.sym s) := by
+  simp [MatchReflexive, matchAtoms, matchAtomsWith]
+
+theorem var_matchReflexive (v : VarName) : MatchReflexive (Atom.var v) := by
+  simp [MatchReflexive, matchAtoms, matchAtomsWith]
 
 end Atom
 

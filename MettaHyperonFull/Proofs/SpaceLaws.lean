@@ -10,38 +10,13 @@ Purpose: Basic atomspace mutation laws for the list-backed `Space`: inserting a 
   readers.
 Imports: MettaHyperonFull.Proofs.Basic
 Trusted boundary: none
-Main exports: Atom.StructurallyReflexive, Atom.MatchReflexive, Space.insert_contains_self,
-  Space.query_insert_self, Space.removeOne_insert_self, Space.typeAssignments_insert_visible,
-  Space.equalityRules_insert_visible
+Main exports: Space.insert_contains_self, Space.query_insert_self, Space.removeOne_insert_self,
+  Space.typeAssignments_insert_visible, Space.equalityRules_insert_visible
 Open obligations: named-space and state-cell visibility are proved at the interpreter/world layer.
 -/
 import MettaHyperonFull.Proofs.Basic
 
 namespace Metta
-
-namespace Atom
-
-/-- Atoms whose structural equality is reflexive. Grounded floats can include values whose host
-    equality is not reflexive, so space visibility laws name this host-side condition explicitly. -/
-def StructurallyReflexive (a : Atom) : Prop := Atom.beq a a = true
-
-/-- Atoms that match themselves with no bindings under the executable space-query matcher. This is
-    the exact condition needed for direct `Space.query` visibility. -/
-def MatchReflexive (a : Atom) : Prop := [] ∈ matchAtoms a a
-
-theorem sym_structurallyReflexive (s : String) : StructurallyReflexive (Atom.sym s) := by
-  simp [StructurallyReflexive, Atom.beq]
-
-theorem var_structurallyReflexive (v : VarName) : StructurallyReflexive (Atom.var v) := by
-  simp [StructurallyReflexive, Atom.beq]
-
-theorem sym_matchReflexive (s : String) : MatchReflexive (Atom.sym s) := by
-  simp [MatchReflexive, matchAtoms, matchAtomsWith]
-
-theorem var_matchReflexive (v : VarName) : MatchReflexive (Atom.var v) := by
-  simp [MatchReflexive, matchAtoms, matchAtomsWith]
-
-end Atom
 
 namespace Space
 

@@ -40,6 +40,23 @@ claims. The distributed atomspace target proves replica-local mutation and deliv
 | The deterministic fragment is confluent. | Checked | `Metta.detStep_confluent` | Applies to the single-successor fragment. |
 | Kernel query behavior matches the operational query reduct set. | Checked | `Metta.kernel_query_eq_mops_query` | This is the query correspondence theorem. |
 
+## Binding Merge Laws
+
+The executable matcher merges `Bindings` through `Bindings.addVarBinding`, `Bindings.addVarEquality`,
+and `Bindings.merge`. The checked laws mirror the useful single-step merge cases while preserving the
+runtime's unification behavior.
+
+| Claim | Status | Lean evidence | Boundary |
+| --- | --- | --- | --- |
+| Looking up a value in the empty binding set fails. | Checked | `Metta.Bindings.lookupVal_empty` | Direct value lookup only; equality aliases are not followed. |
+| Raw value insertion makes the inserted value visible. | Checked | `Metta.Bindings.lookupVal_addValRaw_self` | `addValRaw` removes prior direct values for the variable. |
+| A fresh direct value binding extends the binding set. | Checked | `Metta.Bindings.addVarBinding_fresh`, `Metta.Bindings.merge_one_val_fresh` | Fresh means `lookupVal b x = none`. |
+| Re-adding the same structurally reflexive value keeps the binding set. | Checked | `Metta.Bindings.addVarBinding_same`, `Metta.Bindings.merge_one_val_same` | Grounded values need the same equality reflexivity condition used elsewhere. |
+| A direct value conflict fails when old and new values are neither equal nor unifiable. | Checked | `Metta.Bindings.addVarBinding_conflict`, `Metta.Bindings.merge_one_val_conflict` | The unification-failure condition is explicit. |
+| Distinct direct values can still merge when unification succeeds. | Checked | `Metta.Bindings.addVarBinding_unifies`, `Metta.Bindings.merge_one_val_unifies` | This is why the conflict law cannot be stated from inequality alone. |
+| Equality aliases accept equal structurally reflexive values and reject unequal direct values. | Checked | `Metta.Bindings.addVarEquality_same`, `Metta.Bindings.addVarEquality_conflict` | Alias closure beyond one direct step is not claimed here. |
+| Merging an empty right-hand binding set returns the original binding set as the only candidate. | Checked | `Metta.Bindings.merge_empty_right` | Exact executable `foldl` behavior. |
+
 ## Atomspace Mutation Laws
 
 The list-backed `Space` now has named mutation laws for the basic visibility facts used by later

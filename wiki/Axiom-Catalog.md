@@ -44,9 +44,10 @@ no project-specific distributed-system axiom.
 The current executable kernel has concrete grounded values and concrete builtins. It also permits
 external grounded payloads. That creates a real proof boundary.
 
-The current checked laws include `Atom.StructurallyReflexive` for atom equality reflexivity where space
-mutation proofs require it. The predicate is intentionally not automatic for every grounded value,
-because host values can include non-reflexive equality cases.
+The current checked laws include `Atom.StructurallyReflexive` for atom equality reflexivity where
+space membership proofs require it, and `Atom.MatchReflexive` where `Space.query` visibility depends
+on the executable matcher. These predicates are intentionally not automatic for every grounded value,
+because host values can include non-reflexive equality or matching cases.
 
 The public interface is `Metta.NativeCarrier` with laws in `Metta.NativeCarrierLaws`. It covers:
 

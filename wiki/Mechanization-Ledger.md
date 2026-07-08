@@ -48,6 +48,7 @@ proofs.
 | Claim | Status | Lean evidence | Boundary |
 | --- | --- | --- | --- |
 | Inserting a structurally reflexive atom makes it visible to `contains`. | Checked | `Metta.Space.insert_contains_self` | Grounded floats can break host equality reflexivity, so the theorem names the condition. |
+| Inserting a matcher-reflexive atom makes it visible to `query` with the empty binding. | Checked | `Metta.Space.query_insert_self` | Uses the exact `matchAtoms a a` condition required by executable query. |
 | Removing the atom just inserted restores the previous multiset. | Checked | `Metta.Space.removeOne_insert_self` | The theorem uses the list-backed `removeOne` semantics. |
 | Inserting `(: a ty)` makes `ty` visible in `typeAssignments a`. | Checked | `Metta.Space.typeAssignments_insert_visible` | Requires structural reflexivity of the subject atom. |
 | Inserting `(= lhs rhs)` makes the rule visible in `equalityRules`. | Checked | `Metta.Space.equalityRules_insert_visible` | Plain list membership over the current space. |
@@ -67,6 +68,16 @@ Metta.Atom.StructurallyReflexive a := Atom.beq a a = true
 Symbols and variables satisfy it directly through `Metta.Atom.sym_structurallyReflexive` and
 `Metta.Atom.var_structurallyReflexive`. Grounded host values need their own host-side law when the
 carrier can contain values like NaN.
+
+Direct query visibility uses the matcher-facing predicate:
+
+```lean
+Metta.Atom.MatchReflexive a := [] ∈ matchAtoms a a
+```
+
+Symbols and variables satisfy it through `Metta.Atom.sym_matchReflexive` and
+`Metta.Atom.var_matchReflexive`. Grounded and compound atoms can use the predicate directly when the
+executable matcher proves self-matching for the value in question.
 
 ## Distributed Atomspace
 

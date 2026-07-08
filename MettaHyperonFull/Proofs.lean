@@ -20,6 +20,7 @@ import MettaHyperonFull.Proofs.Substitution
 import MettaHyperonFull.Proofs.Alpha
 import MettaHyperonFull.Proofs.Indexing
 import MettaHyperonFull.Proofs.IndexingComplete
+import MettaHyperonFull.Proofs.SpaceLaws
 import MettaHyperonFull.Proofs.Results
 import MettaHyperonFull.Proofs.TypeSoundness
 import MettaHyperonFull.Proofs.Confluence

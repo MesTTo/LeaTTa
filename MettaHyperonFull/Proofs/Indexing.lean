@@ -95,15 +95,21 @@ theorem beq_sym_expr (a : String) (xs : List Atom) :
 theorem beq_expr_sym (xs : List Atom) (a : String) :
     (Atom.expr xs == Atom.sym a) = false := rfl
 
+theorem equiv_sym_expr (a : String) (xs : List Atom) :
+    Atom.equiv (Atom.sym a) (Atom.expr xs) = false := rfl
+
+theorem equiv_expr_sym (xs : List Atom) (a : String) :
+    Atom.equiv (Atom.expr xs) (Atom.sym a) = false := rfl
+
 /-- A symbol pattern never matches an expression (different metatypes). -/
 theorem matchAtoms_sym_expr (a : String) (xs : List Atom) :
     matchAtoms (Atom.sym a) (Atom.expr xs) = [] := by
-  simp [matchAtoms, matchAtomsWith, beq_sym_expr]
+  simp [matchAtoms, matchAtomsWith, equiv_sym_expr]
 
 /-- An expression pattern never matches a symbol (different metatypes). -/
 theorem matchAtoms_expr_sym (xs : List Atom) (a : String) :
     matchAtoms (Atom.expr xs) (Atom.sym a) = [] := by
-  simp [matchAtoms, matchAtomsWith, beq_expr_sym]
+  simp [matchAtoms, matchAtomsWith, equiv_expr_sym]
 
 /-- **Matching forces head agreement.** If the query `toEval` is headed by symbol `k` and a rule
 left-hand side `lhs` matches it, then `lhs` is headed by the *same* `k`, or `lhs` is head-less

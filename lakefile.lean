@@ -37,6 +37,13 @@ lean_lib «Metatheory» where
 lean_lib «Operational» where
   roots := #[`MettaHyperonFull.Operational]
 
+-- DAS-style distributed atomspace semantics. This is separate from Cordial Miners consensus:
+-- Cordial Miners proves consensus/order safety, while Distributed models replica-local atom storage,
+-- mutation delivery, quiescence, and convergence boundaries.
+@[default_target]
+lean_lib «Distributed» where
+  roots := #[`MettaHyperonFull.Distributed]
+
 -- The MeTTaIL formalization: F1R3FLY-io's Meta Type Talk Intermediate Language. A meta-language of
 -- graph-structured lambda theories (presentations + the elaboration algebra), its type-lifting
 -- transformation, the GSLT operational semantics, the hypercube typing, and the spice/mq-calculus

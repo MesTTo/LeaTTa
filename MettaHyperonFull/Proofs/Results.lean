@@ -62,10 +62,12 @@ theorem mettaEval_deterministic {env : MinEnv} {fuel : Nat} {st : St} {bnd : Bin
     (h₂ : mettaEval env fuel st bnd a = r₂) : r₁ = r₂ :=
   h₁.symm.trans h₂
 
-/-- With no work left, the driver returns the accumulated results (un-reversed) and the unchanged
-state, at any fuel. -/
+/-- With no work left, the driver returns the accumulated results, drops `Empty`, and leaves the
+state unchanged, at any fuel. -/
 theorem interpretFuel_nil (env : MinEnv) (fuel : Nat) (st : St)
-    (done : List (Atom × Bindings)) : interpretFuel env fuel st [] done = (done.reverse, st) := by
+    (done : List (Atom × Bindings)) :
+    interpretFuel env fuel st [] done =
+      (done.reverse.filter (fun p => p.1 != emptyA), st) := by
   cases fuel <;> simp [interpretFuel]
 
 /-- When fuel is exhausted with work remaining, the driver harvests *every* item: already-final
@@ -74,20 +76,23 @@ exhaustion is reported, never silently truncated. -/
 theorem interpretFuel_zero_cons (env : MinEnv) (st : St) (it : Item) (rest : List Item)
     (done : List (Atom × Bindings)) :
     interpretFuel env 0 st (it :: rest) done
-      = (done.reverse ++ (it :: rest).map (fun i => if isFinal i then finalPair i else exhaustedPair i), st) := by
+      = ((done.reverse ++
+          (it :: rest).map (fun i => if isFinal i then finalPair i else exhaustedPair i)).filter
+          (fun p => p.1 != emptyA), st) := by
   simp [interpretFuel]
 
 /-- **Accumulator correctness.** The `done` accumulator threaded through the driver is exactly a
-reversed prefix of the output: `interpretFuel … work done` equals
-`done.reverse ++ (interpretFuel … work []).1` with the same final state. So the accumulator never
-changes *which* results are produced: it is a faithful accumulator, which is what lets us reason
-about the driver as if it simply returned its results. (Induction on `fuel`; the inductive step
-rewrites both occurrences of the recursive call by the inductive hypothesis and reconciles the
-`reverse`/`append` bookkeeping.) -/
+filtered reversed prefix of the output: `interpretFuel … work done` equals the non-`Empty` part of
+`done.reverse`, followed by the result of running the same work with an empty accumulator. So the
+accumulator never changes *which* non-empty results are produced: it is a faithful accumulator, which
+is what lets us reason about the driver as if it simply returned its results. (Induction on `fuel`;
+the inductive step rewrites both occurrences of the recursive call by the inductive hypothesis and
+reconciles the `reverse`/`append` bookkeeping.) -/
 theorem interpretFuel_done (env : MinEnv) (fuel : Nat) :
     ∀ (st : St) (work : List Item) (done : List (Atom × Bindings)),
       interpretFuel env fuel st work done
-        = (done.reverse ++ (interpretFuel env fuel st work []).1,
+        = (done.reverse.filter (fun p => p.1 != emptyA) ++
+            (interpretFuel env fuel st work []).1,
            (interpretFuel env fuel st work []).2) := by
   induction fuel with
   | zero =>
@@ -107,7 +112,7 @@ theorem interpretFuel_done (env : MinEnv) (fuel : Nat) :
               generalize List.filter (fun r => !isFinal r) results ++ rest = W
               generalize List.map finalPair (List.filter isFinal results) = F
               rw [ih st' W (F.reverse ++ done), ih st' W F.reverse]
-              simp [List.reverse_append, List.append_assoc]
+              simp [List.reverse_append, List.filter_append, List.append_assoc]
 
 theorem cartesian_nil {α : Type} : cartesian ([] : List (List α)) = [[]] := rfl
 

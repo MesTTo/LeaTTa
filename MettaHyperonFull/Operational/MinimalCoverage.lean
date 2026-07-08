@@ -52,7 +52,7 @@ example :
       (Atom.expr [Atom.sym "unify", Atom.sym "a", Atom.var "x", Atom.var "x", Atom.sym "bad"])
       = [Atom.sym "a"] := by
   simp [cfg, emptyCtx, evalMinimal, evalUnifyInstr, matchAtoms, matchAtomsWith, instantiate,
-    bindingsToSubst, Subst.apply, Subst.lookup]
+    bindingsToSubst, Subst.apply, Subst.occurs, Subst.lookup]
 
 example :
     evalMinimal cfg emptyCtx

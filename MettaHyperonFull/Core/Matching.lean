@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 /-
 Module: MettaHyperonFull.Core.Matching
 Layer: Core
@@ -66,12 +69,12 @@ mutual
 def matchAtomsWith (custom : Option GroundMatcher) : Atom → Atom → List Bindings
   | Atom.sym a, Atom.sym b => if a == b then [[]] else []
   | Atom.var x, Atom.var y => if x == y then [[]] else [[BindingRel.val x (Atom.var y)]]
-  | Atom.var x, r => [[BindingRel.val x r]]
-  | l, Atom.var y => [[BindingRel.val y l]]
+  | Atom.var x, r => if Subst.occurs x r then [] else [[BindingRel.val x r]]
+  | l, Atom.var y => if Subst.occurs y l then [] else [[BindingRel.val y l]]
   | Atom.expr xs, Atom.expr ys => matchAll custom [[]] xs ys
-  | l@(Atom.gnd _), r => match custom with | some f => f l r | none => if l == r then [[]] else []
-  | l, r@(Atom.gnd _) => match custom with | some f => f r l | none => if l == r then [[]] else []
-  | l, r => if l == r then [[]] else []
+  | l@(Atom.gnd _), r => match custom with | some f => f l r | none => if Atom.equiv l r then [[]] else []
+  | l, r@(Atom.gnd _) => match custom with | some f => f r l | none => if Atom.equiv l r then [[]] else []
+  | l, r => if Atom.equiv l r then [[]] else []
 
 /-- Pointwise-match two atom lists, threading the consistent binding sets accumulated so far
     (`acc`). Lists of different lengths do not match. -/

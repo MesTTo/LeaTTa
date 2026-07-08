@@ -1,8 +1,12 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 /-
 Module: Main
 Layer: Executable
 Purpose: The runnable LeaTTa entry point. It runs the minimal MeTTa interpreter and stdlib on a
   program, with CLI modes for a built-in demo, running a `.metta` file (`--file` / `--min-file`),
+  running a `.metta` file as observed result lines (`--observed-file`),
   running a program string (`--min`), running a test file's `!`-assertions as an oracle report
   (`--oracle`), and running an external MeTTaIL dialect file (`--mettail FILE --term TERM`). It also
   resolves and transitively loads `import!` modules, handling both the plain sibling-file form and the
@@ -67,7 +71,8 @@ def resolveImport (catalog : Std.HashMap String System.FilePath) (dir : System.F
     cycles. Missing or unparsable modules are silently skipped. Returns the accumulated
     `name → atoms` map that the pure interpreter consults when it encounters `import!`. -/
 def loadImportsFuel : Nat → Std.HashMap String System.FilePath → List String → System.FilePath →
-    List Atom → Std.HashMap String (List Atom) → IO (Std.HashMap String (List Atom))
+    List Atom → Std.HashMap String (List Atom) × Std.HashMap String (List String) →
+    IO (Std.HashMap String (List Atom) × Std.HashMap String (List String))
   | 0, _, _, _, _, acc => pure acc
   | fuel + 1, catalog0, visited, dir, atoms, acc => do
       -- Extend the catalog with any `register-module!` roots declared in this file.
@@ -82,22 +87,40 @@ def loadImportsFuel : Nat → Std.HashMap String System.FilePath → List String
               if ← fp.pathExists then
                 match parseProgram (← IO.FS.readFile fp) with
                 | Except.ok fatoms =>
+                    let deps := collectImports fatoms
+                    let acc' := (m.1.insert name (moduleExportAtoms fatoms), m.2.insert name deps)
                     loadImportsFuel fuel catalog (name :: visited) (fp.parent.getD dir) fatoms
-                      (m.insert name fatoms)
+                      acc'
                 | Except.error _ => pure m
               else pure m
 
 /-- Load all modules a program imports, transitively. Returns the `name → atoms` map for `import!`.
     IO is limited to reading files; the `import!` instruction itself is pure. -/
-def loadImports (path : String) (src : String) : IO (Std.HashMap String (List Atom)) := do
+def loadImports (path : String) (src : String) :
+    IO (Std.HashMap String (List Atom) × Std.HashMap String (List String)) := do
   let dir := (System.FilePath.mk path).parent.getD (System.FilePath.mk ".")
   match parseProgram src with
-  | Except.error _ => pure Std.HashMap.emptyWithCapacity
-  | Except.ok atoms => loadImportsFuel 64 Std.HashMap.emptyWithCapacity [] dir atoms Std.HashMap.emptyWithCapacity
+  | Except.error _ => pure (Std.HashMap.emptyWithCapacity, Std.HashMap.emptyWithCapacity)
+  | Except.ok atoms =>
+      loadImportsFuel 64 Std.HashMap.emptyWithCapacity [] dir atoms
+        (Std.HashMap.emptyWithCapacity, Std.HashMap.emptyWithCapacity)
+
+def runObservedFile (path : String) : IO UInt32 := do
+  let src ← IO.FS.readFile path
+  let (imports, importDeps) ← loadImports path src
+  match parseProgram src with
+  | Except.error e =>
+      IO.eprintln ("parse error: " ++ e)
+      pure 0
+  | Except.ok atoms =>
+      for results in evalSequentialObserved atoms 100000 imports importDeps do
+        IO.println (Pretty.atoms results)
+      pure 0
 
 /-- CLI entry point for LeaTTa. Runs on the minimal MeTTa interpreter and stdlib (`Minimal/`).
     * no arguments: run the demo program;
     * `--file PATH` / `--min-file PATH`: run a `.metta` file;
+    * `--observed-file PATH`: run a `.metta` file and print each observed top-level result line;
     * `--min PROGRAM`: run a program string;
     * `--mettail PATH --term TERM [--fuel N]`: run `TERM` with a MeTTaIL dialect file;
     * `--oracle PATH`: run a test file's `!`-assertions and report how many evaluate to `()`.
@@ -105,15 +128,16 @@ def loadImports (path : String) (src : String) : IO (Std.HashMap String (List At
 def main : List String → IO UInt32
   | ["--file", path] | ["--min-file", path] => do
       let src ← IO.FS.readFile path
-      let imports ← loadImports path src
-      IO.println (runMinimalSource src (imports := imports))
+      let (imports, importDeps) ← loadImports path src
+      IO.println (runMinimalSource src (imports := imports) (importDeps := importDeps))
       pure 0
+  | ["--observed-file", path] => runObservedFile path
   | ["--oracle", path] => do
       -- Run every `!`-assertion through the minimal interpreter in file order.
       -- An assertion passes iff it evaluates to the unit atom `()`.
       let src ← IO.FS.readFile path
-      let imports ← loadImports path src
-      IO.println (oracleReport src (imports := imports))
+      let (imports, importDeps) ← loadImports path src
+      IO.println (oracleReport src (imports := imports) (importDeps := importDeps))
       pure 0
   | "--min" :: rest => do
       IO.println (runMinimalSource (" ".intercalate rest))

@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 MesTTo -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # Developer Guide: recommended Lean machinery
 
 This page covers the Lean tooling, libraries, and proof machinery for working on LeaTTa.

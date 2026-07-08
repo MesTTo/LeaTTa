@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 /-
 PoR-weighted Cordial Miners: a Lean 4 formalization of the leaderless DAG-based BFT consensus
 protocol, following the blueprint "LLM + Lean Guided Synthesis and Verification of PoR-Weighted

@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 /-
 LeaTTa: Chapter: Discussion, limitations, and related work.
 -/

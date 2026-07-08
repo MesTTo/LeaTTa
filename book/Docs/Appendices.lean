@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 /- jscpd:ignore-start -/
 /-
 LeaTTa: Appendices. Reference material consolidated into the book from the repository's former

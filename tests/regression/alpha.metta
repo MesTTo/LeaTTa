@@ -1,3 +1,6 @@
+; SPDX-FileCopyrightText: 2026 MesTTo
+; SPDX-License-Identifier: Apache-2.0
+
 ; Regression: if-equal / unique-atom / =alpha now compare up to alpha-equivalence.
 !(assertEqual (if-equal a a yes no) yes)
 !(assertEqual (if-equal a b yes no) no)

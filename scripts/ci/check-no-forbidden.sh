@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 MesTTo
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # Static guard for the project invariant: the active development uses no sorry, admit, native_decide,
 # partial, or unsafe. Covers the MeTTa kernel/metatheory, the MeTTaIL formalization, and the Cordial

@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 /-
 LeaTTa: bibliography.
 Citable references for the LeaTTa manual (the analogue of a `.bib` file), defined as Verso

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 MesTTo
+# SPDX-License-Identifier: Apache-2.0
+
 # A runnable MeTTaIL dialect file for the shipped CLI.
 sort Tm
 term tt : Tm

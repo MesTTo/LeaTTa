@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 MesTTo -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # Installing and running LeaTTa
 
 LeaTTa ships the minimal MeTTa interpreter as a single native binary named `LeaTTa`. It

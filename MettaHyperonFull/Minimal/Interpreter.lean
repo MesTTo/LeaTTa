@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 /-
 Module: MettaHyperonFull.Minimal.Interpreter
 Layer: Minimal
@@ -62,7 +65,7 @@ def notReducibleA : Atom := Atom.sym "NotReducible"
 def emptyA : Atom := Atom.sym "Empty"
 
 /-- Build `(Error <atom> <message>)` with the message as a symbol (matching the interpreter ops). -/
-def errAtom (a : Atom) (msg : String) : Atom := Atom.expr [Atom.sym "Error", a, Atom.sym msg]
+def errAtom (a : Atom) (msg : String) : Atom := Atom.expr [Atom.sym "Error", a, Atom.gnd (Ground.str msg)]
 
 /-- Copy the variable scope from the top frame of `prev` (Rust `Stack::vars_copy`). -/
 def varsCopy : Stack → List VarName
@@ -140,6 +143,9 @@ structure MinEnv where
   gt : GroundingTable
   /-- Full atom list of the space (used by `match`, which queries all atoms, not just `=` rules). -/
   atoms : List Atom
+  /-- User-visible atoms in `&self`, excluding prelude/runtime support rules. Observable space
+      operations such as `match &self`, `get-atoms &self`, and `fork-space &self` use this list. -/
+  visibleAtoms : List Atom
   /-- Declared types of each symbol from `(: sym T)` atoms (arrow or not), for `get-type` and
       runtime type-checking. A symbol may have several declared types (e.g. `(: Ten Nat)` and
       `(: Ten Int)`), matching Hyperon's `get_atom_types : ... -> Vec<AtomType>`. -/
@@ -148,6 +154,9 @@ structure MinEnv where
       The file read is IO and happens once in the runner (`Main`); the `import!` instruction
       itself is pure and looks the atoms up here. -/
   imports : HashMap String (List Atom)
+  /-- Immediate module dependencies discovered while pre-reading imports. Runtime `import! &self`
+      follows these dependencies before exposing the importing module's exported atoms. -/
+  importDeps : HashMap String (List String)
   /-- Declared types of expression subjects, from `(: (e ...) T)` atoms (e.g. `(: (A B) PairAB)`),
       kept separate from `types` (keyed by symbol). A direct declaration takes precedence over
       the type inferred for an application in `getTypes`. -/
@@ -185,8 +194,8 @@ def MinEnv.ofAtomsGT (atoms : List Atom) (gt : GroundingTable) : MinEnv :=
     | Atom.expr [Atom.sym ":", Atom.expr es, t] => some (Atom.expr es, t)
     | _ => none
   { ruleIndex := idx, varRules := rules.filter (fun lr => (headKey lr.fst).isNone),
-    sigs := sigs, gt := gt, atoms := atoms, types := types,
-    imports := HashMap.emptyWithCapacity, exprTypes := exprTypes }
+    sigs := sigs, gt := gt, atoms := atoms, visibleAtoms := atoms, types := types,
+    imports := HashMap.emptyWithCapacity, importDeps := HashMap.emptyWithCapacity, exprTypes := exprTypes }
 
 /-- Candidate `=`-rules for `toEval`: rules keyed by its head symbol plus all non-symbol-headed rules. -/
 def MinEnv.candidates (env : MinEnv) (toEval : Atom) : List (Atom × Atom) :=
@@ -207,12 +216,17 @@ structure World where
       `evalSequential` rebuilds the KB each step; threading here means an `import! &self`
       is visible only to the queries that follow it, matching Hyperon's order-sensitive processing. -/
   selfExtra : List Atom
+  /-- Module atoms imported into `&self`. These participate in evaluation but are hidden from
+      observable space contents such as `get-atoms &self`, matching Hyperon's module isolation. -/
+  selfImports : List Atom
+  /-- Imported `(target,module)` keys. Re-importing the same module into the same target is a no-op. -/
+  imported : List String
 
 open Std in
 /-- Empty world: no named spaces, state cells, tokens, or `&self` atoms. -/
 def World.empty : World :=
   { spaces := HashMap.emptyWithCapacity, store := HashMap.emptyWithCapacity,
-    tokens := HashMap.emptyWithCapacity, selfExtra := [] }
+    tokens := HashMap.emptyWithCapacity, selfExtra := [], selfImports := [], imported := [] }
 
 def World.setStore (w : World) (id : Nat) (v : Atom) : World := { w with store := w.store.insert id v }
 def World.newSpace (w : World) (name : String) : World := { w with spaces := w.spaces.insert name [] }
@@ -224,9 +238,18 @@ def World.eraseFromSpace (w : World) (name : String) (a : Atom) : World :=
   { w with spaces := w.spaces.alter name fun cur => some ((cur.getD []).erase a) }
 /-- Append atoms to the `&self` extension (`add-atom`/`import! &self`). -/
 def World.appendSelf (w : World) (atoms : List Atom) : World := { w with selfExtra := w.selfExtra ++ atoms }
+/-- Append hidden module atoms to `&self` for evaluation without exposing them through `get-atoms`. -/
+def World.appendSelfImport (w : World) (atoms : List Atom) : World :=
+  { w with selfImports := w.selfImports ++ atoms }
 /-- Remove the first occurrence of `a` from the `&self` extension. -/
 def World.eraseSelf (w : World) (a : Atom) : World := { w with selfExtra := w.selfExtra.erase a }
 def World.bindTok (w : World) (t : String) (v : Atom) : World := { w with tokens := w.tokens.insert t v }
+
+def World.importKey (target moduleName : String) : String := target ++ "::" ++ moduleName
+def World.hasImport (w : World) (target moduleName : String) : Bool :=
+  w.imported.contains (World.importKey target moduleName)
+def World.markImport (w : World) (target moduleName : String) : World :=
+  { w with imported := World.importKey target moduleName :: w.imported }
 
 /-- Threaded interpreter state: the gensym `counter` and the mutable `world`. Replaces the bare
     `Nat` counter that used to thread through the interpreter, so space/state effects ride alongside
@@ -300,12 +323,33 @@ def wrapStates (w : World) : Atom → Atom
     After this the atom carries no world reference, so `getTypes` is a plain structural function. -/
 def typePrep (w : World) (a : Atom) : Atom := wrapStates w (subTokens w a)
 
+/-- Build a type-query environment for a specific space. Hyperon `get-type-space` reads
+    declarations from the requested space while the runtime builtins remain available. -/
+def typeEnvForSpace (env : MinEnv) (w : World) (space : Atom) : MinEnv :=
+  let spaceAtoms := match spaceName w space with
+    | some "&self" => w.selfExtra ++ w.selfImports
+    | some name => w.spaces.getD name []
+    | none => []
+  { MinEnv.ofAtomsGT (env.atoms ++ spaceAtoms) env.gt with
+    visibleAtoms := env.visibleAtoms, imports := env.imports, importDeps := env.importDeps }
+
+/-- Build an evaluation environment for `evalc`. Hyperon evaluates against the supplied space while
+    keeping grounded operations available from the runner. -/
+def evalEnvForSpace (env : MinEnv) (w : World) (space : Atom) : Option MinEnv :=
+  match spaceName w space with
+  | none => none
+  | some "&self" => some env
+  | some name =>
+      let atoms := w.spaces.getD name []
+      some { MinEnv.ofAtomsGT atoms env.gt with
+        visibleAtoms := atoms, imports := env.imports, importDeps := env.importDeps }
+
 /-- Candidate `=`-rules for evaluating `toEval`, including rules added to `&self` at runtime
     (`add-atom &self (= ...)` / `import! &self`). These live in `world.selfExtra` rather than
     the precompiled `MinEnv.ruleIndex`. Runtime rules come after the static ones (knowledge-base
     order) and are filtered by head the same way. -/
 def candidatesW (env : MinEnv) (w : World) (toEval : Atom) : List (Atom × Atom) :=
-  let extra := w.selfExtra.filterMap fun x => match x with
+  let extra := (w.selfExtra ++ w.selfImports).filterMap fun x => match x with
     | Atom.expr [Atom.sym "=", lhs, rhs] =>
         match headKey lhs, headKey toEval with
         | some k1, some k2 => if k1 == k2 then some (lhs, rhs) else none
@@ -323,6 +367,33 @@ def freshenRule (counter : Nat) (lhs rhs : Atom) : Atom × Atom :=
   | vs =>
       let sub : Subst := vs.map fun v => (v, Atom.var (v ++ "#" ++ toString counter))
       (Subst.apply sub lhs, Subst.apply sub rhs)
+
+/-- Rename variables in an atom read back from a space. Hyperon variables carry parser-level
+    identity; this prevents a caller's `let $x ...` from capturing `$x` stored inside an atom. -/
+def freshenAtom (counter : Nat) (a : Atom) : Atom :=
+  match Atom.vars a with
+  | [] => a
+  | vs =>
+      let sub : Subst := vs.map fun v => (v, Atom.var (v ++ "#" ++ toString counter))
+      Subst.apply sub a
+
+/-- Freshen each atom returned by `get-atoms`, advancing the gensym counter for stable hygiene. -/
+def freshenSpaceAtoms (st : St) (atoms : List Atom) : List Atom × St :=
+  let (rev, st') := atoms.foldl (fun (acc : List Atom × St) a =>
+    (freshenAtom acc.2.counter a :: acc.1, { acc.2 with counter := acc.2.counter + 1 })) ([], st)
+  (rev.reverse, st')
+
+/-- Import a module into `&self`, following dependencies first and hiding imported atoms from
+    observable `&self` contents. Fuel bounds cycles that are not caught by `World.imported`. -/
+def importSelfFuel (env : MinEnv) : Nat → String → World → World
+  | 0, _, w => w
+  | fuel + 1, moduleName, w =>
+      if w.hasImport "&self" moduleName then w
+      else
+        let wMarked := w.markImport "&self" moduleName
+        let wDeps := (env.importDeps.getD moduleName []).foldl
+          (fun acc dep => importSelfFuel env fuel dep acc) wMarked
+        wDeps.appendSelfImport (env.imports.getD moduleName [])
 
 /-- Query the KB for `(= to_eval $X)` and return each matching RHS with merged bindings
     (Rust `query`), threading the gensym counter. Returns `[NotReducible]` when nothing matches.
@@ -567,6 +638,14 @@ def typeMismatch (env : MinEnv) (w : World) (op : String) (args : List Atom) : O
   | none => none
   | some ts => typeCheckArgs env w ts.dropLast 0 [] args
 
+/-- Direct calls to a declared symbol must use the declared arity. `get-type` is intentionally
+    exempt because this runner supports both `(get-type atom)` and `(get-type atom space)`. -/
+def arityMismatch (env : MinEnv) (op : String) (args : List Atom) : Bool :=
+  if op == "get-type" then false
+  else match env.sigs.get? op with
+    | none => false
+    | some ts => args.length != ts.dropLast.length
+
 /-- Conjunctively match a list of patterns over `atoms`, threading bindings from earlier conjuncts
     into later ones (Hyperon's `(match S (, p1 ... pk) tmpl)`). Each stored atom is freshened so its
     variables cannot capture query variables. Returns the surviving solution bindings and the
@@ -659,7 +738,10 @@ def interpretStack1 (env : MinEnv) (fuel : Nat) (st : St) (it : Item) : List Ite
     else
       match top.atom with
       | Atom.expr [Atom.sym "eval", x] => evalOp env st prev x it.bnd
-      | Atom.expr [Atom.sym "evalc", x, _space] => evalOp env st prev x it.bnd
+      | Atom.expr [Atom.sym "evalc", x, space] =>
+          match evalEnvForSpace env st.world (instantiate it.bnd space) with
+          | some evalEnv => evalOp evalEnv st prev x it.bnd
+          | none => ([finItem prev (errAtom top.atom "expected: (evalc <atom> <space>)") it.bnd], st)
       | Atom.expr [Atom.sym "chain", nested, Atom.var v, templ] =>
           ([{ stack := atomToStack (Subst.apply [(v, nested)] templ) prev, bnd := it.bnd }], st)
       | Atom.expr [Atom.sym "unify", a, p, t, e] => (unifyOp prev a p t e it.bnd, st)
@@ -670,12 +752,12 @@ def interpretStack1 (env : MinEnv) (fuel : Nat) (st : St) (it : Item) : List Ite
       | Atom.expr [Atom.sym "decons-atom", _] =>
           ([finItem prev (errAtom top.atom "decons-atom: expected (decons-atom <non-empty-expression>)") it.bnd], st)
       | Atom.expr [Atom.sym "context-space"] => ([finItem prev (Atom.sym "&self") it.bnd], st)
-      | Atom.expr [Atom.sym "get-type", x]
-      | Atom.expr [Atom.sym "get-type", x, _space]
-      | Atom.expr [Atom.sym "get-type-space", _space, x] =>
+      | Atom.expr (Atom.sym "get-type" :: args)
+      | Atom.expr (Atom.sym "get-type-space" :: args) =>
           -- `(get-type atom)`, the space-parameterised `(get-type atom space)` (used by `type-cast`),
-          -- and `(get-type-space space atom)` all type `x` identically: `env` carries the program's
-          -- `(: ...)` declarations, which are the `&self`/context environment these queries target.
+          -- and `(get-type-space space atom)` query the selected type environment. The no-space form
+          -- uses the current program environment; the space forms layer the requested space's atoms
+          -- onto the runtime environment so space-local `(: ...)` declarations are visible.
           --
           -- An ill-typed application has no type: `get-type` returns no results when an argument
           -- violates the operator's declared signature (d1_gadt: `(get-type (+ 5 "4"))` is `()`).
@@ -684,21 +766,31 @@ def interpretStack1 (env : MinEnv) (fuel : Nat) (st : St) (it : Item) : List Ite
           -- `(ConsN "1" NilN) : (VecN String (+ 0 1))`, which must reduce to `(VecN String 1)`
           -- ("the result returned by get-type is reduced"). Reduction is a no-op on grounded-free
           -- types (e.g. `(Vec Number (S (S Z)))`, `Number`), so b5/d1 are unchanged.
+          let parsed := match top.atom, args with
+            | Atom.expr (Atom.sym "get-type" :: _), [x] => some (env, x)
+            | Atom.expr (Atom.sym "get-type" :: _), [x, space] =>
+                some (typeEnvForSpace env st.world (instantiate it.bnd space), x)
+            | Atom.expr (Atom.sym "get-type-space" :: _), [space, x] =>
+                some (typeEnvForSpace env st.world (instantiate it.bnd space), x)
+            | _, _ => none
+          match parsed with
+          | none => ([finItem prev (errAtom top.atom "get-type expects one atom, or get-type-space expects space and atom") it.bnd], st)
+          | some (typeEnv, x) =>
           let xi := instantiate it.bnd x
           let emit : St → List Item × St := fun st0 =>
-            (getTypes env (typePrep st.world xi)).foldl (fun (acc : List Item × St) t =>
-              let (rs, st2) := mettaEval env fuel acc.2 it.bnd t
+            (getTypes typeEnv (typePrep st.world xi)).foldl (fun (acc : List Item × St) t =>
+              let (rs, st2) := mettaEval typeEnv fuel acc.2 it.bnd t
               (acc.1 ++ rs.map (fun p => finItem prev p.1 it.bnd), st2)) ([], st0)
           match xi with
           | Atom.expr (Atom.sym op :: args) =>
-              if (typeMismatch env st.world op args).isSome then ([], st) else emit st
+              if (typeMismatch typeEnv st.world op args).isSome then ([], st) else emit st
           | Atom.expr (f :: args) =>
               -- Expression-headed application (e.g. partial application `(curry-a + 2)`): no type
               -- if the head's function type rejects an argument
               -- (d2: `(get-type ((curry-a + 2) "S"))` is `()`).
-              let illTyped := (getTypes env (typePrep st.world f)).any (fun ft => match ft with
+              let illTyped := (getTypes typeEnv (typePrep st.world f)).any (fun ft => match ft with
                 | Atom.expr (Atom.sym "->" :: ts) =>
-                    (typeCheckArgs env st.world ts.dropLast 0 [] args).isSome
+                    (typeCheckArgs typeEnv st.world ts.dropLast 0 [] args).isSome
                 | _ => false)
               if illTyped then ([], st) else emit st
           | _ => emit st
@@ -727,24 +819,27 @@ def interpretStack1 (env : MinEnv) (fuel : Nat) (st : St) (it : Item) : List Ite
              (Bindings.merge it.bnd (restrictBnd (scopeVars it.bnd prev) p.2)).map (finItem prev p.1)), st')
       | Atom.expr [Atom.sym "match", space, pattern, template] =>
           -- Query `space` for `pattern` (single, or a conjunction `(, p1 ... pk)`), returning
-          -- `template` per solution (Rust `match`). `&self` is the program space (`env.atoms`);
-          -- a `bind!`-bound token selects a named space in the world. Stored atoms are freshened
-          -- so their variables cannot capture query variables.
-          let rawSpace := match spaceName st.world (instantiate it.bnd space) with
-            | some "&self" => env.atoms ++ st.world.selfExtra
-            | some name => st.world.spaces.getD name []
-            | none => env.atoms ++ st.world.selfExtra
-          -- Deref state handles in stored atoms, and substitute tokens + deref states in the pattern,
-          -- so `match` compares by state content (e3: a pattern `... &state-active` matches a stored
-          -- `(= ... (State k))` when both cells hold the same value). Both maps are the identity when
-          -- there are no states or tokens, so ordinary spaces (e1/c2/&self KB) are unchanged.
-          let spaceAtoms := rawSpace.map (resolveStates st.world)
-          let patterns := match subTokens st.world pattern with
-            | Atom.expr (Atom.sym "," :: ps) => ps.map (resolveStates st.world)
-            | p => [resolveStates st.world p]
-          let (sols, st') := matchConj spaceAtoms patterns st [it.bnd]
-          (sols.filterMap fun m =>
-            if Bindings.hasLoop m then none else some (finItem prev (instantiate m template) m), st')
+          -- `template` per solution (Rust `match`). `&self` is the user-visible program space,
+          -- while prelude/runtime support atoms remain available only to evaluation.
+          -- A `bind!`-bound token selects a named space in the world. Stored atoms are freshened so
+          -- their variables cannot capture query variables.
+          match spaceName st.world (instantiate it.bnd space) with
+          | none => ([finItem prev (errAtom top.atom "match expects a space as the first argument") it.bnd], st)
+          | some spaceName =>
+            let rawSpace :=
+              if spaceName == "&self" then env.visibleAtoms ++ st.world.selfExtra ++ st.world.selfImports
+              else st.world.spaces.getD spaceName []
+            -- Deref state handles in stored atoms, and substitute tokens + deref states in the pattern,
+            -- so `match` compares by state content (e3: a pattern `... &state-active` matches a stored
+            -- `(= ... (State k))` when both cells hold the same value). Both maps are the identity when
+            -- there are no states or tokens, so ordinary spaces (e1/c2/&self KB) are unchanged.
+            let spaceAtoms := rawSpace.map (resolveStates st.world)
+            let patterns := match subTokens st.world pattern with
+              | Atom.expr (Atom.sym "," :: ps) => ps.map (resolveStates st.world)
+              | p => [resolveStates st.world p]
+            let (sols, st') := matchConj spaceAtoms patterns st [it.bnd]
+            (sols.filterMap fun m =>
+              if Bindings.hasLoop m then none else some (finItem prev (instantiate m template) m), st')
       | Atom.expr [Atom.sym "superpose-bind", Atom.expr pairs] =>
           (pairs.map (superposeItem prev it.bnd), st)
       | Atom.expr [Atom.sym "collapse-bind", nested] =>
@@ -779,7 +874,7 @@ def interpretStack1 (env : MinEnv) (fuel : Nat) (st : St) (it : Item) : List Ite
           -- (c2's parent/child/grandchild spaces). A non-space argument yields a type error.
           match spaceName st.world (instantiate it.bnd s) with
           | some src =>
-              let srcAtoms := if src == "&self" then env.atoms ++ st.world.selfExtra
+              let srcAtoms := if src == "&self" then env.visibleAtoms ++ st.world.selfExtra ++ st.world.selfImports
                               else st.world.spaces.getD src []
               let (id, st') := st.fresh
               let name := "&space-" ++ toString id
@@ -799,8 +894,12 @@ def interpretStack1 (env : MinEnv) (fuel : Nat) (st : St) (it : Item) : List Ite
           | none => ([finItem prev (errAtom (instantiate it.bnd s) "remove-atom: not a space") it.bnd], st)
       | Atom.expr [Atom.sym "get-atoms", s] =>
           match spaceName st.world (instantiate it.bnd s) with
-          | some "&self" => ((env.atoms ++ st.world.selfExtra).map (fun x => finItem prev x it.bnd), st)
-          | some name => ((st.world.spaces.getD name []).map (fun x => finItem prev x it.bnd), st)
+          | some "&self" =>
+              let (atoms, st') := freshenSpaceAtoms st (env.visibleAtoms ++ st.world.selfExtra)
+              (atoms.map (fun x => finItem prev x it.bnd), st')
+          | some name =>
+              let (atoms, st') := freshenSpaceAtoms st (st.world.spaces.getD name [])
+              (atoms.map (fun x => finItem prev x it.bnd), st')
           | none => ([finItem prev (errAtom (instantiate it.bnd s) "get-atoms: not a space") it.bnd], st)
       | Atom.expr [Atom.sym "bind!", tok, val] =>
           -- Bind a token to the (already-evaluated) value; `resolveTok` resolves it on use.
@@ -809,17 +908,27 @@ def interpretStack1 (env : MinEnv) (fuel : Nat) (st : St) (it : Item) : List Ite
           | other => ([finItem prev (errAtom other "bind!: token must be a symbol") it.bnd], st)
       | Atom.expr [Atom.sym "import!", space, file] =>
           -- Load a module's atoms (pre-read into `env.imports` by the IO runner) into a space.
-          -- For `&self`, extends the program space (visible to later queries only). Any other token
-          -- names a separate space (`&kb`), created or extended in the world. Returns `()`.
+          -- For `&self`, extends the evaluator with hidden module atoms (visible to later queries,
+          -- but not to `get-atoms &self`). Any other token names a separate space (`&kb`), created
+          -- or extended with the module's exported atoms. Returns `()`.
           -- Limitation: a file not present in `env.imports` silently contributes no atoms (the
           -- IO runner must pre-read all imported files before evaluation starts).
-          let fileAtoms := match instantiate it.bnd file with
-            | Atom.sym f => env.imports.getD f []
-            | _ => []
-          match spaceName st.world (instantiate it.bnd space) with
-          | some "&self" => ([finItem prev (Atom.expr []) it.bnd], st.mapWorld (·.appendSelf fileAtoms))
-          | some name => ([finItem prev (Atom.expr []) it.bnd], st.mapWorld (·.appendSpace name fileAtoms))
-          | none => ([finItem prev (errAtom (instantiate it.bnd space) "import!: target is not a space") it.bnd], st)
+          let moduleName? := match instantiate it.bnd file with
+            | Atom.sym f => some f
+            | _ => none
+          match spaceName st.world (instantiate it.bnd space), moduleName? with
+          | some "&self", some f =>
+              ([finItem prev (Atom.expr []) it.bnd],
+                st.mapWorld (fun w => importSelfFuel env 64 f w))
+          | some name, some f =>
+              let keyLoaded := st.world.hasImport name f
+              let fileAtoms := env.imports.getD f []
+              let update := fun w =>
+                if keyLoaded then w else (w.markImport name f).appendSpace name fileAtoms
+              ([finItem prev (Atom.expr []) it.bnd], st.mapWorld update)
+          | some "&self", none => ([finItem prev (Atom.expr []) it.bnd], st)
+          | some _, none => ([finItem prev (Atom.expr []) it.bnd], st)
+          | none, _ => ([finItem prev (errAtom (instantiate it.bnd space) "import!: target is not a space") it.bnd], st)
       | _ =>
           if isEmbeddedOp top.atom then
             ([finItem prev (errAtom top.atom "unsupported minimal op") it.bnd], st)
@@ -836,8 +945,10 @@ def interpretFuel (env : MinEnv) (fuel : Nat) (st : St) (work : List Item) (done
   -- `done` accumulates results with their bindings in reverse so each step is O(1); reversed once
   -- on exit. Bindings are kept so callers can propagate query-variable solutions.
   match fuel, work with
-  | _, [] => (done.reverse, st)
-  | 0, w => (done.reverse ++ w.map (fun it => if isFinal it then finalPair it else exhaustedPair it), st)
+  | _, [] => (done.reverse.filter (fun p => p.1 != emptyA), st)
+  | 0, w =>
+      let rest := w.map (fun it => if isFinal it then finalPair it else exhaustedPair it)
+      ((done.reverse ++ rest).filter (fun p => p.1 != emptyA), st)
   | f + 1, it :: rest =>
       let (results, st') := interpretStack1 env f st it
       let finals := (results.filter isFinal).map finalPair
@@ -861,7 +972,10 @@ def mettaEval (env : MinEnv) (fuel : Nat) (st : St) (bnd : Bindings) (a : Atom) 
   | fuel + 1 =>
     match instantiate bnd a with
     | Atom.expr (Atom.sym op :: args) =>
-      if let some (pos, expected, actual) := typeMismatch env st.world op args then
+      if arityMismatch env op args then
+        ([(Atom.expr [Atom.sym "Error", Atom.expr (Atom.sym op :: args),
+            Atom.sym "IncorrectNumberOfArguments"], bnd)], st)
+      else if let some (pos, expected, actual) := typeMismatch env st.world op args then
         -- Runtime type error: a declared parameter type rejects an argument (Hyperon `BadArgType`).
         ([(Atom.expr [Atom.sym "Error", Atom.expr (Atom.sym op :: args),
             Atom.expr [Atom.sym "BadArgType", Atom.gnd (Ground.int (Int.ofNat pos)), expected, actual]], bnd)], st)
@@ -903,7 +1017,7 @@ def mettaEval (env : MinEnv) (fuel : Nat) (st : St) (bnd : Bindings) (a : Atom) 
             let (out, st'') := pairs.foldl (fun (a2 : List (Atom × Bindings) × St) p =>
               let pb := restrictBnd queryVars ((Bindings.merge part.2 p.2).head?.getD p.2)
               if p.1 == notReducibleA || p.1 == w then (a2.1 ++ [(w, part.2)], a2.2)
-              else if returnsAtom env w && !isEmbeddedOp p.1 then (a2.1 ++ [(p.1, pb)], a2.2)
+              else if returnsAtom env w then (a2.1 ++ [(p.1, pb)], a2.2)
               else let (more, st3) := mettaEval env fuel a2.2 pb p.1
                    -- Re-merge the threaded query bindings `pb`: re-evaluating `p.1` produces fresh
                    -- output bindings that may not mention a query variable bound inside the evaluated
@@ -945,7 +1059,7 @@ def mettaEval (env : MinEnv) (fuel : Nat) (st : St) (bnd : Bindings) (a : Atom) 
           [{ stack := atomToStack (Atom.expr [Atom.sym "eval", w]) [], bnd := bnd }] []
         pairs.foldl (fun (a2 : List (Atom × Bindings) × St) p =>
           if p.1 == notReducibleA || p.1 == w then (a2.1 ++ [(w, bnd)], a2.2)
-          else if returnsAtom env w && !isEmbeddedOp p.1 then (a2.1 ++ [p], a2.2)
+          else if returnsAtom env w then (a2.1 ++ [p], a2.2)
           else let (more, st3) := mettaEval env fuel a2.2 p.2 p.1; (a2.1 ++ more, st3)) ([], st')
   termination_by 3 * fuel + 1
   decreasing_by all_goals (simp_wf <;> omega)

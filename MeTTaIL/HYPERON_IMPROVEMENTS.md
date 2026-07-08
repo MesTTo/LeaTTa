@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 MesTTo -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # MeTTaIL improvements for F1R3FLY
 
 Findings about the MeTTaIL tool, collected while building the Lean 4 formalization in this directory.

@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 MesTTo -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 ---
 name: Bug report
 about: A wrong result, a divergence from Hyperon, or a build failure

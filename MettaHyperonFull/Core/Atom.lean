@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 /-
 Module: MettaHyperonFull.Core.Atom
 Layer: Core
@@ -30,6 +33,17 @@ inductive Ground where
   | external : String → String → Ground
   deriving Repr, BEq, Inhabited
 
+namespace Ground
+
+/-- Runtime equality for grounded values. Hyperon's `Number` grounding compares integer and float
+values by numeric value, so `1` and `1.0` match even though their constructors differ. -/
+def equiv : Ground → Ground → Bool
+  | Ground.int a, Ground.float b => Float.ofInt a == b
+  | Ground.float a, Ground.int b => a == Float.ofInt b
+  | a, b => a == b
+
+end Ground
+
 /-- MeTTa atoms: symbols, variables, grounded atoms, and expressions. -/
 inductive Atom where
   | sym : String → Atom
@@ -60,6 +74,25 @@ def Atom.beqList : List Atom → List Atom → Bool
 end
 
 instance : BEq Atom := ⟨Atom.beq⟩
+
+mutual
+
+/-- Runtime equality for atoms. This keeps structural shape but uses `Ground.equiv` for grounded
+payloads, matching Hyperon's `gv_eq` for numeric atoms without changing the proof-facing `BEq`. -/
+def Atom.equiv : Atom → Atom → Bool
+  | Atom.sym a, Atom.sym b => a == b
+  | Atom.var a, Atom.var b => a == b
+  | Atom.gnd a, Atom.gnd b => Ground.equiv a b
+  | Atom.expr a, Atom.expr b => Atom.equivList a b
+  | _, _ => false
+
+/-- Pointwise runtime equality of atom lists. -/
+def Atom.equivList : List Atom → List Atom → Bool
+  | [], [] => true
+  | x :: xs, y :: ys => Atom.equiv x y && Atom.equivList xs ys
+  | _, _ => false
+
+end
 
 /-- Coarse meta-types from the current Hyperon specification. -/
 inductive MetaType where

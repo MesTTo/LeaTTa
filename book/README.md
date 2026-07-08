@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 MesTTo -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # LeaTTa: the book
 
 The LeaTTa book is a Verso manual that documents the MeTTa formalization in this repository. It is

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 MesTTo
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # Trim the doc-gen4 output for hosting. The full reference includes Mathlib, whose pages
 # are about 1 GB, over the GitHub Pages limit. Rewrite links into Mathlib so they point at

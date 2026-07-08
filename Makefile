@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 MesTTo
+# SPDX-License-Identifier: Apache-2.0
+
 # Convenience targets for the LeaTTa MeTTa interpreter.
 # `lake` does the real work; these are thin wrappers for common tasks.
 

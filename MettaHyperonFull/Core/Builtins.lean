@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 /-
 Module: MettaHyperonFull.Core.Builtins
 Layer: Core
@@ -88,7 +91,7 @@ def eqAtom : List Atom → ReduceResult
       -- grounded-call path (a blanket lift regresses the `assert*`/`test_stdlib` suites).
       if a.isError then ReduceResult.ok [a]
       else if b.isError then ReduceResult.ok [b]
-      else ReduceResult.ok [Atom.gnd (Ground.bool (a == b))]
+      else ReduceResult.ok [Atom.gnd (Ground.bool (Atom.equiv a b))]
   | _ => ReduceResult.incorrectArgument "expected exactly two arguments"
 
 /-- Grounded `cons-atom`: prepend a head atom to a tuple, so `(cons-atom h (a b)) = (h a b)`. -/
@@ -100,24 +103,24 @@ def consAtom : List Atom → ReduceResult
 /-- Grounded `decons-atom`: split a non-empty tuple into `(head (tail …))` (empty → `Empty`). -/
 def deconsAtom : List Atom → ReduceResult
   | [Atom.expr (h :: t)] => ReduceResult.ok [Atom.expr [h, Atom.expr t]]
-  | [Atom.expr []] => ReduceResult.ok [Atom.empty]
+  | [Atom.expr []] =>
+      ReduceResult.runtimeError "expected: (decons-atom (: <expr> Expression)), found: (decons-atom ())"
   | _ => ReduceResult.incorrectArgument "expected non-empty expression"
 
 /-- Grounded `car-atom`: the head of a non-empty tuple. -/
 def carAtom : List Atom → ReduceResult
   | [Atom.expr (h :: _)] => ReduceResult.ok [h]
-  | _ => ReduceResult.incorrectArgument "expected non-empty expression"
+  | _ => ReduceResult.runtimeError "car-atom expects a non-empty expression as an argument"
 
 /-- Grounded `cdr-atom`: the tail of a non-empty tuple. -/
 def cdrAtom : List Atom → ReduceResult
   | [Atom.expr (_ :: t)] => ReduceResult.ok [Atom.expr t]
-  | _ => ReduceResult.incorrectArgument "expected non-empty expression"
+  | _ => ReduceResult.runtimeError "cdr-atom expects a non-empty expression as an argument"
 
-/-- Grounded `size-atom`: the number of children of a tuple (or `Atom.size` for a non-expression). -/
+/-- Grounded `size-atom`: the number of children of a tuple. -/
 def sizeAtom : List Atom → ReduceResult
   | [Atom.expr xs] => ReduceResult.ok [Atom.gnd (Ground.int (Int.ofNat xs.length))]
-  | [a] => ReduceResult.ok [Atom.gnd (Ground.int (Int.ofNat (Atom.size a)))]
-  | _ => ReduceResult.incorrectArgument "expected one atom"
+  | _ => ReduceResult.runtimeError "size-atom expects expression as an argument"
 
 /-- Coerce a numeric atom to `Float` (an `Int` is promoted), else `none`. -/
 def toFloat? : Atom → Option Float
@@ -127,36 +130,36 @@ def toFloat? : Atom → Option Float
 
 /-- Unary `f64` math op (`sqrt`/`sin`/`cos`/`tan`/`asin`/`acos`/`atan`-math): coerce the argument to
     `Float`, apply `ff`, return a `Float` (Hyperon `runner/stdlib/math.rs`). -/
-def floatUn (ff : Float → Float) : List Atom → ReduceResult
+def floatUn (name : String) (ff : Float → Float) : List Atom → ReduceResult
   | [a] => match toFloat? a with
       | some x => ReduceResult.ok [Atom.gnd (Ground.float (ff x))]
-      | none => ReduceResult.incorrectArgument "expected a Number"
-  | _ => ReduceResult.incorrectArgument "expected exactly one argument"
+      | none => ReduceResult.runtimeError (name ++ " expects one argument: number")
+  | _ => ReduceResult.runtimeError (name ++ " expects one argument: number")
 
 /-- Binary `f64` math op (`pow-math base exp`, `log-math base input`): both arguments coerced to
     `Float`, result a `Float`. -/
-def floatBin (ff : Float → Float → Float) : List Atom → ReduceResult
+def floatBin (name : String) (ff : Float → Float → Float) : List Atom → ReduceResult
   | [a, b] => match toFloat? a, toFloat? b with
       | some x, some y => ReduceResult.ok [Atom.gnd (Ground.float (ff x y))]
-      | _, _ => ReduceResult.incorrectArgument "expected two Numbers"
-  | _ => ReduceResult.incorrectArgument "expected exactly two arguments"
+      | _, _ => ReduceResult.runtimeError (name ++ " expects two arguments: numbers")
+  | _ => ReduceResult.runtimeError (name ++ " expects two arguments: numbers")
 
 /-- Rounding math op (`abs`/`trunc`/`ceil`/`floor`/`round`-math): an `Int` is integral already, so it
     is returned with `fi` applied (identity except `abs`); a `Float` has `ff` applied, staying `Float`.
     Hyperon matches `Number::Integer`/`Number::Float` the same way. -/
-def numRound (fi : Int → Int) (ff : Float → Float) : List Atom → ReduceResult
+def numRound (name : String) (fi : Int → Int) (ff : Float → Float) : List Atom → ReduceResult
   | [Atom.gnd (Ground.int n)] => ReduceResult.ok [Atom.gnd (Ground.int (fi n))]
   | [Atom.gnd (Ground.float x)] => ReduceResult.ok [Atom.gnd (Ground.float (ff x))]
-  | [_] => ReduceResult.incorrectArgument "expected a Number"
-  | _ => ReduceResult.incorrectArgument "expected exactly one argument"
+  | [_] => ReduceResult.runtimeError (name ++ " expects one argument: number")
+  | _ => ReduceResult.runtimeError (name ++ " expects one argument: number")
 
 /-- Float predicate (`isnan-math`/`isinf-math`): an `Int` is never NaN/∞ (→ `False`); a `Float`
     uses `fb`. -/
-def floatPred (fb : Float → Bool) : List Atom → ReduceResult
+def floatPred (name : String) (fb : Float → Bool) : List Atom → ReduceResult
   | [Atom.gnd (Ground.int _)] => ReduceResult.ok [Atom.gnd (Ground.bool false)]
   | [Atom.gnd (Ground.float x)] => ReduceResult.ok [Atom.gnd (Ground.bool (fb x))]
-  | [_] => ReduceResult.incorrectArgument "expected a Number"
-  | _ => ReduceResult.incorrectArgument "expected exactly one argument"
+  | [_] => ReduceResult.runtimeError (name ++ " expects one argument: number")
+  | _ => ReduceResult.runtimeError (name ++ " expects one argument: number")
 
 /-- Truncate a `Float` toward zero (Lean's `Float` has no `trunc`; toward-zero = floor for `x ≥ 0`,
     ceil otherwise). -/
@@ -166,22 +169,22 @@ def ftrunc (x : Float) : Float := if x ≥ 0.0 then x.floor else x.ceil
     rounding operations (`abs`, `sqrt`, `pow`, `log`, the trig family, the rounding family, and the
     `isnan`/`isinf` predicates). -/
 def mathTable : GroundingTable := [
-  ⟨"sqrt-math", GroundMode.evalArgs, none, floatUn Float.sqrt⟩,
-  ⟨"sin-math", GroundMode.evalArgs, none, floatUn Float.sin⟩,
-  ⟨"cos-math", GroundMode.evalArgs, none, floatUn Float.cos⟩,
-  ⟨"tan-math", GroundMode.evalArgs, none, floatUn Float.tan⟩,
-  ⟨"asin-math", GroundMode.evalArgs, none, floatUn Float.asin⟩,
-  ⟨"acos-math", GroundMode.evalArgs, none, floatUn Float.acos⟩,
-  ⟨"atan-math", GroundMode.evalArgs, none, floatUn Float.atan⟩,
-  ⟨"pow-math", GroundMode.evalArgs, none, floatBin Float.pow⟩,
-  ⟨"log-math", GroundMode.evalArgs, none, floatBin (fun base input => Float.log input / Float.log base)⟩,
-  ⟨"abs-math", GroundMode.evalArgs, none, numRound (fun n => Int.ofNat n.natAbs) Float.abs⟩,
-  ⟨"trunc-math", GroundMode.evalArgs, none, numRound id ftrunc⟩,
-  ⟨"ceil-math", GroundMode.evalArgs, none, numRound id Float.ceil⟩,
-  ⟨"floor-math", GroundMode.evalArgs, none, numRound id Float.floor⟩,
-  ⟨"round-math", GroundMode.evalArgs, none, numRound id Float.round⟩,
-  ⟨"isnan-math", GroundMode.evalArgs, none, floatPred Float.isNaN⟩,
-  ⟨"isinf-math", GroundMode.evalArgs, none, floatPred Float.isInf⟩
+  ⟨"sqrt-math", GroundMode.evalArgs, none, floatUn "sqrt-math" Float.sqrt⟩,
+  ⟨"sin-math", GroundMode.evalArgs, none, floatUn "sin-math" Float.sin⟩,
+  ⟨"cos-math", GroundMode.evalArgs, none, floatUn "cos-math" Float.cos⟩,
+  ⟨"tan-math", GroundMode.evalArgs, none, floatUn "tan-math" Float.tan⟩,
+  ⟨"asin-math", GroundMode.evalArgs, none, floatUn "asin-math" Float.asin⟩,
+  ⟨"acos-math", GroundMode.evalArgs, none, floatUn "acos-math" Float.acos⟩,
+  ⟨"atan-math", GroundMode.evalArgs, none, floatUn "atan-math" Float.atan⟩,
+  ⟨"pow-math", GroundMode.evalArgs, none, floatBin "pow-math" Float.pow⟩,
+  ⟨"log-math", GroundMode.evalArgs, none, floatBin "log-math" (fun base input => Float.log input / Float.log base)⟩,
+  ⟨"abs-math", GroundMode.evalArgs, none, numRound "abs-math" (fun n => Int.ofNat n.natAbs) Float.abs⟩,
+  ⟨"trunc-math", GroundMode.evalArgs, none, numRound "trunc-math" id ftrunc⟩,
+  ⟨"ceil-math", GroundMode.evalArgs, none, numRound "ceil-math" id Float.ceil⟩,
+  ⟨"floor-math", GroundMode.evalArgs, none, numRound "floor-math" id Float.floor⟩,
+  ⟨"round-math", GroundMode.evalArgs, none, numRound "round-math" id Float.round⟩,
+  ⟨"isnan-math", GroundMode.evalArgs, none, floatPred "isnan-math" Float.isNaN⟩,
+  ⟨"isinf-math", GroundMode.evalArgs, none, floatPred "isinf-math" Float.isInf⟩
 ]
 
 /-- `min-atom`/`max-atom` (Hyperon `atom.rs`): the minimum/maximum of an expression of numbers,

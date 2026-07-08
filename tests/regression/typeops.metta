@@ -1,3 +1,6 @@
+; SPDX-FileCopyrightText: 2026 MesTTo
+; SPDX-License-Identifier: Apache-2.0
+
 ; Regression for ported type/error stdlib helpers (Hyperon stdlib.metta).
 !(assertEqual (noreduce-eq a a) True)
 !(assertEqual (noreduce-eq a b) False)

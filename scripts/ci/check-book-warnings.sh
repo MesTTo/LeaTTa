@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 MesTTo
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # Fail CI if the Verso book build emits any warning except the reviewed upstream warning in
 # Verso v4.31.0.

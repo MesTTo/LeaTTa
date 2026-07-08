@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 MesTTo -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # Cordial Miners on the MeTTaIL runtime
 
 This directory turns the coarse Cordial Miners protocol into a MeTTaIL dialect. The bridge does not call

@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 /-
 Module: MettaHyperonFull.Core.Unification
 Layer: Core
@@ -29,7 +32,7 @@ def decomposeEq : Atom → Atom → Option (List (VarName × Atom))
   | Atom.var x, t => some [(x, t)]
   | t, Atom.var x => some [(x, t)]
   | Atom.sym a, Atom.sym b => if a == b then some [] else none
-  | Atom.gnd a, Atom.gnd b => if a == b then some [] else none
+  | Atom.gnd a, Atom.gnd b => if Ground.equiv a b then some [] else none
   | Atom.expr xs, Atom.expr ys => decomposeList xs ys
   | _, _ => none
 

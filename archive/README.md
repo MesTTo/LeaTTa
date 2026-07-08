@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 MesTTo -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # Archived exploratory modules
 
 This directory holds earlier models that were built during the project's design exploration and then

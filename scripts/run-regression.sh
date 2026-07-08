@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 MesTTo
+# SPDX-License-Identifier: Apache-2.0
+
 # Run every tests/regression/*.metta feature test through the interpreter and tally assertions.
 # These guard the stdlib/grounded-op coverage added on top of the vendored Hyperon oracle.
 set -euo pipefail

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 MesTTo
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # Reproducible oracle. Runs the minimal-MeTTa interpreter (`LeaTTa --oracle`)
 # over Hyperon's own test corpus, vendored under tests/corpus/ (MIT, commit 3f76dc4), and checks

@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 MesTTo -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # LeaTTa: machine-checked MeTTa semantics in Lean 4
 
 LeaTTa is a Lean 4 development for MeTTa, MeTTaIL, and a checked Cordial Miners runtime. LeaTTa starts

@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 MesTTo -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # Wiki source
 
 These pages mirror the project's GitHub wiki. They are version-controlled here so they

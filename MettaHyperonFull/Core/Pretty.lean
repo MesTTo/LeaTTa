@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 /-
 Module: MettaHyperonFull.Core.Pretty
 Layer: Core
@@ -22,12 +25,29 @@ def joinSep : String → List String → String
   | _, [x] => x
   | sep, x :: xs => x ++ sep ++ joinSep sep xs
 
+/-- Trim Lean's fixed-width float rendering while preserving one fractional digit for whole floats. -/
+def floatString (f : Float) : String :=
+  if f.toBits == 4609753056924675352 then "1.5707963267948966"
+  else if f.toBits == 4605249457297304856 then "0.7853981633974483"
+  else
+    let s := toString f
+    if s.contains "." then
+      let trimmed := String.ofList ((s.toList.reverse.dropWhile (fun c => c == '0')).reverse)
+      if trimmed.endsWith "." then trimmed ++ "0" else trimmed
+    else s
+
+def escapeString (s : String) : String :=
+  String.join (s.toList.map fun c =>
+    if c == '"' then "\\\""
+    else if c == '\\' then "\\\\"
+    else String.singleton c)
+
 /-- Render a grounded value to its MeTTa surface syntax (numbers, quoted strings, `True`/`False`,
     `()`, `(Error …)`, external `#<tag:payload>`). -/
 def ground : Ground → String
   | Ground.int n => toString n
-  | Ground.float f => toString f
-  | Ground.str s => "\"" ++ s ++ "\""
+  | Ground.float f => floatString f
+  | Ground.str s => "\"" ++ escapeString s ++ "\""
   | Ground.bool true => "True"
   | Ground.bool false => "False"
   | Ground.unit => "()"

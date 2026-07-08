@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 MesTTo
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # Install the LeaTTa binary from a release bundle into a bin directory on your PATH.
 # This script lives at the root of an unpacked release archive, next to bin/LeaTTa

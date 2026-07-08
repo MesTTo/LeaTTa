@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 MesTTo
+# SPDX-License-Identifier: Apache-2.0
+
 # Isolated package for generating API documentation with doc-gen4.
 # It requires the main library by path and doc-gen4 pinned to the matching toolchain, and
 # reuses the parent's already-fetched packages (Mathlib, etc.) via packagesDir. This keeps

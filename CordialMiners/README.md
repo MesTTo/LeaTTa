@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 MesTTo -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 # PoR-weighted Cordial Miners, formalized in Lean 4
 
 This directory contains the Lean formalization of PoR-weighted Cordial Miners, a leaderless DAG-based

@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 /-
 LeaTTa: a machine-checked operational semantics and metatheory of MeTTa in Lean 4.
 Book root (Verso manual genre). Built with `lake exe docs`.

@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 /-
 Module: MettaHyperonFull.Minimal.Stdlib
 Layer: Minimal
@@ -48,13 +51,13 @@ def msSubtract (lhs rhs : List Atom) : List Atom :=
     `core.rs : atoms_are_equivalent`; atoms equal up to a consistent variable renaming match). -/
 def ifEqualOp : List Atom → ReduceResult
   | [a, b, t, e] => ReduceResult.ok [if alphaEq a b then t else e]
-  | _ => ReduceResult.incorrectArgument "if-equal expects 4 arguments"
+  | _ => ReduceResult.runtimeError "if-equal expects four arguments"
 
 /-- `(=alpha a b)` → `True`/`False` by **α-equivalence** (Hyperon `debug.rs`): equal up to a
     consistent renaming of variables. -/
 def alphaEqOp : List Atom → ReduceResult
   | [a, b] => ReduceResult.ok [Atom.gnd (Ground.bool (alphaEq a b))]
-  | _ => ReduceResult.incorrectArgument "=alpha expects two arguments"
+  | _ => ReduceResult.runtimeError "=alpha expects two arguments"
 
 /-- `(get-metatype a)` → `Symbol` | `Variable` | `Expression` | `Grounded`. -/
 def getMetatypeOp : List Atom → ReduceResult
@@ -82,14 +85,18 @@ def xorOp : List Atom → ReduceResult
     `DivisionByZero` error (Hyperon's `checked_div`); float division follows IEEE (`x/0.0 = ±inf`). -/
 def divOp : List Atom → ReduceResult
   | [Atom.gnd (Ground.int a), Atom.gnd (Ground.int b)] =>
-      if b == 0 then ReduceResult.runtimeError "DivisionByZero"
+      if b == 0 then ReduceResult.ok [Atom.expr [Atom.sym "Error",
+        Atom.expr [Atom.sym "/", Atom.gnd (Ground.int a), Atom.gnd (Ground.int b)],
+        Atom.sym "DivisionByZero"]]
       else ReduceResult.ok [Atom.gnd (Ground.int (a / b))]
   | args => Builtins.numBin (· / ·) (· / ·) args
 
 /-- Grounded `(% a b)`: integer modulo of two `Int` atoms; a zero divisor raises `DivisionByZero`. -/
 def modOp : List Atom → ReduceResult
   | [Atom.gnd (Ground.int a), Atom.gnd (Ground.int b)] =>
-      if b == 0 then ReduceResult.runtimeError "DivisionByZero"
+      if b == 0 then ReduceResult.ok [Atom.expr [Atom.sym "Error",
+        Atom.expr [Atom.sym "%", Atom.gnd (Ground.int a), Atom.gnd (Ground.int b)],
+        Atom.sym "DivisionByZero"]]
       else ReduceResult.ok [Atom.gnd (Ground.int (a % b))]
   | _ => ReduceResult.incorrectArgument "% expects two Int atoms"
 
@@ -97,22 +104,22 @@ def modOp : List Atom → ReduceResult
     occurrence of each (order-preserving dedup). -/
 def uniqueAtomOp : List Atom → ReduceResult
   | [Atom.expr xs] => ReduceResult.ok [Atom.expr (dedupAux [] xs)]
-  | _ => ReduceResult.incorrectArgument "unique-atom expects one expression"
+  | _ => ReduceResult.runtimeError "unique-atom expects one expression"
 
 /-- Grounded `(union-atom a b)`: multiset union of two tuples (their children concatenated). -/
 def unionAtomOp : List Atom → ReduceResult
   | [Atom.expr xs, Atom.expr ys] => ReduceResult.ok [Atom.expr (xs ++ ys)]
-  | _ => ReduceResult.incorrectArgument "union-atom expects two expressions"
+  | _ => ReduceResult.runtimeError "union-atom expects two expressions"
 
 /-- Grounded `(intersection-atom a b)`: multiset intersection of two tuples. -/
 def intersectionAtomOp : List Atom → ReduceResult
   | [Atom.expr xs, Atom.expr ys] => ReduceResult.ok [Atom.expr (msIntersect xs ys)]
-  | _ => ReduceResult.incorrectArgument "intersection-atom expects two expressions"
+  | _ => ReduceResult.runtimeError "intersection-atom expects two expressions"
 
 /-- Grounded `(subtraction-atom a b)`: multiset difference `a \ b` of two tuples. -/
 def subtractionAtomOp : List Atom → ReduceResult
   | [Atom.expr xs, Atom.expr ys] => ReduceResult.ok [Atom.expr (msSubtract xs ys)]
-  | _ => ReduceResult.incorrectArgument "subtraction-atom expects two expressions"
+  | _ => ReduceResult.runtimeError "subtraction-atom expects two expressions"
 
 /-- Hyperon's `result_items` (`stdlib/debug.rs`), operating on the children of a collapsed bag.
     Current Hyperon (v0.2.10) yields a bare bag `(x …)`; older versions used an explicit comma
@@ -123,8 +130,8 @@ def resultItems : List Atom → List Atom
   | Atom.sym "," :: rest => rest
   | xs => xs
 
-/-- `(superpose (a b c))` → the nondeterministic results `a`, `b`, `c`; a collapsed `(, a b c)` is
-    accepted too (the `,` is stripped), so `(superpose (collapse x))` round-trips. -/
+/-- `(superpose (a b c))` → the nondeterministic results `a`, `b`, `c`; the older internal comma
+    tuple form is accepted too, so `(superpose (collapse x))` round-trips across both shapes. -/
 def superposeOp : List Atom → ReduceResult
   | [Atom.expr xs] => ReduceResult.ok (resultItems xs)
   | _ => ReduceResult.incorrectArgument "superpose expects one expression"
@@ -147,11 +154,21 @@ def collapseExtractOp : List Atom → ReduceResult
 def nopOp : List Atom → ReduceResult
   | _ => ReduceResult.ok [Atom.expr []]  -- `()` as the parser produces it (the oracle's unit)
 
+/-- `println!` prints in Hyperon; this pure runner returns the observable unit result. -/
+def printlnOp : List Atom → ReduceResult
+  | [_] => ReduceResult.ok [Atom.expr []]
+  | _ => ReduceResult.runtimeError "println! expects single atom as an argument"
+
+/-- `trace!` logs its first argument in Hyperon and returns the second. -/
+def traceOp : List Atom → ReduceResult
+  | [_msg, atom] => ReduceResult.ok [atom]
+  | _ => ReduceResult.runtimeError "trace! expects two atoms as arguments"
+
 /-- `(sealed (<vars>) <atom>)` → `<atom>`. Variable hygiene is already provided by the interpreter's
     per-application rule-variable freshening, so sealing reduces to the identity on its body. -/
 def sealedOp : List Atom → ReduceResult
   | [_vars, atom] => ReduceResult.ok [atom]
-  | _ => ReduceResult.incorrectArgument "sealed expects (sealed <vars-expr> <atom>)"
+  | _ => ReduceResult.runtimeError "sealed expects (sealed <vars-expr> <atom>)"
 
 /-! ## Assertion helpers (Hyperon's grounded `_assert-results-are-equal[-msg]` family) -/
 
@@ -202,6 +219,33 @@ def sortAtomOp : List Atom → ReduceResult
   | [Atom.expr xs] => ReduceResult.ok [Atom.expr (sortAtoms xs)]
   | _ => ReduceResult.incorrectArgument "sort-atom expects one expression"
 
+/-- Replace `{}` placeholders in `fmt` with the printed atoms from `args`, left to right. -/
+def formatArgsString : List Char → List Atom → String
+  | [], _ => ""
+  | '{' :: '}' :: cs, a :: args => toString a ++ formatArgsString cs args
+  | '{' :: '}' :: cs, [] => "{}" ++ formatArgsString cs []
+  | c :: cs, args => String.singleton c ++ formatArgsString cs args
+
+/-- Hyperon's `format-args`: interpolate printed atoms into a grounded format string. -/
+def formatArgsOp : List Atom → ReduceResult
+  | [Atom.gnd (Ground.str fmt), Atom.expr args] =>
+      ReduceResult.ok [Atom.gnd (Ground.str (formatArgsString fmt.toList args))]
+  | _ =>
+      ReduceResult.runtimeError
+        "format-args expects format string as a first argument and expression as a second argument"
+
+/-- Deterministic part of Hyperon's `random-int`: empty ranges produce the symbolic `RangeIsEmpty`
+    error. Successful random draws need stateful generator support, so they remain unreduced here. -/
+def randomIntOp : List Atom → ReduceResult
+  | [rng, Atom.gnd (Ground.int start), Atom.gnd (Ground.int stop)] =>
+      if stop <= start then
+        ReduceResult.ok [Atom.expr [Atom.sym "Error",
+          Atom.expr [Atom.sym "random-int", rng, Atom.gnd (Ground.int start), Atom.gnd (Ground.int stop)],
+          Atom.sym "RangeIsEmpty"]]
+      else ReduceResult.noReduce
+  | _ => ReduceResult.incorrectArgument
+      "random-int expects three arguments: random generator, number (start) and number (end)"
+
 /-- Grounded table for the minimal interpreter: the arithmetic core plus the stdlib grounded ops. -/
 def stdGroundings : GroundingTable := Builtins.table ++ [
   ⟨"if-equal", GroundMode.evalArgs, none, ifEqualOp⟩,
@@ -223,6 +267,10 @@ def stdGroundings : GroundingTable := Builtins.table ++ [
   ⟨"hyperpose", GroundMode.evalArgs, none, superposeOp⟩,
   ⟨"collapse-extract", GroundMode.evalArgs, none, collapseExtractOp⟩,
   ⟨"sealed", GroundMode.evalArgs, none, sealedOp⟩,
+  ⟨"format-args", GroundMode.evalArgs, none, formatArgsOp⟩,
+  ⟨"random-int", GroundMode.evalArgs, none, randomIntOp⟩,
+  ⟨"println!", GroundMode.evalArgs, none, printlnOp⟩,
+  ⟨"trace!", GroundMode.evalArgs, none, traceOp⟩,
   ⟨"nop", GroundMode.evalArgs, none, nopOp⟩,
   -- `(pragma! …)` is a runtime directive (e.g. `type-check auto`); we accept it and return `()`.
   -- Eager type-checking is always on in this model (operators carry declared types), so the
@@ -240,8 +288,8 @@ def stdGroundings : GroundingTable := Builtins.table ++ [
   -- `help!` prints documentation for its atom; we satisfy the contract by returning `()` (the
   -- formal doc is available via `get-doc`, which g1_docs checks structurally).
   ⟨"help!", GroundMode.evalArgs, none, nopOp⟩,
-  ⟨"_assert-results-are-equal", GroundMode.evalArgs, none, assertResultsEqOp (· == ·)⟩,
-  ⟨"_assert-results-are-equal-msg", GroundMode.evalArgs, none, assertResultsEqOp (· == ·)⟩,
+  ⟨"_assert-results-are-equal", GroundMode.evalArgs, none, assertResultsEqOp Atom.equiv⟩,
+  ⟨"_assert-results-are-equal-msg", GroundMode.evalArgs, none, assertResultsEqOp Atom.equiv⟩,
   ⟨"_assert-results-are-alpha-equal", GroundMode.evalArgs, none, assertResultsEqOp alphaEq⟩,
   ⟨"_assert-results-are-alpha-equal-msg", GroundMode.evalArgs, none, assertResultsEqOp alphaEq⟩,
   ⟨"sort-atom", GroundMode.evalArgs, none, sortAtomOp⟩,
@@ -289,6 +337,12 @@ def preludeSrc : String :=
    (: % (-> Number Number Number))
    (: = (-> $t $t %Undefined%))
    (: == (-> $t $t Bool))
+   (: and (-> Bool Bool Bool))
+   (: or (-> Bool Bool Bool))
+   (: not (-> Bool Bool))
+   (: xor (-> Bool Bool Bool))
+   (: if-equal (-> Atom Atom Atom Atom Atom))
+   (: =alpha (-> Atom Atom Bool))
    (: < (-> Number Number Bool))
    (: > (-> Number Number Bool))
    (: <= (-> Number Number Bool))
@@ -303,6 +357,11 @@ def preludeSrc : String :=
    (: return (-> Atom Atom))
    (: cons-atom (-> Atom Expression Atom))
    (: decons-atom (-> Expression Atom))
+   (: size-atom (-> Expression Number))
+   (: unique-atom (-> Expression Expression))
+   (: union-atom (-> Expression Expression Expression))
+   (: intersection-atom (-> Expression Expression Expression))
+   (: subtraction-atom (-> Expression Expression Expression))
    (: collapse-bind (-> Atom Expression))
    (: superpose-bind (-> Expression Atom))
    (: metta (-> Atom Atom Atom Atom))
@@ -336,6 +395,8 @@ def preludeSrc : String :=
    (: noeval (-> Atom Atom))
    (: id (-> $t $t))
    (: match (-> Atom Atom Atom %Undefined%))
+   (: println! (-> Atom (->)))
+   (: trace! (-> Atom Atom Atom))
    (: if-decons-expr (-> Expression Variable Variable Atom Atom %Undefined%))
    (: foldl-atom (-> Expression Atom Variable Variable Atom %Undefined%))
    (: assert (-> Atom (->)))
@@ -353,6 +414,7 @@ def preludeSrc : String :=
    (= (id $x) $x)
    (= (noeval $x) $x)
    (= (quote $atom) NotReducible)
+   (: unquote (-> Atom %Undefined%))
    (= (unquote (quote $atom)) $atom)
    (= (nop) ())
    (= (let $pattern $atom $template) (unify $atom $pattern $template Empty))
@@ -398,6 +460,7 @@ def preludeSrc : String :=
    (= (atom-subst $atom $var $templ)
       (function (chain (eval (noeval $atom)) $var (return $templ))))
    (: map-atom (-> Expression Variable Atom Expression))
+   (: sealed (-> Expression Atom Atom))
    (= (map-atom $list $var $map)
       (function (chain (decons-atom $list) $ht
         (unify ($head $tail) $ht
@@ -547,7 +610,7 @@ def preludeSrc : String :=
             (unify $error-and-tail ($error $tail)
               (return $error)
               (return (Error $atom BadType)))))))
-   (: type-cast (-> Atom Type Space %Undefined%))
+   (: type-cast (-> Atom Type SpaceType %Undefined%))
    (= (type-cast $atom $type $space)
       (function (chain (eval (get-metatype $atom)) $meta
         (eval (if-equal $type $meta
@@ -560,6 +623,15 @@ def preludeSrc : String :=
                   (chain (eval (type-cast-error-or-bad-type $atom $actual-types)) $error (return $error)) ))))))))))
    (: ErrorType Type)
    (: SpaceType Type)
+   (: &self SpaceType)
+   (: new-space (-> SpaceType))
+   (: fork-space (-> SpaceType SpaceType))
+   (: get-atoms (-> SpaceType Atom))
+   (: add-atom (-> SpaceType Atom (->)))
+   (: remove-atom (-> SpaceType Atom (->)))
+   (: import! (-> Atom Atom (->)))
+   (: format-args (-> String Expression String))
+   (: random-int (-> Atom Number Number Number))
    (: BadType (-> Type Type ErrorDescription))
    (: BadArgType (-> Number Type Type ErrorDescription))
    (: IncorrectNumberOfArguments ErrorDescription)
@@ -580,12 +652,14 @@ def stdKb (userAtoms : List Atom) : Space := ⟨preludeAtoms ++ userAtoms⟩
 
 /-- Evaluate `query` with the fuel-bounded interpreter against the prelude+user knowledge base. -/
 def runStd (userAtoms : List Atom) (fuel : Nat) (query : Atom) : List Atom :=
-  evalAtomMin (MinEnv.ofAtomsGT (preludeAtoms ++ userAtoms) stdGroundings) fuel query
+  evalAtomMin { MinEnv.ofAtomsGT (preludeAtoms ++ userAtoms) stdGroundings with visibleAtoms := userAtoms }
+    fuel query
 
 /-- Fully evaluate `query` against the prelude+user knowledge base (`mettaEval` is defined in
     `Minimal/Interpreter`, mutual with the interpreter so the `metta` instruction uses it). -/
 def runFull (userAtoms : List Atom) (fuel : Nat) (query : Atom) : List Atom :=
-  (mettaEval (MinEnv.ofAtomsGT (preludeAtoms ++ userAtoms) stdGroundings) fuel St.init [] query).1.map (·.1)
+  (mettaEval { MinEnv.ofAtomsGT (preludeAtoms ++ userAtoms) stdGroundings with visibleAtoms := userAtoms }
+    fuel St.init [] query).1.map (·.1)
 
 /-- Split a parsed program into (knowledge-base atoms, `!`-prefixed query atoms). -/
 def splitProgram : List Atom → List Atom × List Atom
@@ -600,13 +674,17 @@ def splitProgram : List Atom → List Atom × List Atom
     e.g. the same expression evaluated before and after a `(: …)` type declaration gives different
     results. Returns each query paired with its results, in file order. -/
 def evalSequential (atoms : List Atom) (fuel : Nat)
-    (imports : Std.HashMap String (List Atom) := Std.HashMap.emptyWithCapacity) : List (Atom × List Atom) :=
+    (imports : Std.HashMap String (List Atom) := Std.HashMap.emptyWithCapacity)
+    (importDeps : Std.HashMap String (List String) := Std.HashMap.emptyWithCapacity) :
+    List (Atom × List Atom) :=
   -- `runQ` evaluates a query under the current `St` (gensym counter + mutable world) and returns its
   -- results together with the advanced state, so `bind!` tokens, named-space `add-atom`s and state
   -- cells made by one query are visible to later queries (globally mutable, like Hyperon). `imports`
   -- (pre-read by the IO runner) backs `import!` and is constant across the run.
   let runQ := fun (kbRev : List Atom) (st : St) (q : Atom) =>
-    let env := { MinEnv.ofAtomsGT (preludeAtoms ++ kbRev.reverse) stdGroundings with imports := imports }
+    let userAtoms := kbRev.reverse
+    let env := { MinEnv.ofAtomsGT (preludeAtoms ++ userAtoms) stdGroundings with
+      imports := imports, importDeps := importDeps, visibleAtoms := userAtoms }
     let (pairs, st') := mettaEval env fuel st [] q
     (pairs.map (·.1), st')
   -- accumulator: (kb-atoms reversed, results reversed, threaded St, "previous atom was `!`")
@@ -617,6 +695,32 @@ def evalSequential (atoms : List Atom) (fuel : Nat)
       | Atom.sym "!" => (kbRev, resRev, st, true)
       | Atom.expr [Atom.sym "!", q] => let (rs, st') := runQ kbRev st q; (kbRev, (q, rs) :: resRev, st', false)
       | _ => (a :: kbRev, resRev, st, false)
+  (atoms.foldl step ([], [], St.init, false)).2.1.reverse
+
+/-- Evaluate a program in file order using Hyperon's runner observation rule.
+    A top-level `!` switches the next parsed atom into execution mode. Ordinary top-level atoms extend
+    the knowledge base silently. Bang directives emit one observable result list. -/
+def evalSequentialObserved (atoms : List Atom) (fuel : Nat)
+    (imports : Std.HashMap String (List Atom) := Std.HashMap.emptyWithCapacity)
+    (importDeps : Std.HashMap String (List String) := Std.HashMap.emptyWithCapacity) :
+    List (List Atom) :=
+  let runQ := fun (kbRev : List Atom) (st : St) (q : Atom) =>
+    let userAtoms := kbRev.reverse
+    let env := { MinEnv.ofAtomsGT (preludeAtoms ++ userAtoms) stdGroundings with
+      imports := imports, importDeps := importDeps, visibleAtoms := userAtoms }
+    let (pairs, st') := mettaEval env fuel st [] q
+    (pairs.map (·.1), st')
+  let step := fun (acc : List Atom × List (List Atom) × St × Bool) (a : Atom) =>
+    let (kbRev, obsRev, st, wasBang) := acc
+    if wasBang then
+      let (rs, st') := runQ kbRev st a
+      (kbRev, rs :: obsRev, st', false)
+    else match a with
+      | Atom.sym "!" => (kbRev, obsRev, st, true)
+      | Atom.expr [Atom.sym "!", q] =>
+          let (rs, st') := runQ kbRev st q
+          (kbRev, rs :: obsRev, st', false)
+      | _ => (a :: kbRev, obsRev, st, false)
   (atoms.foldl step ([], [], St.init, false)).2.1.reverse
 
 /-- The module name imported by an `import!` statement (`!(import! &kb c2_spaces_kb)` →
@@ -630,6 +734,14 @@ def importName? : Atom → Option String
 /-- Module names referenced by any top-level `import!` in a program, so the IO runner knows which
     files to read before evaluating. -/
 def collectImports (atoms : List Atom) : List String := atoms.filterMap importName?
+
+/-- Exported module atoms: top-level bang directives are executed while loading a module and are
+    not exposed as ordinary atoms of an imported named space. -/
+def moduleExportAtoms : List Atom → List Atom
+  | [] => []
+  | Atom.sym "!" :: _ :: rest => moduleExportAtoms rest
+  | Atom.expr [Atom.sym "!", _] :: rest => moduleExportAtoms rest
+  | a :: rest => a :: moduleExportAtoms rest
 
 /-- The search-root path registered by a `register-module!` statement
     (`!(register-module! ../../../chaining)` → `../../../chaining`), if `a` is one. As with
@@ -645,19 +757,21 @@ def collectModuleRoots (atoms : List Atom) : List String := atoms.filterMap modu
 
 /-- Run a MeTTa program (sequentially) and pretty-print all `!`-query results. -/
 def runMinimalSource (src : String) (fuel : Nat := 100000)
-    (imports : Std.HashMap String (List Atom) := Std.HashMap.emptyWithCapacity) : String :=
+    (imports : Std.HashMap String (List Atom) := Std.HashMap.emptyWithCapacity)
+    (importDeps : Std.HashMap String (List String) := Std.HashMap.emptyWithCapacity) : String :=
   match parseProgram src with
   | Except.error e => "parse error: " ++ e
-  | Except.ok atoms => Pretty.atoms ((evalSequential atoms fuel imports).flatMap (·.2))
+  | Except.ok atoms => Pretty.atoms ((evalSequential atoms fuel imports importDeps).flatMap (·.2))
 
 /-- Run a test file's `!`-assertions (sequentially) and report pass/fail counts; an assertion passes
     iff it evaluates to the unit atom `()` (`Atom.expr []`). -/
 def oracleReport (src : String) (fuel : Nat := 100000)
-    (imports : Std.HashMap String (List Atom) := Std.HashMap.emptyWithCapacity) : String :=
+    (imports : Std.HashMap String (List Atom) := Std.HashMap.emptyWithCapacity)
+    (importDeps : Std.HashMap String (List String) := Std.HashMap.emptyWithCapacity) : String :=
   match parseProgram src with
   | Except.error e => "parse error: " ++ e
   | Except.ok atoms =>
-      let res := (evalSequential atoms fuel imports).foldl (fun (acc : Nat × Nat × List String) qr =>
+      let res := (evalSequential atoms fuel imports importDeps).foldl (fun (acc : Nat × Nat × List String) qr =>
         if qr.2 == [Atom.expr []] then (acc.1 + 1, acc.2.1, acc.2.2)
         else (acc.1, acc.2.1 + 1, acc.2.2 ++ [s!"FAIL: {qr.1}\n   got: {Pretty.atoms qr.2}"])) (0, 0, [])
       "\n".intercalate (res.2.2 ++ [s!"\n==== PASS={res.1}  FAIL={res.2.1}  TOTAL={res.1 + res.2.1} ===="])

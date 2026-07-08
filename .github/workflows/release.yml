@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 MesTTo
+# SPDX-License-Identifier: Apache-2.0
+
 # Build the LeaTTa interpreter binary on Linux, macOS, and Windows, and attach the
 # bundles to the GitHub release for the pushed tag. Trigger by pushing a tag like
 # `v1.0.0`, or run manually from the Actions tab. The interpreter binary does not link

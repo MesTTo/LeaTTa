@@ -1,3 +1,6 @@
+; SPDX-FileCopyrightText: 2026 MesTTo
+; SPDX-License-Identifier: Apache-2.0
+
 ; Regression test for the *-math grounded ops (Hyperon runner/stdlib/math.rs).
 !(assertEqual (sqrt-math 4.0) 2.0)
 !(assertEqual (pow-math 2.0 10.0) 1024.0)

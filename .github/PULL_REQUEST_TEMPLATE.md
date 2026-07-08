@@ -1,3 +1,6 @@
+<!-- SPDX-FileCopyrightText: 2026 MesTTo -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
 <!-- Thanks for contributing. CI runs all of the checks below on every pull request, and they must
      pass before a change can merge. You can run them locally first; see the commands beside each. -->
 

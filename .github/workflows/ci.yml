@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 MesTTo
+# SPDX-License-Identifier: Apache-2.0
+
 name: CI
 
 # Gate for contributions. Every pull request and every push to a main branch must build the whole
@@ -31,6 +34,9 @@ jobs:
 
       - name: Fetch the prebuilt Mathlib cache (used by the metatheory layer)
         run: lake exe cache get
+
+      - name: License headers
+        run: scripts/ci/check-license-headers.sh
 
       - name: Build (kernel, interpreter binary, metatheory, operational)
         run: lake build 2>&1 | tee build.log

@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 MesTTo
+# SPDX-License-Identifier: Apache-2.0
+
 name: Deploy the LeaTTa book and API docs to GitHub Pages
 
 # Builds two things and publishes them as one GitHub Pages site:

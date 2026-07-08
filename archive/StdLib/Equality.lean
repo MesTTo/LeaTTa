@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 import MettaHyperonFull.Core.Space
 import MettaHyperonFull.Core.Alpha
 

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 MesTTo
+# SPDX-License-Identifier: Apache-2.0
+
 #
 # Build a self-contained release bundle of LeaTTa, the machine-checked minimal MeTTa
 # interpreter, and package it as a tarball under dist/.

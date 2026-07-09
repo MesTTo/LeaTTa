@@ -280,10 +280,12 @@ implement CZ2's prefix-compressed store, the cut law, or the final coalgebra.
 
 `MeTTaIL.Semantics.Rho` starts the target side of that theorem. It defines rho names and processes,
 quote/drop, ordinary and persistent send/receive COMM, structural congruence for parallel composition,
-and a one-channel RSpace produce/consume boundary. The local implementation source is the
-`mettatron-workspace` checkout:
-`MeTTa-Compiler/src/pathmap_par_integration.rs` serializes MeTTa state into `Par`, while
-`f1r3node/rholang/src/rust/interpreter/reduce.rs` runs `produce` and `consume` against RSpace using
+and a one-channel RSpace produce/consume boundary. The implementation sources are the public
+MeTTa-Compiler and f1r3node paths
+[`src/pathmap_par_integration.rs`](https://github.com/F1R3FLY-io/MeTTa-Compiler/blob/main/src/pathmap_par_integration.rs)
+and
+[`rholang/src/rust/interpreter/reduce.rs`](https://github.com/F1R3FLY-io/f1r3node/blob/dylon/mettatron/rholang/src/rust/interpreter/reduce.rs).
+The first serializes MeTTa state into `Par`; the second runs `produce` and `consume` against RSpace using
 `ListParWithRandom`, `BindPattern`, `TaggedContinuation`, and persistent flags. `eval_send` evaluates
 and substitutes the send channel and data before calling `produce`, which is why the Lean bridge emits
 the encoded contractum process rather than a suspended dereference.

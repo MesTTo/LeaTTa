@@ -1,11 +1,12 @@
 <!-- SPDX-FileCopyrightText: 2026 MesTTo -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# LeaTTa 1.0.7
+# LeaTTa 1.0.8
 
-LeaTTa 1.0.7 is the metatheory and distributed-atomspace release. It keeps the executable minimal
-MeTTa interpreter aligned with Hyperon's oracle corpus, adds a checked distributed atomspace target,
-and expands the public proof ledger for the kernel boundary.
+LeaTTa 1.0.8 is the MORK/MM2 resource-readback release. It keeps the executable minimal
+MeTTa interpreter aligned with Hyperon's oracle corpus, preserves the checked distributed atomspace
+target from 1.0.7, and expands the public proof ledger around MORK-backed query readback, MM2
+lowering, and ACT resource isolation.
 
 ## Announcement
 

@@ -475,9 +475,11 @@ The map below states what each source supports in the Lean development, and what
 ## Other sources checked
 
  * The `trueagi-io/hyperon-experimental` repository, for the current implementation shape.
- * The local `/home/user/Dev/mettatron-workspace` checkout, especially
-   `MeTTa-Compiler/src/pathmap_par_integration.rs` and
-   `f1r3node/rholang/src/rust/interpreter/reduce.rs`, for the concrete `Par` and RSpace boundary.
+ * The public MeTTa-Compiler and f1r3node sources, especially
+   [`src/pathmap_par_integration.rs`](https://github.com/F1R3FLY-io/MeTTa-Compiler/blob/main/src/pathmap_par_integration.rs)
+   and
+   [`rholang/src/rust/interpreter/reduce.rs`](https://github.com/F1R3FLY-io/f1r3node/blob/dylon/mettatron/rholang/src/rust/interpreter/reduce.rs),
+   for the concrete `Par` and RSpace boundary.
  * `hyperon.opencog.org` and the `metta-lang.dev` tutorials, for surface concepts: equality and
    reduction, type assignment, spaces, matching, and atomspace operations.
  * The MeTTa standard library documentation, for runtime and stdlib coverage.

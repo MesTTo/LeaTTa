@@ -72,6 +72,17 @@ Every theorem named here is checked by Lean's kernel in `MettaHyperonFull/Proofs
    type-assignment, equality-rule, named-space, state-cell, token, `&self`, and hidden-import facts:
    `Space.query_insert_self`, `Space.query_removeOne_insert_self`, and the `World.*_visible`
    theorems (`Proofs/SpaceLaws.lean`, `Proofs/WorldLaws.lean`).
+ * *MORK-facing query and MM2 laws* cover the backend-neutral query interface, the logical codec,
+   decoded binding rows, prepared query snapshots, sharded counts, named spaces, grounded host handles,
+   MM2 lowering, and the pure ACT resource boundary:
+   `QueryBackend.spaceBackend_refines_self`, `MorkCodec.decode_encode_eq`,
+   `QueryBackend.morkEncodedSpaceBackend_refines_decoded`, `MorkPrepared.snapshot_query_eq`,
+   `MorkSharded.ShardedSpace.countByShards_eq_count`, `MorkNamedSpaces.query_add_same`,
+   `MorkGroundedRegistry.liveRef?_of_currentValue`,
+   `MorkMM2.step_consumes_first_exec`, `MorkMM2Lowering.evalSource_equation`,
+   `MorkMM2Resources.ResourceStore.queryAct_insert_same`,
+   `MorkMM2Resources.ResourceStore.queryAct_insert_other`, and
+   `MorkMM2Resources.applyEffectWithResources_act`.
  * *Observation and host boundaries* are named theorem surfaces rather than implicit assumptions:
    `observeQuery_results`, `observeQuery_errors`, `observeQuery_exhausted`,
    `NativeCarrierLaws.typeOf_sound`, `NativeCarrierLaws.matchWith_sound`,
@@ -281,6 +292,19 @@ The map below states what each source supports in the Lean development, and what
    `candidates_sound`, `candidates_complete`) and QUERY soundness/completeness
    (`mem_equalityReductions`). The claim is not that every current Hyperon import/runtime feature is
    reimplemented; the exact corpus boundary is the 270/270 oracle run described above.
+ * The MORK and MeTTa implementation work supports the backend-facing query and MM2 readback layer. The
+   Lean surface is `MettaHyperonFull/Core/QueryBackend.lean`,
+   `MettaHyperonFull/Core/MorkCodec.lean`, `MettaHyperonFull/Core/MorkEncodedSpace.lean`,
+   `MettaHyperonFull/Core/MorkPrepared.lean`, `MettaHyperonFull/Core/MorkSharded.lean`,
+   `MettaHyperonFull/Core/MorkNamedSpaces.lean`, `MettaHyperonFull/Core/MorkGroundedRegistry.lean`,
+   `MettaHyperonFull/Core/MorkMM2.lean`, `MettaHyperonFull/Core/MorkMM2Lowering.lean`,
+   `MettaHyperonFull/Core/MorkMM2Resources.lean`, and their proof modules. The checked claims include
+   duplicate-preserving reference queries, decoded-space query refinement, query/data namespace
+   separation, prepared-query equivalence, finite sharding equivalence, named-space isolation, stable
+   host handles for mutable grounded values, semantic MM2 exec consumption, lowering for `I`/`,` and
+   `O`/`,` lists, equality and inequality sources, add/remove effects, priority-ordered exec
+   selection, and pure ACT resource isolation. The claim is not that Lean models the byte trie, mmap ACT
+   files, host solver callbacks, WASM/native resources, lock scheduling, or byte-level path priority.
  * The MOPS paper {citep mops}[] supports the four-register machine, barbed bisimulation, and the
    QUERY/CHAIN/ADD/REM/OUTPUT step split. The Lean surface is `Operational/State.lean`,
    `Operational/Semantics.lean`, `Operational/Bisimulation.lean`, and `Operational/Properties.lean`.

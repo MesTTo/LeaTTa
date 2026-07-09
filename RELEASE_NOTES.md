@@ -36,6 +36,36 @@ added regression suite stays green.
 - `MettaHyperonFull.Proofs.SpaceLaws` and `MettaHyperonFull.Proofs.WorldLaws` record insert, query,
   remove, type-assignment, equality-rule, named-space, state-cell, token, `&self`, and hidden-import
   visibility facts.
+- `MettaHyperonFull.Core.QueryBackend` and `MettaHyperonFull.Proofs.QueryBackend` add a
+  backend-neutral query interface, the list-backed reference backend, a generated reference backend for
+  cache laws, and serial conjunctive-query laws.
+- `MettaHyperonFull.Core.MorkCodec`, `MettaHyperonFull.Proofs.MorkCodec`,
+  `MettaHyperonFull.Core.MorkEncodedSpace`, and `MettaHyperonFull.Proofs.MorkEncodedSpace` add a
+  logical MORK codec model, decode-after-encode, repeated-variable coreference, decoded-space query
+  refinement, and encoded-backend conjunctive-query laws.
+- `MettaHyperonFull.Core.MorkNamespace` and `MettaHyperonFull.Proofs.MorkNamespace` add the MORK
+  query-result namespace split and prove query/data disjointness plus result-id separation.
+- `MettaHyperonFull.Core.MorkPrepared`, `MettaHyperonFull.Proofs.MorkPrepared`,
+  `MettaHyperonFull.Core.MorkSharded`, and `MettaHyperonFull.Proofs.MorkSharded` add semantic
+  snapshot, prepared-query, and finite-sharding equivalence laws.
+- `MettaHyperonFull.Core.MorkNamedSpaces` and `MettaHyperonFull.Proofs.MorkNamedSpaces` add
+  backend-level named-space visibility and isolation laws.
+- `MettaHyperonFull.Core.MorkGroundedFilter`, `MettaHyperonFull.Proofs.MorkGroundedFilter`,
+  `MettaHyperonFull.Core.MorkMM2`, and `MettaHyperonFull.Proofs.MorkMM2` add mutable-grounded
+  live-value filtering laws and semantic MM2 exec readback laws.
+- `MettaHyperonFull.Core.MorkCompactCodec` and `MettaHyperonFull.Proofs.MorkCompactCodec` refine the
+  logical codec to compact `newVar`/`varRef` traces and prove compact decode-after-encode.
+- `MettaHyperonFull.Core.MorkDecodedBindings` and `MettaHyperonFull.Proofs.MorkDecodedBindings` keep
+  decoded MORK query-result variables structured through binding rows and prove query/data separation.
+- `MettaHyperonFull.Core.MorkGroundedRegistry` and `MettaHyperonFull.Proofs.MorkGroundedRegistry`
+  connect mutable-grounded live filters to stable host handles through a pure registry boundary.
+- `MettaHyperonFull.Core.MorkMM2Lowering` and `MettaHyperonFull.Proofs.MorkMM2Lowering` add the
+  MM2 lowering view for `I`/`,` source lists, `O`/`,` template lists, equality and inequality source
+  constraints, add/remove effects, and priority-ordered semantic exec selection.
+- `MettaHyperonFull.Core.MorkMM2Resources` and `MettaHyperonFull.Proofs.MorkMM2Resources` add a pure
+  ACT resource boundary for lowered MM2 plans. ACT sinks write instantiated payloads to named resource
+  spaces, ACT sources read those spaces, and resource names stay isolated from the main reference
+  `Space`.
 - `MettaHyperonFull.Proofs.SubstitutionAudit` records the boundary around cyclic bindings and
   fuel-bounded recursive resolution.
 - `MettaHyperonFull.Minimal.Observation` records input, fuel, result atoms, error atoms, exhaustion,

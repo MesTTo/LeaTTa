@@ -15,7 +15,8 @@ The current branch has five public surfaces.
   across 22 files.
 - The kernel metatheory and operational-semantics targets prove determinism, confluence of the
   deterministic fragment, type soundness, indexing soundness and completeness, query correspondence,
-  observation facts, and the published four-register machine properties.
+  observation facts, MORK-backed query readback laws, MM2 lowering and ACT resource facts, and the
+  published four-register machine properties.
 - The distributed atomspace target models replica-local atoms, mutation events, vector clocks, fair
   delivery as a theorem parameter, ordered replay assumptions, and matching convergence.
 - The MeTTaIL layer formalizes the determinate presentation pipeline and ships a small editable dialect
@@ -252,6 +253,9 @@ on-chain MeTTa needs:
   resolution needs an acyclicity condition;
 - host-law records make external grounded equality, matching, typing, execution, and display
   assumptions explicit;
+- MORK-facing laws cover duplicate-preserving query backends, codecs, decoded binding rows, prepared
+  query snapshots, sharded counts, named spaces, grounded host handles, MM2 lowering, and ACT resource
+  isolation;
 - observation records expose input, fuel, results, error atoms, exhaustion status, and before/after
   worlds without adding a second evaluator;
 - arrow-constructor laws pin `Atom.mkArrow` and `TypeEnv.arrowParts?` to the executable splitter.

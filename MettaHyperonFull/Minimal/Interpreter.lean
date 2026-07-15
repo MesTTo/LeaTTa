@@ -475,12 +475,10 @@ def exhaustedPair : Item → Atom × Bindings
 /-- Extract the result atom of a final item with its bindings applied. -/
 def finalAtom (it : Item) : Atom := (finalPair it).1
 
-/-- Apply `instantiate` to `a` under `b` repeatedly until it reaches a fixpoint, bounded by the
-    number of bindings (which caps any chain length). A single `instantiate` is one-step because
-    `Subst.apply` looks a variable up once and does not chase `$x <- $y <- Plato`. Recursive
-    backchaining needs this: in b2's `(deduce (Evaluation (human $x)))`, the query variable `$x`
-    is first bound to a rule variable (via the `Implication` match) that only resolves to `Plato`
-    deeper in the recursion, so `$x` reaches `Plato` only through the chain. -/
+/-- Apply equality-class-aware `instantiate` to `a` under `b` until it reaches a fixpoint, bounded by
+    the number of bindings. `instantiate` already follows variable chains and compound values; this
+    bounded wrapper preserves the interpreter's explicit fixpoint contract and rejects cycles by
+    stabilizing on the unchanged atom. -/
 def resolveAtom (b : Bindings) : Nat → Atom → Atom
   | 0, a => a
   | n + 1, a => let a' := instantiate b a; if a' == a then a else resolveAtom b n a'

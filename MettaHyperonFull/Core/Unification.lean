@@ -11,8 +11,8 @@ Purpose: First-order syntactic unification of atoms, returning a most-general un
   function is total. Grounded atoms with custom matching are handled in Matching.lean.
 Imports: MettaHyperonFull.Core.Substitution
 Trusted boundary: none
-Main exports: Unify.decomposeEq, Unify.decomposeList, Unify.decomposeAll, Unify.unifyRounds,
-  Unify.unifyTop
+Main exports: Unify.decomposeEq, Unify.decomposeList, Unify.decomposeAll,
+  Unify.aliasConstraints, Unify.aliasTrace, Unify.unifyRounds, Unify.unifyTop
 Open obligations: none
 -/
 import MettaHyperonFull.Core.Substitution
@@ -56,6 +56,38 @@ def decomposeAll : List (Atom × Atom) → Option (List (VarName × Atom))
       match decomposeEq a b, decomposeAll rest with
       | some c₁, some c₂ => some (c₁ ++ c₂)
       | _, _ => none
+
+/-- Explicit variable/variable constraints visible in one fully decomposed
+unification round.  These are retained separately from the normalized
+substitution because later elimination may ground both endpoints without
+erasing the alias relation discovered by matching. -/
+def aliasConstraints : List (VarName × Atom) → List (VarName × VarName)
+  | [] => []
+  | (x, Atom.var y) :: rest => (x, y) :: aliasConstraints rest
+  | _ :: rest => aliasConstraints rest
+
+/-- Alias constraints encountered throughout Robinson elimination.  Every
+round records all currently exposed variable/variable constraints before its
+first constraint is eliminated, so an earlier grounding substitution cannot
+erase an alias that appeared later in that same round. -/
+def aliasTrace : Nat → List (Atom × Atom) → List (VarName × VarName)
+  | 0, equations =>
+      match decomposeAll equations with
+      | some constraints => aliasConstraints constraints
+      | none => []
+  | fuel + 1, equations =>
+      match decomposeAll equations with
+      | none => []
+      | some [] => []
+      | some ((x, term) :: rest) =>
+          let here := aliasConstraints ((x, term) :: rest)
+          if Subst.occurs x term then here
+          else
+            let sub : Subst := [(x, term)]
+            let remaining := rest.map fun constraint =>
+              (Subst.apply sub (Atom.var constraint.1),
+                Subst.apply sub constraint.2)
+            here ++ aliasTrace fuel remaining
 
 /-- The unification main loop, recursing structurally on `fuel`. Each round fully decomposes the
     worklist, then eliminates one variable: it substitutes `x ↦ t` into the remaining constraints

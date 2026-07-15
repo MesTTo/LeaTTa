@@ -12,7 +12,9 @@ Purpose: Nondeterministic pattern matching for MeTTa atoms and the consistency-c
 Imports: MettaHyperonFull.Core.Unification, MettaHyperonFull.Core.Bindings
 Trusted boundary: none
 Main exports: GroundMatcher, Bindings.addVarBinding, Bindings.addVarEquality, Bindings.mergeOne,
-  Bindings.merge, Bindings.ofSubst, matchAtomsWith, matchAll, matchAtoms, bindingsToSubst, instantiate
+  Bindings.merge, Bindings.ofSubst, Bindings.reconcileAll, Bindings.rebuildFromSubst,
+  Bindings.reconciliationAliases, Bindings.rebuildFromReconciliation,
+  matchAtomsWith, matchAll, matchAtoms, bindingsToSubst, instantiate
 Open obligations: none
 -/
 import MettaHyperonFull.Core.Unification
@@ -26,24 +28,117 @@ abbrev GroundMatcher := Atom → Atom → List Bindings
 /- Binding-set merge based on the algorithm in the Hyperon specification. -/
 namespace Bindings
 
-/-- Add `$x ← v` to `b` consistently: if `$x` is unbound, insert it; if already bound to `v`, keep
-    `b`; otherwise the old and new values must unify (else no result). The consistency-checking core
-    of `merge`. -/
-def addVarBinding (b : Bindings) (x : VarName) (v : Atom) : List Bindings :=
-  match lookupVal b x with
-  | none => [addValRaw b x v]
-  | some prev =>
-      if prev == v then [b]
-      else match Unify.unifyTop prev v with
-        | none => []
-        | some _ => [addValRaw b x v]
+/-- View a unifier as binding relations, preserving variable/variable constraints
+    as explicit equality rather than an oriented value assignment. -/
+def ofSubst (s : Subst) : Bindings :=
+  s.map (fun p => match p.2 with
+    | Atom.var y => BindingRel.eq p.1 y
+    | value => BindingRel.val p.1 value)
 
-/-- Add the alias `$x = $y` to `b` consistently: if both are already value-bound, those values must
-    be equal (else no result). -/
+/-- Add every relation from a unifier to a binding set without discarding its
+    reconciliation constraints. -/
+def addSubstRaw (b : Bindings) (s : Subst) : Bindings :=
+  (ofSubst s).foldl (fun b r => match r with
+    | BindingRel.val x value => addValRaw b x value
+    | BindingRel.eq x y => addEqRaw b x y) b
+
+/-- Unify all values carried by one equality class. -/
+def unifyValues : List Atom → Option Subst
+  | [] => some []
+  | [_] => some []
+  | first :: rest =>
+      let equations := rest.map (fun value => (first, value))
+      let fuel := first.size + (rest.map Atom.size).sum
+      Unify.unifyRounds fuel equations []
+
+/-- Present one binding relation as a first-order atom equation. -/
+def relationEquation : BindingRel → Atom × Atom
+  | BindingRel.val x value => (Atom.var x, value)
+  | BindingRel.eq x y => (Atom.var x, Atom.var y)
+
+/-- The complete first-order equation presentation of a binding set. -/
+def equations (b : Bindings) : List (Atom × Atom) :=
+  b.map relationEquation
+
+/-- Structural fuel covering every atom in an equation worklist. -/
+def equationFuel (work : List (Atom × Atom)) : Nat :=
+  (work.map fun equation => equation.1.size + equation.2.size).sum
+
+/-- Reconcile every existing binding relation together with new constraints.
+    This prevents a class-local unifier from overwriting an unrelated seeded
+    value that shares one of its internal variables. -/
+def reconcileAll (b : Bindings) (extra : List (Atom × Atom)) : Option Subst :=
+  let work := equations b ++ extra
+  Unify.unifyRounds (equationFuel work) work []
+
+/-- Retain the explicit equality graph while a whole-system unifier normalizes
+    every direct value relation. -/
+def equalitySkeleton : Bindings → Bindings
+  | [] => []
+  | BindingRel.val _ _ :: rest => equalitySkeleton rest
+  | BindingRel.eq x y :: rest => BindingRel.eq x y :: equalitySkeleton rest
+
+/-- Rebuild a normalized binding set without discarding explicit class edges. -/
+def rebuildFromSubst (b : Bindings) (sigma : Subst) : Bindings :=
+  equalitySkeleton b ++ ofSubst sigma
+
+/-- Every explicit variable alias encountered by whole-system reconciliation.
+The caller invokes this only after `reconcileAll` succeeds, so the successful
+unification run certifies every traced constraint; no representative-oriented
+substitution image is used to decide semantic class membership. -/
+def reconciliationAliases
+    (b : Bindings) (extra : List (Atom × Atom)) (_sigma : Subst) :
+    List (VarName × VarName) :=
+  let work := equations b ++ extra
+  Unify.aliasTrace (equationFuel work) work
+
+/-- Insert one alias only when its equality class is not already represented.
+This makes alias restoration conservative on existing normalized outputs. -/
+def restoreAlias (b : Bindings) (edge : VarName × VarName) : Bindings :=
+  if (eqClass b edge.1).contains edge.2 then b
+  else addEqRaw b edge.1 edge.2
+
+/-- Rebuild normalized values while retaining every alias discovered by a
+successful whole-system reconciliation.  Existing output is left
+unchanged whenever its equality closure already carries the alias. -/
+def rebuildFromReconciliation
+    (candidate source : Bindings) (extra : List (Atom × Atom))
+    (sigma : Subst) : Bindings :=
+  (reconciliationAliases source extra sigma).foldl restoreAlias
+    (rebuildFromSubst candidate sigma)
+
+/-- Add the alias `$x = $y` while reconciling every value already carried by
+    either equality class. Successful unifiers are retained as relations. -/
 def addVarEquality (b : Bindings) (x y : VarName) : List Bindings :=
-  match lookupVal b x, lookupVal b y with
-  | some vx, some vy => if vx == vy then [addEqRaw b x y] else []
-  | _, _ => [addEqRaw b x y]
+  let candidate := addEqRaw b x y
+  match unifyValues (classValues candidate x) with
+  | none => []
+  | some [] => [candidate]
+  | some (_ :: _) =>
+      match reconcileAll b [(Atom.var x, Atom.var y)] with
+      | none => []
+      | some sigma =>
+          [rebuildFromReconciliation candidate b
+            [(Atom.var x, Atom.var y)] sigma]
+
+/-- Add `$x ← v` consistently across `$x`'s whole equality class. Variable
+    values are aliases, and successful reconciliation constraints are retained
+    instead of replacing one direct value and discarding the unifier. -/
+def addVarBinding (b : Bindings) (x : VarName) (v : Atom) : List Bindings :=
+  match v with
+  | Atom.var y => addVarEquality b x y
+  | _ =>
+      match classValues b x with
+      | [] => [addValRaw b x v]
+      | values =>
+          match unifyValues (values ++ [v]) with
+          | none => []
+          | some [] => [b]
+          | some (_ :: _) =>
+              match reconcileAll b [(Atom.var x, v)] with
+              | none => []
+              | some sigma =>
+                  [rebuildFromReconciliation b b [(Atom.var x, v)] sigma]
 
 /-- Fold one binding relation `r` into every candidate set in `bs`, keeping only consistent
     extensions; it is nondeterministic, so a relation may yield zero, one, or several results. -/
@@ -56,9 +151,6 @@ def mergeOne (bs : List Bindings) (r : BindingRel) : List Bindings :=
     result is empty exactly when they conflict. -/
 def merge (a b : Bindings) : List Bindings := b.foldl mergeOne [a]
 
-/-- View a substitution as a binding set: each `x ↦ v` becomes a `val` relation. -/
-def ofSubst (s : Subst) : Bindings := s.map (fun p => BindingRel.val p.fst p.snd)
-
 end Bindings
 
 mutual
@@ -68,7 +160,7 @@ mutual
     only the right-hand atom is grounded, the custom matcher is called as `f r l`, arguments swapped. -/
 def matchAtomsWith (custom : Option GroundMatcher) : Atom → Atom → List Bindings
   | Atom.sym a, Atom.sym b => if a == b then [[]] else []
-  | Atom.var x, Atom.var y => if x == y then [[]] else [[BindingRel.val x (Atom.var y)]]
+  | Atom.var x, Atom.var y => if x == y then [[]] else [[BindingRel.eq x y]]
   | Atom.var x, r => if Subst.occurs x r then [] else [[BindingRel.val x r]]
   | l, Atom.var y => if Subst.occurs y l then [] else [[BindingRel.val y l]]
   | Atom.expr xs, Atom.expr ys => matchAll custom [[]] xs ys
@@ -96,8 +188,8 @@ def matchAtoms (l r : Atom) : List Bindings := matchAtomsWith none l r
 def bindingsToSubst (b : Bindings) : Subst :=
   b.foldr (fun r s => match r with | BindingRel.val x v => (x,v)::s | _ => s) []
 
-/-- Apply a binding set to an atom as a substitution (value bindings only, since `eq` aliases are
-    dropped by `bindingsToSubst`). -/
-def instantiate (b : Bindings) (a : Atom) : Atom := Subst.apply (bindingsToSubst b) a
+/-- Resolve a binding set throughout an atom, including equality classes,
+    variable chains, and variables nested in compound values. -/
+def instantiate (b : Bindings) (a : Atom) : Atom := Bindings.resolveAtom b a
 
 end Metta

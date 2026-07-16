@@ -20,6 +20,9 @@ Main exports: Bindings.lookupVal_empty, Bindings.lookupVal_addValRaw_self,
   Unify.varBinding_mem_or_mem_aliasTrace_of_unifyRounds,
   Unify.varBinding_mem_aliasTrace_of_unifyRounds_empty,
   connectedClass_match, connectedClass_instantiation, connectedClass_bindingReadout,
+  transientCollision_innerAlias_retained,
+  transientCollision_permutation_innerAlias_retained,
+  transientCollision_incompatible_rejected,
   incompatibleClassValues_rejected, compoundClassValue_resolves, compoundCycle_hasLoop
 Open obligations: semantic permutation invariance and the general matcher transport theorem live at
   the representation-independent conformance layer.
@@ -466,6 +469,107 @@ theorem connectedClass_bindingReadout :
     Bindings.relationResolutionFuel, hclass, Bindings.eqRepresentative,
     Bindings.eqClassOrdered, Bindings.eqClass, Bindings.eqClassAux,
     Bindings.eqStep, Bindings.eqVarsInOrder, Atom.size]
+
+/-- Seed whose two compound values collide only after `x` and `y` are joined.
+The intervening ground relations previously caused the inner `u = v` alias to
+disappear from the reconciliation trace. -/
+def transientCollisionSeed : Bindings :=
+  [BindingRel.val "x" (Atom.expr [Atom.sym "f", Atom.var "u"]),
+    BindingRel.val "u" (Atom.sym "a"),
+    BindingRel.val "y" (Atom.expr [Atom.sym "f", Atom.var "v"]),
+    BindingRel.val "v" (Atom.sym "a")]
+
+private def transientCollisionOutput : Bindings :=
+  [BindingRel.eq "u" "v", BindingRel.eq "x" "y",
+    BindingRel.val "v" (Atom.sym "a"),
+    BindingRel.val "y" (Atom.expr [Atom.sym "f", Atom.var "v"]),
+    BindingRel.val "u" (Atom.sym "a"),
+    BindingRel.val "x" (Atom.expr [Atom.sym "f", Atom.var "u"])]
+
+private theorem transientCollision_addVarEquality_eq :
+    Bindings.addVarEquality transientCollisionSeed "x" "y" =
+      [transientCollisionOutput] := by
+  simp (config := { maxSteps := 1000000 })
+    [transientCollisionSeed, transientCollisionOutput,
+      Bindings.addVarEquality, Bindings.addEqRaw, Bindings.classValues,
+      Bindings.eqClassOrdered, Bindings.eqVarsInOrder, Bindings.eqClass,
+      Bindings.eqClassAux, Bindings.eqStep, Bindings.lookupVal,
+      Bindings.unifyValues, Bindings.reconcileAll, Bindings.equations,
+      Bindings.relationEquation, Bindings.equationFuel,
+      Bindings.rebuildFromReconciliation, Bindings.rebuildFromSubst,
+      Bindings.reconciliationAliases, Bindings.restoreAlias,
+      Bindings.equalitySkeleton, Bindings.ofSubst,
+      Unify.unifyRounds, Unify.decomposeAll, Unify.decomposeEq,
+      Unify.decomposeList, Unify.aliasTrace, Unify.aliasConstraints,
+      Subst.occurs, Subst.apply, Subst.lookup, Subst.extend, Subst.erase,
+      Atom.size]
+
+/-- POSITIVE: collision reconciliation retains the inner alias exposed by
+matching `f(u)` with `f(v)`, even when ground relations intervene in the seed. -/
+theorem transientCollision_innerAlias_retained :
+    (Bindings.addVarEquality transientCollisionSeed "x" "y").map
+        (fun out => Bindings.eqClass out "u") = [["u", "v"]] := by
+  rw [transientCollision_addVarEquality_eq]
+  decide
+
+/-- The same collision with direct values grouped in a different relation
+order. Both chronology variants retain the inner alias class. -/
+def transientCollisionPermutationSeed : Bindings :=
+  [BindingRel.val "x" (Atom.expr [Atom.sym "f", Atom.var "u"]),
+    BindingRel.val "y" (Atom.expr [Atom.sym "f", Atom.var "v"]),
+    BindingRel.val "u" (Atom.sym "a"),
+    BindingRel.val "v" (Atom.sym "a")]
+
+private def transientCollisionPermutationOutput : Bindings :=
+  [BindingRel.eq "v" "u", BindingRel.eq "x" "y",
+    BindingRel.val "v" (Atom.sym "a"),
+    BindingRel.val "u" (Atom.sym "a"),
+    BindingRel.val "y" (Atom.expr [Atom.sym "f", Atom.var "v"]),
+    BindingRel.val "x" (Atom.expr [Atom.sym "f", Atom.var "u"])]
+
+private theorem transientCollisionPermutation_addVarEquality_eq :
+    Bindings.addVarEquality transientCollisionPermutationSeed "x" "y" =
+      [transientCollisionPermutationOutput] := by
+  simp (config := { maxSteps := 1000000 })
+    [transientCollisionPermutationSeed, transientCollisionPermutationOutput,
+      Bindings.addVarEquality, Bindings.addEqRaw, Bindings.classValues,
+      Bindings.eqClassOrdered, Bindings.eqVarsInOrder, Bindings.eqClass,
+      Bindings.eqClassAux, Bindings.eqStep, Bindings.lookupVal,
+      Bindings.unifyValues, Bindings.reconcileAll, Bindings.equations,
+      Bindings.relationEquation, Bindings.equationFuel,
+      Bindings.rebuildFromReconciliation, Bindings.rebuildFromSubst,
+      Bindings.reconciliationAliases, Bindings.restoreAlias,
+      Bindings.equalitySkeleton, Bindings.ofSubst,
+      Unify.unifyRounds, Unify.decomposeAll, Unify.decomposeEq,
+      Unify.decomposeList, Unify.aliasTrace, Unify.aliasConstraints,
+      Subst.occurs, Subst.apply, Subst.lookup, Subst.extend, Subst.erase,
+      Atom.size]
+
+/-- POSITIVE: the alternate relation order has the same repaired inner class. -/
+theorem transientCollision_permutation_innerAlias_retained :
+    (Bindings.addVarEquality transientCollisionPermutationSeed "x" "y").map
+        (fun out => Bindings.eqClass out "u") = [["u", "v"]] := by
+  rw [transientCollisionPermutation_addVarEquality_eq]
+  decide
+
+/-- NEGATIVE: exposing the inner collision alias does not make incompatible
+ground values acceptable. Complete reconciliation still rejects the join. -/
+theorem transientCollision_incompatible_rejected :
+    Bindings.addVarEquality
+      [BindingRel.val "x" (Atom.expr [Atom.sym "f", Atom.var "u"]),
+        BindingRel.val "u" (Atom.sym "a"),
+        BindingRel.val "y" (Atom.expr [Atom.sym "f", Atom.var "v"]),
+        BindingRel.val "v" (Atom.sym "b")]
+      "x" "y" = [] := by
+  simp (config := { maxSteps := 1000000 })
+    [Bindings.addVarEquality, Bindings.addEqRaw, Bindings.classValues,
+      Bindings.eqClassOrdered, Bindings.eqVarsInOrder, Bindings.eqClass,
+      Bindings.eqClassAux, Bindings.eqStep, Bindings.lookupVal,
+      Bindings.unifyValues, Bindings.reconcileAll, Bindings.equations,
+      Bindings.relationEquation, Bindings.equationFuel,
+      Unify.unifyRounds, Unify.decomposeAll, Unify.decomposeEq,
+      Unify.decomposeList, Subst.occurs, Subst.apply, Subst.lookup,
+      Subst.extend, Subst.erase, Atom.size]
 
 /-- NEGATIVE: equating classes with incompatible ground values is rejected. -/
 theorem incompatibleClassValues_rejected :

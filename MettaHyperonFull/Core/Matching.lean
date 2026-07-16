@@ -83,14 +83,16 @@ def rebuildFromSubst (b : Bindings) (sigma : Subst) : Bindings :=
   equalitySkeleton b ++ ofSubst sigma
 
 /-- Every explicit variable alias encountered by whole-system reconciliation.
-The caller invokes this only after `reconcileAll` succeeds, so the successful
-unification run certifies every traced constraint; no representative-oriented
-substitution image is used to decide semantic class membership. -/
+The primary trace preserves the successful run's elimination order.  The
+collision-first trace exposes aliases inside newly joined compound values
+before seeded ground equations can normalize them away. -/
 def reconciliationAliases
     (b : Bindings) (extra : List (Atom × Atom)) (_sigma : Subst) :
     List (VarName × VarName) :=
-  let work := equations b ++ extra
-  Unify.aliasTrace (equationFuel work) work
+  let primary := equations b ++ extra
+  let collisionFirst := extra ++ equations b
+  Unify.aliasTrace (equationFuel primary) primary ++
+    Unify.aliasTrace (equationFuel collisionFirst) collisionFirst
 
 /-- Insert one alias only when its equality class is not already represented.
 This makes alias restoration conservative on existing normalized outputs. -/

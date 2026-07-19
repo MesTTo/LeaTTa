@@ -75,12 +75,12 @@ theorem evalSource_equation (space : Space) (row : Bindings) (index : Nat)
 /-- Inequality keeps a row when the instantiated sides cannot match. -/
 theorem evalInequalitySource_different_symbols (row : Bindings) :
     evalInequalitySource row (Atom.sym "X") (Atom.sym "Y") = [row] := by
-  simp [evalInequalitySource, instantiate, Subst.apply, matchAtoms, matchAtomsWith]
+  simp [evalInequalitySource, instantiate, Bindings.resolveAtom, matchAtoms, matchAtomsWith]
 
 /-- Inequality rejects a row when the instantiated sides already match. -/
 theorem evalInequalitySource_same_symbol (row : Bindings) :
     evalInequalitySource row (Atom.sym "X") (Atom.sym "X") = [] := by
-  simp [evalInequalitySource, instantiate, Subst.apply, matchAtoms, matchAtomsWith]
+  simp [evalInequalitySource, instantiate, Bindings.resolveAtom, matchAtoms, matchAtomsWith]
 
 /-- Applying an add effect inserts the instantiated payload into the reference space. -/
 theorem applyEffect_add (row : Bindings) (space : Space) (index : Nat)

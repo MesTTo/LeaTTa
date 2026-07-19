@@ -61,12 +61,12 @@ Every theorem named here is checked by Lean's kernel in `MettaHyperonFull/Proofs
  * *Substitution laws and cycle audits* used by binding propagation and preservation:
    `Subst.apply_compose` (`Proofs/Substitution.lean`), plus
    `cyclicSubst_apply_x_once`, `cyclicSubst_apply_x_twice`,
-   `cyclicBindingsXY_not_direct_loop`, and `cyclicResolve_not_fuel_stable`
+   `cyclicBindingsXY_hasLoop`, and `cyclicResolve_x_stable`
    (`Proofs/SubstitutionAudit.lean`).
- * *Binding merge laws* expose fresh, same-value, conflict, and unification-mediated direct-binding
-   cases: `Bindings.addVarBinding_fresh`, `Bindings.addVarBinding_same`,
-   `Bindings.addVarBinding_conflict`, `Bindings.addVarBinding_unifies`,
-   `Bindings.merge_one_val_fresh`, and `Bindings.merge_one_val_conflict`
+ * *Binding merge laws* expose fresh values, explicit aliases, class-wide conflict and
+   unification-mediated reconciliation: `Bindings.addVarBinding_fresh`,
+   `Bindings.addVarBinding_reconciles`, `Bindings.addVarBinding_conflict`,
+   `Bindings.addVarEquality_reconciles`, and `Bindings.addVarEquality_conflict`
    (`Proofs/BindingLaws.lean`).
  * *Atomspace and world visibility laws* state the executable list-backed insert, query, remove,
    type-assignment, equality-rule, named-space, state-cell, token, `&self`, and hidden-import facts:

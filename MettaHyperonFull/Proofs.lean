@@ -68,10 +68,10 @@ and that the implementation's optimisations don't change behaviour. Those drive 
 * `Proofs/Substitution.lean`: foundational `Subst.apply` / `instantiate` lemmas: empty-substitution
                                identity, closed atoms are fixed, size monotonicity, and the
                                substitution **composition law** `Subst.apply_compose`.
-* `Proofs/SubstitutionAudit.lean`: cyclic substitution audit: one-pass substitution does not chase
-                               `$x <- $y <- $x`; repeated resolution is fuel-bounded and can fail
-                               fuel-stability without an acyclicity side condition
-                               (`cyclicResolve_not_fuel_stable`).
+* `Proofs/SubstitutionAudit.lean`: cyclic substitution audit: raw substitution stays one-pass, while
+                               equality-class-aware binding resolution detects longer cycles and
+                               leaves rejected cyclic instantiation fuel-stable
+                               (`cyclicResolve_x_stable`).
 * `Proofs/Alpha.lean`:         α-equivalence is an **equivalence relation**; preserves `Atom.size`;
                                coincides with `=` on variable-free atoms. Documents the Float/IEEE
                                caveat on the Boolean decider.

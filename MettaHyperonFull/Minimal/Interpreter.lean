@@ -65,7 +65,16 @@ def notReducibleA : Atom := Atom.sym "NotReducible"
 def emptyA : Atom := Atom.sym "Empty"
 
 /-- Build `(Error <atom> <message>)` with the message as a symbol (matching the interpreter ops). -/
-def errAtom (a : Atom) (msg : String) : Atom := Atom.expr [Atom.sym "Error", a, Atom.gnd (Ground.str msg)]
+def errAtom (a : Atom) (msg : String) : Atom := Atom.expr [Atom.sym "Error", a, Atom.sym msg]
+
+/-- Runtime message for malformed primitive `unify` applications. -/
+def unifyBadArityMessage : Atom → String
+  | Atom.expr [Atom.sym "unify", Atom.sym a, Atom.sym p, Atom.sym t] =>
+      "expected: (unify <atom> <pattern> <then> <else>), found: " ++
+        "(unify " ++ a ++ " " ++ p ++ " " ++ t ++ ")"
+  | source =>
+      "expected: (unify <atom> <pattern> <then> <else>), found: " ++
+        toString source
 
 /-- Copy the variable scope from the top frame of `prev` (Rust `Stack::vars_copy`). -/
 def varsCopy : Stack → List VarName
@@ -100,7 +109,7 @@ def atomToStack : Atom → Stack → Stack
     | Atom.expr (Atom.sym "function" :: _) =>
         { atom := errAtom a "function: expected (function <expression>)", fin := true } :: prev
     | Atom.expr (Atom.sym "unify" :: _) =>
-        { atom := errAtom a "unify: expected (unify <atom> <pattern> <then> <else>)", fin := true } :: prev
+        { atom := errAtom a (unifyBadArityMessage a), fin := true } :: prev
     | _ => { atom := a, vars := varsCopy prev } :: prev
 
 /-- Make a finished item: a single frame carrying `a` on top of `st`. -/
@@ -466,12 +475,10 @@ def exhaustedPair : Item → Atom × Bindings
 /-- Extract the result atom of a final item with its bindings applied. -/
 def finalAtom (it : Item) : Atom := (finalPair it).1
 
-/-- Apply `instantiate` to `a` under `b` repeatedly until it reaches a fixpoint, bounded by the
-    number of bindings (which caps any chain length). A single `instantiate` is one-step because
-    `Subst.apply` looks a variable up once and does not chase `$x <- $y <- Plato`. Recursive
-    backchaining needs this: in b2's `(deduce (Evaluation (human $x)))`, the query variable `$x`
-    is first bound to a rule variable (via the `Implication` match) that only resolves to `Plato`
-    deeper in the recursion, so `$x` reaches `Plato` only through the chain. -/
+/-- Apply equality-class-aware `instantiate` to `a` under `b` until it reaches a fixpoint, bounded by
+    the number of bindings. `instantiate` already follows variable chains and compound values; this
+    bounded wrapper preserves the interpreter's explicit fixpoint contract and rejects cycles by
+    stabilizing on the unchanged atom. -/
 def resolveAtom (b : Bindings) : Nat → Atom → Atom
   | 0, a => a
   | n + 1, a => let a' := instantiate b a; if a' == a then a else resolveAtom b n a'

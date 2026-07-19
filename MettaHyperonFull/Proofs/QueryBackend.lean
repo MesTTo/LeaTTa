@@ -109,7 +109,7 @@ private def edgeBTo : Atom :=
 private theorem match_edgeAto_edgeAB :
     matchAtoms edgeAto edgeAB = [[BindingRel.val "to" (Atom.sym "b")]] := by
   simp [edgeAto, edgeAB, matchAtoms, matchAtomsWith, matchAll, Bindings.merge, Bindings.mergeOne,
-    Bindings.addVarBinding, Bindings.lookupVal, Bindings.addValRaw, Bindings.removeVal,
+    Bindings.addVarBinding, Bindings.addValRaw, Bindings.removeVal,
     Subst.occurs]
 
 private theorem match_edgeAto_edgeBC :
@@ -124,7 +124,7 @@ private theorem edgeAto_rows :
 private theorem match_edgeAMid_edgeAB :
     matchAtoms edgeAMid edgeAB = [[BindingRel.val "mid" (Atom.sym "b")]] := by
   simp [edgeAMid, edgeAB, matchAtoms, matchAtomsWith, matchAll, Bindings.merge, Bindings.mergeOne,
-    Bindings.addVarBinding, Bindings.lookupVal, Bindings.addValRaw, Bindings.removeVal,
+    Bindings.addVarBinding, Bindings.addValRaw, Bindings.removeVal,
     Subst.occurs]
 
 private theorem match_edgeAMid_edgeBC :
@@ -144,7 +144,7 @@ private theorem match_edgeBTo_edgeAB :
 private theorem match_edgeBTo_edgeBC :
     matchAtoms edgeBTo edgeBC = [[BindingRel.val "to" (Atom.sym "c")]] := by
   simp [edgeBTo, edgeBC, matchAtoms, matchAtomsWith, matchAll, Bindings.merge, Bindings.mergeOne,
-    Bindings.addVarBinding, Bindings.lookupVal, Bindings.addValRaw, Bindings.removeVal,
+    Bindings.addVarBinding, Bindings.addValRaw, Bindings.removeVal,
     Subst.occurs]
 
 private theorem edgeBTo_rows :
@@ -158,7 +158,18 @@ private theorem empty_merge_mid :
 
 private theorem instantiate_mid_row_edgeMidTo :
     instantiate [BindingRel.val "mid" (Atom.sym "b")] edgeMidTo = edgeBTo := by
-  simp [instantiate, bindingsToSubst, Subst.apply, Subst.lookup, edgeMidTo, edgeBTo]
+  have hmid := instantiate_singleton_val_var_of_not_mem "mid" (Atom.sym "b") (by
+    simp [Atom.vars])
+  have hto := instantiate_singleton_val_inert "mid" (Atom.sym "b")
+    (Atom.var "to") (by simp [Atom.vars])
+  unfold edgeMidTo edgeBTo
+  simp only [instantiate, Bindings.resolveAtom, List.map]
+  rw [show (Bindings.resolve [BindingRel.val "mid" (Atom.sym "b")] "mid").getD
+      (Atom.var "mid") = Atom.sym "b" by
+        simpa [instantiate, Bindings.resolveAtom] using hmid]
+  rw [show (Bindings.resolve [BindingRel.val "mid" (Atom.sym "b")] "to").getD
+      (Atom.var "to") = Atom.var "to" by
+        simpa [instantiate, Bindings.resolveAtom] using hto]
 
 private theorem mid_merge_to :
     Bindings.merge [BindingRel.val "mid" (Atom.sym "b")] [BindingRel.val "to" (Atom.sym "c")] =

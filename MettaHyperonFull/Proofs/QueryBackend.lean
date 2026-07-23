@@ -108,14 +108,15 @@ private def edgeBTo : Atom :=
 
 private theorem match_edgeAto_edgeAB :
     matchAtoms edgeAto edgeAB = [[BindingRel.val "to" (Atom.sym "b")]] := by
+  have hloop : Bindings.hasLoop [BindingRel.val "to" (Atom.sym "b")] = false :=
+    Bindings.hasLoop_singleton_val_of_not_mem _ _ (by simp [Atom.vars])
   simp [edgeAto, edgeAB, matchAtoms, matchAtomsWith, matchAll, Bindings.merge, Bindings.mergeOne,
     Bindings.addVarBinding, Bindings.addValRaw, Bindings.removeVal,
-    Subst.occurs]
+    hloop, Subst.occurs]
 
 private theorem match_edgeAto_edgeBC :
     matchAtoms edgeAto edgeBC = [] := by
-  simp [edgeAto, edgeBC, matchAtoms, matchAtomsWith, matchAll, Bindings.merge, Bindings.mergeOne,
-    Bindings.addVarBinding, Bindings.addValRaw, Bindings.removeVal, Subst.occurs]
+  simp [edgeAto, edgeBC, matchAtoms, matchAtomsWith, matchAll, Bindings.merge, Subst.occurs]
 
 private theorem edgeAto_rows :
     edgeSpace.query edgeAto = [[BindingRel.val "to" (Atom.sym "b")]] := by
@@ -123,14 +124,15 @@ private theorem edgeAto_rows :
 
 private theorem match_edgeAMid_edgeAB :
     matchAtoms edgeAMid edgeAB = [[BindingRel.val "mid" (Atom.sym "b")]] := by
+  have hloop : Bindings.hasLoop [BindingRel.val "mid" (Atom.sym "b")] = false :=
+    Bindings.hasLoop_singleton_val_of_not_mem _ _ (by simp [Atom.vars])
   simp [edgeAMid, edgeAB, matchAtoms, matchAtomsWith, matchAll, Bindings.merge, Bindings.mergeOne,
     Bindings.addVarBinding, Bindings.addValRaw, Bindings.removeVal,
-    Subst.occurs]
+    hloop, Subst.occurs]
 
 private theorem match_edgeAMid_edgeBC :
     matchAtoms edgeAMid edgeBC = [] := by
-  simp [edgeAMid, edgeBC, matchAtoms, matchAtomsWith, matchAll, Bindings.merge, Bindings.mergeOne,
-    Bindings.addVarBinding, Bindings.addValRaw, Bindings.removeVal, Subst.occurs]
+  simp [edgeAMid, edgeBC, matchAtoms, matchAtomsWith, matchAll, Bindings.merge, Subst.occurs]
 
 private theorem edgeAMid_rows :
     edgeSpace.query edgeAMid = [[BindingRel.val "mid" (Atom.sym "b")]] := by
@@ -138,14 +140,15 @@ private theorem edgeAMid_rows :
 
 private theorem match_edgeBTo_edgeAB :
     matchAtoms edgeBTo edgeAB = [] := by
-  simp [edgeBTo, edgeAB, matchAtoms, matchAtomsWith, matchAll, Bindings.merge, Bindings.mergeOne,
-    Bindings.addVarBinding, Bindings.addValRaw, Bindings.removeVal, Subst.occurs]
+  simp [edgeBTo, edgeAB, matchAtoms, matchAtomsWith, matchAll, Bindings.merge, Subst.occurs]
 
 private theorem match_edgeBTo_edgeBC :
     matchAtoms edgeBTo edgeBC = [[BindingRel.val "to" (Atom.sym "c")]] := by
+  have hloop : Bindings.hasLoop [BindingRel.val "to" (Atom.sym "c")] = false :=
+    Bindings.hasLoop_singleton_val_of_not_mem _ _ (by simp [Atom.vars])
   simp [edgeBTo, edgeBC, matchAtoms, matchAtomsWith, matchAll, Bindings.merge, Bindings.mergeOne,
     Bindings.addVarBinding, Bindings.addValRaw, Bindings.removeVal,
-    Subst.occurs]
+    hloop, Subst.occurs]
 
 private theorem edgeBTo_rows :
     edgeSpace.query edgeBTo = [[BindingRel.val "to" (Atom.sym "c")]] := by

@@ -27,7 +27,7 @@ Main exports: Bindings.lookupVal_empty, Bindings.lookupVal_addValRaw_self,
 Open obligations: semantic permutation invariance and the general matcher transport theorem live at
   the representation-independent conformance layer.
 -/
-import MettaHyperonFull.Proofs.Basic
+import MettaHyperonFull.Proofs.Substitution
 
 namespace Metta
 
@@ -412,7 +412,13 @@ theorem Unify.varBinding_mem_aliasTrace_of_unifyRounds_empty
 /-- Matching two distinct variables emits an explicit equality relation. -/
 theorem matchAtoms_var_var_equality {x y : VarName} (h : (x == y) = false) :
     matchAtoms (Atom.var x) (Atom.var y) = [[BindingRel.eq x y]] := by
-  simp [matchAtoms, matchAtomsWith, h]
+  simp (config := { maxSteps := 1000000 })
+    [matchAtoms, matchAtomsWith, Bindings.hasLoop, Bindings.vars,
+      Bindings.resolveAtomAux, Bindings.resolutionFuel,
+      Bindings.classValues, Bindings.lookupVal, Bindings.eqRepresentative,
+      Bindings.eqClassOrdered, Bindings.eqVarsInOrder,
+      Bindings.eqClass, Bindings.eqClassAux, Bindings.eqStep,
+      Atom.size, h]
 
 def connectedClassPattern : Atom :=
   Atom.expr [Atom.sym "g", Atom.var "p1", Atom.var "p2", Atom.var "p2"]
@@ -613,5 +619,109 @@ theorem compoundCycle_hasLoop :
     Bindings.relationResolutionFuel, hclass, Bindings.lookupVal,
     Bindings.eqRepresentative, Bindings.eqClassOrdered,
     Bindings.eqVarsInOrder, Atom.size, Atom.vars]
+
+/-! ## Whole-match loop filtering -/
+
+def crossChildCycleLeft : Atom :=
+  .expr [.var "x", .var "y"]
+
+def crossChildCycleRight : Atom :=
+  .expr
+    [.expr [.sym "f", .var "y"],
+      .expr [.sym "f", .var "x"]]
+
+def crossChildCycleBindings : Bindings :=
+  [BindingRel.val "y" (.expr [.sym "f", .var "x"]),
+    BindingRel.val "x" (.expr [.sym "f", .var "y"])]
+
+/-- The internal pointwise fold constructs both locally occurs-clean
+constraints before the whole binding graph is available.  This positive raw
+oracle makes the public loop filter substantive. -/
+theorem crossChildCycle_rawMatchAll :
+    matchAll none [[]]
+      [.var "x", .var "y"]
+      [.expr [.sym "f", .var "y"],
+        .expr [.sym "f", .var "x"]] =
+      [crossChildCycleBindings] := by
+  have hxLoop : Bindings.hasLoop
+      [BindingRel.val "x" (.expr [.sym "f", .var "y"])] = false :=
+    Bindings.hasLoop_singleton_val_of_not_mem _ _ (by simp [Atom.vars])
+  have hyLoop : Bindings.hasLoop
+      [BindingRel.val "y" (.expr [.sym "f", .var "x"])] = false :=
+    Bindings.hasLoop_singleton_val_of_not_mem _ _ (by simp [Atom.vars])
+  simp (config := { maxSteps := 1000000 })
+    [matchAll, matchAtomsWith, crossChildCycleBindings, hxLoop, hyLoop,
+      Bindings.merge, Bindings.mergeOne, Bindings.addVarBinding,
+      Bindings.addValRaw, Bindings.removeVal, Bindings.classValues,
+      Bindings.eqClassOrdered, Bindings.eqVarsInOrder, Bindings.eqClass,
+      Bindings.eqClassAux, Bindings.eqStep, Bindings.lookupVal, Subst.occurs]
+
+/-- The raw cross-child candidate is cyclic in the complete binding graph. -/
+theorem crossChildCycleBindings_hasLoop :
+    crossChildCycleBindings.hasLoop = true := by
+  have hfuel : Bindings.resolutionFuel crossChildCycleBindings (.var "y") = 10 := by
+    norm_num [Bindings.resolutionFuel, Bindings.relationResolutionFuel,
+      crossChildCycleBindings, Atom.size]
+  have hyClass : Bindings.eqClassOrdered crossChildCycleBindings "y" = ["y"] := by
+    rfl
+  have hxClass : Bindings.eqClassOrdered crossChildCycleBindings "x" = ["x"] := by
+    rfl
+  have hyValues : Bindings.classValues crossChildCycleBindings "y" =
+      [.expr [.sym "f", .var "x"]] := by
+    rfl
+  have hxValues : Bindings.classValues crossChildCycleBindings "x" =
+      [.expr [.sym "f", .var "y"]] := by
+    rfl
+  have hresolveYVisited : Bindings.resolveAtomAux crossChildCycleBindings
+      6 ["x", "y"] (.var "y") = none := by
+    rw [Bindings.resolveAtomAux, hyClass]
+    rfl
+  have hsym6 : Bindings.resolveAtomAux crossChildCycleBindings
+      6 ["x", "y"] (.sym "f") = some (.sym "f") := by
+    rfl
+  have hmapY : [.sym "f", .var "y"].mapM
+      (Bindings.resolveAtomAux crossChildCycleBindings 6 ["x", "y"]) = none := by
+    simp [hsym6, hresolveYVisited]
+  have hresolveExprY : Bindings.resolveAtomAux crossChildCycleBindings
+      7 ["x", "y"] (.expr [.sym "f", .var "y"]) = none := by
+    rw [Bindings.resolveAtomAux, hmapY]
+  have hresolveX : Bindings.resolveAtomAux crossChildCycleBindings
+      8 ["y"] (.var "x") = none := by
+    rw [Bindings.resolveAtomAux, hxClass]
+    simp [hxValues, hresolveExprY]
+  have hsym8 : Bindings.resolveAtomAux crossChildCycleBindings
+      8 ["y"] (.sym "f") = some (.sym "f") := by
+    rfl
+  have hmapX : [.sym "f", .var "x"].mapM
+      (Bindings.resolveAtomAux crossChildCycleBindings 8 ["y"]) = none := by
+    simp [hsym8, hresolveX]
+  have hresolveExprX : Bindings.resolveAtomAux crossChildCycleBindings
+      9 ["y"] (.expr [.sym "f", .var "x"]) = none := by
+    rw [Bindings.resolveAtomAux, hmapX]
+  have hresolve : Bindings.resolveAtomAux crossChildCycleBindings
+      (Bindings.resolutionFuel crossChildCycleBindings (.var "y")) []
+      (.var "y") = none := by
+    rw [hfuel]
+    rw [Bindings.resolveAtomAux, hyClass]
+    simp [hyValues, hresolveExprX]
+  unfold Bindings.hasLoop
+  rw [Bool.or_eq_true]
+  apply Or.inr
+  exact List.any_eq_true.mpr ⟨"y", by
+    simp [Bindings.vars, crossChildCycleBindings, Atom.vars], by
+    simp [hresolve]⟩
+
+/-- NEGATIVE: public matching rejects a dependency cycle assembled across
+distinct expression children, as required by the human HE specification. -/
+theorem crossChildCycle_matchAtoms_rejected :
+    matchAtoms crossChildCycleLeft crossChildCycleRight = [] := by
+  rw [matchAtoms]
+  change List.filter (fun bindings => !bindings.hasLoop)
+    (matchAll none [[]]
+      [.var "x", .var "y"]
+      [.expr [.sym "f", .var "y"],
+        .expr [.sym "f", .var "x"]]) = []
+  rw [crossChildCycle_rawMatchAll]
+  simp [crossChildCycleBindings_hasLoop]
 
 end Metta

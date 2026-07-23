@@ -20,7 +20,7 @@ Open obligations: fuel is shared with the nested `collapse-bind` driver, so deep
   deplete the outer budget; on exhaustion, unfinished items surface as `StackOverflow` rather than
   resumable partial results.
 -/
-import MettaHyperonFull.Core.Matching
+import MettaHyperonFull.Minimal.CaptureAvoidingFreshening
 import MettaHyperonFull.Core.Space
 import MettaHyperonFull.Core.Builtins
 import Std.Data.HashMap
@@ -50,6 +50,11 @@ structure Frame where
 
 /-- Evaluation stack: head is the top (current) frame; tail is the parent chain. -/
 abbrev Stack := List Frame
+
+/-- Every live variable spelling retained by a continuation, including explicit frame scopes and
+variables occurring in the frame atoms themselves. -/
+def liveStackVars (stack : Stack) : List VarName :=
+  stack.flatMap fun frame => frame.vars ++ frame.atom.vars
 
 /-- One work item in the nondeterministic queue: a stack plus the bindings accumulated so far. -/
 structure Item where
@@ -81,6 +86,14 @@ def varsCopy : Stack → List VarName
   | [] => []
   | f :: _ => f.vars
 
+/-- Variables retained by a `chain` frame: the enclosing frame scope plus
+variables shared by the nested computation and the continuation template.
+This is the ordered-list realization of Hyperon's `chain_to_stack`
+intersection. -/
+def chainFrameVars (prev : Stack) (nested template : Atom) : List VarName :=
+  (varsCopy prev ++ nested.vars.filter fun name =>
+    template.vars.contains name).eraseDups
+
 /-- Return `true` if the atom is an embedded minimal-MeTTa operation. -/
 def isEmbeddedOp : Atom → Bool
   | Atom.expr (Atom.sym op :: _) =>
@@ -98,7 +111,8 @@ def atomToStack : Atom → Stack → Stack
     match a with
     | Atom.expr [Atom.sym "chain", nested, Atom.var v, templ] =>
         atomToStack nested ({ atom := Atom.expr [Atom.sym "chain", nested, Atom.var v, templ],
-                              ret := Ret.chain, vars := varsCopy prev } :: prev)
+                              ret := Ret.chain,
+                              vars := chainFrameVars prev nested templ } :: prev)
     | Atom.expr [Atom.sym "function", Atom.expr body] =>
         atomToStack (Atom.expr body) ({ atom := Atom.expr [Atom.sym "function", Atom.expr body],
                                         ret := Ret.function, vars := varsCopy prev } :: prev)
@@ -146,10 +160,12 @@ structure MinEnv where
   ruleIndex : HashMap String (List (Atom × Atom))
   /-- `=`-rules whose LHS has no head key (variable- or non-symbol-headed); candidates for every query. -/
   varRules : List (Atom × Atom)
-  /-- Declared arrow signatures per operator, consulted by `typeMismatch` for argument type-checking. -/
-  sigs : HashMap String (List Atom)
   /-- Grounding table: implementations of the built-in operations. -/
   gt : GroundingTable
+  /-- Identity of the space in which this environment evaluates.  The public
+      `context-space` instruction exposes it as an opaque `SpaceType` grounding,
+      never as an ordinary symbol. -/
+  contextName : String
   /-- Full atom list of the space (used by `match`, which queries all atoms, not just `=` rules). -/
   atoms : List Atom
   /-- User-visible atoms in `&self`, excluding prelude/runtime support rules. Observable space
@@ -180,8 +196,9 @@ def extractRules (atoms : List Atom) : List (Atom × Atom) :=
 
 open Std in
 /-- Build a `MinEnv` from a flat atom list and a grounding table. Indexes `(= lhs rhs)` atoms by
-    `headKey lhs`, preserving knowledge-base order within each bucket, and collects
-    `(: op (-> ...))` argument-type signatures. -/
+    `headKey lhs`, preserving knowledge-base order within each bucket, and collects every
+    `(: subject type)` declaration in source order.  Evaluation consults this one ordered type
+    index directly; there is no second, last-write-wins signature cache. -/
 def MinEnv.ofAtomsGT (atoms : List Atom) (gt : GroundingTable) : MinEnv :=
   let rules : List (Atom × Atom) := extractRules atoms
   -- Index `=`-rules by head key in one pass (`alter`, appending each rule in knowledge-base
@@ -193,9 +210,6 @@ def MinEnv.ofAtomsGT (atoms : List Atom) (gt : GroundingTable) : MinEnv :=
       | some k => m.alter k (fun cur => some ((cur.getD []) ++ [lr]))
       | none => m)
     HashMap.emptyWithCapacity
-  let sigs := atoms.foldl (fun (m : HashMap String (List Atom)) x => match x with
-    | Atom.expr [Atom.sym ":", Atom.sym op, Atom.expr (Atom.sym "->" :: ts)] => m.insert op ts
-    | _ => m) HashMap.emptyWithCapacity
   let types := atoms.foldl (fun (m : HashMap String (List Atom)) x => match x with
     | Atom.expr [Atom.sym ":", Atom.sym s, t] => m.insert s (m.getD s [] ++ [t])
     | _ => m) HashMap.emptyWithCapacity
@@ -203,7 +217,7 @@ def MinEnv.ofAtomsGT (atoms : List Atom) (gt : GroundingTable) : MinEnv :=
     | Atom.expr [Atom.sym ":", Atom.expr es, t] => some (Atom.expr es, t)
     | _ => none
   { ruleIndex := idx, varRules := rules.filter (fun lr => (headKey lr.fst).isNone),
-    sigs := sigs, gt := gt, atoms := atoms, visibleAtoms := atoms, types := types,
+    gt := gt, contextName := "&self", atoms := atoms, visibleAtoms := atoms, types := types,
     imports := HashMap.emptyWithCapacity, importDeps := HashMap.emptyWithCapacity, exprTypes := exprTypes }
 
 /-- Candidate `=`-rules for `toEval`: rules keyed by its head symbol plus all non-symbol-headed rules. -/
@@ -290,10 +304,18 @@ def stateId (w : World) (a : Atom) : Option Nat :=
   | Atom.expr [Atom.sym "State", Atom.gnd (Ground.int id)] => some id.toNat
   | _ => none
 
-/-- Resolve a space handle or token to its name string (`&self` or a named space). -/
+/-- Opaque grounded representation of a runtime space handle.  `SpaceType` is
+the declared public type of `context-space`; the payload is private host data. -/
+def contextSpaceAtom (name : String) : Atom :=
+  Atom.gnd (Ground.external "SpaceType" name)
+
+/-- Resolve a space handle or token to its name string (`&self` or a named space).
+Symbols remain accepted for source-level compatibility, while evaluator-produced
+handles use the opaque grounded representation. -/
 def spaceName (w : World) (a : Atom) : Option String :=
   match resolveTok w a with
   | Atom.sym s => some s
+  | Atom.gnd (Ground.external "SpaceType" name) => some name
   | _ => none
 
 /-- Replace each `(State id)` handle with the cell's current contents (one hop). Cell contents are
@@ -335,23 +357,26 @@ def typePrep (w : World) (a : Atom) : Atom := wrapStates w (subTokens w a)
 /-- Build a type-query environment for a specific space. Hyperon `get-type-space` reads
     declarations from the requested space while the runtime builtins remain available. -/
 def typeEnvForSpace (env : MinEnv) (w : World) (space : Atom) : MinEnv :=
-  let spaceAtoms := match spaceName w space with
+  let selected := spaceName w space
+  let spaceAtoms := match selected with
     | some "&self" => w.selfExtra ++ w.selfImports
     | some name => w.spaces.getD name []
     | none => []
   { MinEnv.ofAtomsGT (env.atoms ++ spaceAtoms) env.gt with
-    visibleAtoms := env.visibleAtoms, imports := env.imports, importDeps := env.importDeps }
+    contextName := selected.getD env.contextName, visibleAtoms := env.visibleAtoms,
+    imports := env.imports, importDeps := env.importDeps }
 
 /-- Build an evaluation environment for `evalc`. Hyperon evaluates against the supplied space while
     keeping grounded operations available from the runner. -/
 def evalEnvForSpace (env : MinEnv) (w : World) (space : Atom) : Option MinEnv :=
   match spaceName w space with
   | none => none
-  | some "&self" => some env
+  | some "&self" => some { env with contextName := "&self" }
   | some name =>
       let atoms := w.spaces.getD name []
       some { MinEnv.ofAtomsGT atoms env.gt with
-        visibleAtoms := atoms, imports := env.imports, importDeps := env.importDeps }
+        contextName := name, visibleAtoms := atoms, imports := env.imports,
+        importDeps := env.importDeps }
 
 /-- Candidate `=`-rules for evaluating `toEval`, including rules added to `&self` at runtime
     (`add-atom &self (= ...)` / `import! &self`). These live in `world.selfExtra` rather than
@@ -367,29 +392,12 @@ def candidatesW (env : MinEnv) (w : World) (toEval : Atom) : List (Atom × Atom)
     | _ => none
   env.candidates toEval ++ extra
 
-/-- Rename every variable in the rule to a fresh name tagged with `counter`. Without freshening,
-    a recursive function reuses the same variable names across recursion levels in a single binding
-    thread and clashes. Hyperon freshens rule variables via the atomspace query / `make_unique`. -/
-def freshenRule (counter : Nat) (lhs rhs : Atom) : Atom × Atom :=
-  match Atom.vars lhs ++ Atom.vars rhs with
-  | [] => (lhs, rhs)  -- ground rule (e.g. a data fact): nothing to rename
-  | vs =>
-      let sub : Subst := vs.map fun v => (v, Atom.var (v ++ "#" ++ toString counter))
-      (Subst.apply sub lhs, Subst.apply sub rhs)
-
-/-- Rename variables in an atom read back from a space. Hyperon variables carry parser-level
-    identity; this prevents a caller's `let $x ...` from capturing `$x` stored inside an atom. -/
-def freshenAtom (counter : Nat) (a : Atom) : Atom :=
-  match Atom.vars a with
-  | [] => a
-  | vs =>
-      let sub : Subst := vs.map fun v => (v, Atom.var (v ++ "#" ++ toString counter))
-      Subst.apply sub a
-
-/-- Freshen each atom returned by `get-atoms`, advancing the gensym counter for stable hygiene. -/
-def freshenSpaceAtoms (st : St) (atoms : List Atom) : List Atom × St :=
+/-- Freshen each atom returned by `get-atoms`, avoiding the caller's live variables and advancing
+the gensym counter for stable hygiene. -/
+def freshenSpaceAtoms (st : St) (avoid : List VarName) (atoms : List Atom) : List Atom × St :=
   let (rev, st') := atoms.foldl (fun (acc : List Atom × St) a =>
-    (freshenAtom acc.2.counter a :: acc.1, { acc.2 with counter := acc.2.counter + 1 })) ([], st)
+    let (renamed, nextCounter) := freshenRuleAvoiding acc.2.counter avoid a a
+    (renamed.1 :: acc.1, { acc.2 with counter := nextCounter })) ([], st)
   (rev.reverse, st')
 
 /-- Import a module into `&self`, following dependencies first and hiding imported atoms from
@@ -404,17 +412,35 @@ def importSelfFuel (env : MinEnv) : Nat → String → World → World
           (fun acc dep => importSelfFuel env fuel dep acc) wMarked
         wDeps.appendSelfImport (env.imports.getD moduleName [])
 
+/-- The variable spellings visible at a query step and therefore forbidden to rule freshening. -/
+def queryOpAvoid (prev : Stack) (toEval : Atom) (b : Bindings) : List VarName :=
+  b.vars ++ toEval.vars ++ liveStackVars prev
+
+/-- Work items contributed by one query candidate at the current freshening counter. -/
+def queryOpItemsOfRule (prev : Stack) (toEval : Atom)
+    (b : Bindings) (counter : Nat) (p : Atom × Atom) : List Item :=
+  let (lhs', rhs') := (freshenRuleAvoiding counter (queryOpAvoid prev toEval b) p.1 p.2).1
+  (matchAtoms lhs' toEval).flatMap fun mb =>
+    (Bindings.merge b mb).filterMap fun m =>
+      if Bindings.hasLoop m then none
+      else some (evalResult prev (instantiate m rhs') m)
+
+/-- One capture-avoiding candidate step of the executable query fold. -/
+def queryOpFoldStep (prev : Stack) (toEval : Atom) (b : Bindings) :
+    (List Item × St) → (Atom × Atom) → (List Item × St)
+  | acc, p =>
+      let items := queryOpItemsOfRule prev toEval b acc.2.counter p
+      let nextCounter :=
+        (freshenRuleAvoiding acc.2.counter (queryOpAvoid prev toEval b) p.1 p.2).2
+      (acc.1 ++ items, { acc.2 with counter := nextCounter })
+
 /-- Query the KB for `(= to_eval $X)` and return each matching RHS with merged bindings
     (Rust `query`), threading the gensym counter. Returns `[NotReducible]` when nothing matches.
     Variable-headed atoms are refused without querying. -/
 def queryOp (env : MinEnv) (st : St) (prev : Stack) (toEval : Atom) (b : Bindings) : List Item × St :=
   if isVariableHeaded toEval then ([finItem prev notReducibleA b], st) else
-  let (results, st') := (candidatesW env st.world toEval).foldl (fun (acc : List Item × St) p =>
-    let (lhs', rhs') := freshenRule acc.2.counter p.fst p.snd
-    let items := (matchAtoms lhs' toEval).flatMap fun mb =>
-      (Bindings.merge b mb).filterMap fun m =>
-        if Bindings.hasLoop m then none else some (evalResult prev (instantiate m rhs') m)
-    (acc.1 ++ items, { acc.2 with counter := acc.2.counter + 1 })) ([], st)
+  let (results, st') := (candidatesW env st.world toEval).foldl
+    (queryOpFoldStep prev toEval b) ([], st)
   if results.isEmpty then ([finItem prev notReducibleA b], st') else (results, st')
 
 /-- `(eval <atom>)` (Rust `eval`/`eval_impl`): apply bindings, then execute a grounded operator,
@@ -483,21 +509,32 @@ def resolveAtom (b : Bindings) : Nat → Atom → Atom
   | 0, a => a
   | n + 1, a => let a' := instantiate b a; if a' == a then a else resolveAtom b n a'
 
-/-- Restrict a binding set to the solutions for `vars` (the argument's own query variables), so that
-    freshened internal variables of a sub-evaluation do not leak into the continuation. Each query
-    variable is emitted bound to its fully-resolved value via `resolveAtom`, dropping internal
-    variables and collapsing transitive chains so one `instantiate` in the continuation suffices.
-    Equalities between two query variables are retained.
-    Known issue: an earlier version merely filtered to bindings touching `vars`, which severed
-    transitive chains through a dropped intermediate variable and broke b2 recursive backchaining. -/
-def restrictBnd (vars : List VarName) (b : Bindings) : Bindings :=
+/-- Raw evaluator-visible projection before canonical binding normalization.
+Each requested variable is emitted against its fully resolved value; residual
+variable aliases use equality edges, and existing public equalities remain
+explicit. -/
+def restrictBndRaw (vars : List VarName) (b : Bindings) : Bindings :=
   let solved := vars.filterMap fun x =>
     let v := resolveAtom b (b.length + 1) (Atom.var x)
-    if v == Atom.var x then none else some (BindingRel.val x v)
+    match v with
+    | Atom.var y =>
+        if y == x then none else some (BindingRel.eq x y)
+    | _ => some (BindingRel.val x v)
   let eqs := b.filter fun r => match r with
     | BindingRel.eq x y => vars.contains x && vars.contains y
     | _ => false
   solved ++ eqs
+
+/-- Restrict a binding set to the solutions for `vars` (the argument's own query variables), so that
+    unrelated internal variables of a sub-evaluation do not leak into the continuation. The raw
+    projection is replayed through the ordinary binding merger, ensuring that reachable projections
+    have the same canonical representation invariant as every other runtime binding producer. The
+    raw fallback preserves total behavior on inconsistent, unreachable API inputs.
+    Known issue: an earlier version merely filtered to bindings touching `vars`, which severed
+    transitive chains through a dropped intermediate variable and broke b2 recursive backchaining. -/
+def restrictBnd (vars : List VarName) (b : Bindings) : Bindings :=
+  let raw := restrictBndRaw vars b
+  (Bindings.merge [] raw).head?.getD raw
 
 /-- Collect the variables still live in the continuation `prev` after applying current bindings.
     These are the variables a sub-evaluation should retain solutions for (Hyperon `apply_and_retain`).
@@ -506,77 +543,46 @@ def restrictBnd (vars : List VarName) (b : Bindings) : Bindings :=
 def scopeVars (b : Bindings) (prev : Stack) : List VarName :=
   prev.flatMap fun f => Atom.vars (instantiate b f.atom)
 
-/-- Emit one alternative of `superpose-bind`: take the first element of a `(atom ())` pair.
-    The match accepts any non-empty expression; `collapse-bind` produces these pairs, whose second
-    element is the unit placeholder `()`. -/
-def superposeItem (prev : Stack) (b : Bindings) : Atom → Item
-  | Atom.expr (a :: _) => finItem prev a b
-  | other => finItem prev other b
+/-- Expected-type variables whose assignments remain visible in the immediate
+continuation of an embedded `metta` call.  Expression-produced bindings are
+owned by `metta-thread`; intersecting here preserves return-gate assignments
+without leaking bindings local to the evaluated expression. -/
+def embeddedMettaRetentionScope (prev : Stack) (expected : Atom) : List VarName :=
+  expected.vars.filter fun name => (varsCopy prev).contains name
+
+/-- Every continuation variable protected while type-casting the result of an
+embedded `metta` call.  This is intentionally wider than
+`embeddedMettaRetentionScope`: a private type candidate must not capture any
+live continuation spelling and thereby change whether the cast succeeds, even
+though only expected-type assignments are returned to the continuation. -/
+def embeddedMettaCastProtectedScope (prev : Stack) : List VarName :=
+  varsCopy prev
+
+/-- Return embedded-`metta` results to their caller.  Each result contributes
+only its expected-type assignments still live in the continuation; those are
+reconciled with the incoming evaluator theory before the result proceeds. -/
+def retainEmbeddedMettaResults (prev : Stack) (incoming : Bindings)
+    (expected : Atom) (pairs : List (Atom × Bindings)) : List Item :=
+  let visibleScope := embeddedMettaRetentionScope prev expected
+  pairs.flatMap fun pair =>
+    (Bindings.merge incoming (restrictBnd visibleScope pair.2)).map
+      (finItem prev pair.1)
+
+/-- Emit one alternative of `superpose-bind`. A pair produced by `collapse-bind` carries its exact
+grounded binding set, which is merged with the bindings at the `superpose-bind` call before the atom
+returns. The non-pair fallback preserves the interpreter's non-reducing behavior on manually
+constructed inputs outside the published `collapse-bind`/`superpose-bind` protocol. -/
+def superposeItems (prev : Stack) (current : Bindings) : Atom → List Item
+  | Atom.expr [atom, Atom.gnd (Ground.bindings stored)] =>
+      (Bindings.merge (Bindings.restore stored) current).filterMap fun merged =>
+        if Bindings.hasLoop merged then none else some (finItem prev atom merged)
+  | Atom.expr (atom :: _) => [finItem prev atom current]
+  | other => [finItem prev other current]
 
 /-- Cartesian product of a list of result-lists. Used to combine nondeterministic argument evaluations. -/
 def cartesian {α : Type} : List (List α) → List (List α)
   | [] => [[]]
   | xs :: rest => xs.flatMap fun x => (cartesian rest).map fun t => x :: t
-
-/-- Compute which argument positions of `(op ...)` to evaluate (type-directed evaluation,
-    Hyperon `metta`). An argument is evaluated unless its declared type is `Atom`, `Variable`,
-    or `Expression`. With no declared signature every argument is evaluated; data and patterns
-    reduce to themselves, so that is safe. -/
-def argMask (env : MinEnv) (op : String) (arity : Nat) : List Bool :=
-  match env.sigs.get? op with
-  | some ts => (List.range arity).map fun i => match ts[i]? with
-      | some t => t != Atom.sym "Atom" && t != Atom.sym "Variable" && t != Atom.sym "Expression"
-      | none => true
-  | none => List.replicate arity true
-
-/-- Return `true` if the head operator of `a` has declared return type `Atom`. Matches Hyperon's
-    `metta_call`/`interpret_expression` behaviour: the result of applying such a function is left
-    inert rather than re-evaluated. This is what makes `(noeval (+ 1 2))` stay `(+ 1 2)`, while
-    `(id (noeval (+ 1 2)))`, where `id : (-> $t $t)` has a non-`Atom` return, reduces to `3`. -/
-def returnsAtom (env : MinEnv) (a : Atom) : Bool :=
-  match headKey a with
-  | some op => ((env.sigs.get? op).bind (·.getLast?)) == some (Atom.sym "Atom")
-  | none => false
-
-/-- Return the declared or inferred types of an atom (Hyperon `get_atom_types`, all candidates).
-    Grounded literals get their built-in type. A symbol gets its `(: s T)` declarations (possibly
-    several, or `%Undefined%` if undeclared, as gradual typing allows). A `(StateValue ...)` handle
-    gets `(StateMonad ...)`. An application `(f ...)` gets each of `f`'s arrow return types, with
-    type variables instantiated by unifying the declared parameter types against the argument types
-    (parametric inference). `%Undefined%` acts as the gradual top. -/
-def getTypes (env : MinEnv) : Atom → List Atom
-  | Atom.gnd (Ground.int _) => [Atom.sym "Number"]
-  | Atom.gnd (Ground.float _) => [Atom.sym "Number"]
-  | Atom.gnd (Ground.str _) => [Atom.sym "String"]
-  | Atom.gnd (Ground.bool _) => [Atom.sym "Bool"]
-  | Atom.gnd _ => [Atom.sym "Grounded"]
-  | Atom.var _ => [Atom.sym "%Undefined%"]
-  | Atom.sym s => match env.types.getD s [] with | [] => [Atom.sym "%Undefined%"] | ts => ts
-  | Atom.expr [Atom.sym "StateValue", v] =>
-      -- `wrapStates` rewrote a state handle to carry its contents; type it as
-      -- `(StateMonad <type of contents>)`, matching `(: new-state (-> $t (StateMonad $t)))`.
-      [Atom.expr [Atom.sym "StateMonad", ((getTypes env v).head?).getD (Atom.sym "%Undefined%")]]
-  | Atom.expr (f :: args) =>
-      -- A direct `(: (e ...) T)` declaration wins over inference (e.g. `(: (A B) PairAB)`).
-      match env.exprTypes.filter (fun p => p.1 == Atom.expr (f :: args)) with
-      | t :: ts => (t :: ts).map (·.2)
-      | [] =>
-      -- Otherwise the application's type is each arrow return type of its head, with type variables
-      -- instantiated by unifying declared parameter types against the argument types (parametric
-      -- inference, e.g. `(new-state 2) : (StateMonad Number)`, `(Cons Z Nil) : (List Nat)`).
-      let argTs := args.map (fun a => ((getTypes env a).head?).getD (Atom.sym "%Undefined%"))
-      match (getTypes env f).filterMap (fun t => match t with
-              | Atom.expr (Atom.sym "->" :: ts) =>
-                  let ret := (ts.getLast?).getD (Atom.sym "%Undefined%")
-                  let tb := ((ts.dropLast).zip argTs).foldl (fun (b : Bindings) pa =>
-                    match (matchAtoms (instantiate b pa.1) pa.2).head? with
-                    | some b' => ((Bindings.merge b b').head?).getD b
-                    | none => b) []
-                  some (instantiate tb ret)
-              | _ => none) with
-        | [] => [Atom.sym "%Undefined%"]
-        | rs => rs
-  | Atom.expr [] => [Atom.sym "%Undefined%"]
 
 mutual
 /-- Structural type unification for Hyperon's `match_reducted_types` (`types.rs`).
@@ -591,7 +597,14 @@ def matchReduced (tb : Bindings) (expected actual : Atom) : Option Bindings :=
   then some tb
   else match expected, actual with
     | Atom.expr es, Atom.expr acts => matchReducedList tb es acts
-    | _, _ => ((matchAtoms expected actual).flatMap (Bindings.merge tb)).head?
+    | _, _ =>
+        -- A public matcher result is loop-free in isolation, but merging it
+        -- with bindings accumulated by earlier type children can create a
+        -- cross-child dependency cycle.  Filter the complete merged state
+        -- before selecting a candidate so every threaded accumulator remains
+        -- a satisfiable finite-term binding.
+        ((matchAtoms expected actual).flatMap (Bindings.merge tb)).filter
+          (fun bindings => !bindings.hasLoop) |>.head?
 /-- Pointwise binding-threading companion of `matchReduced` for the children of two type
     expressions. Lengths must agree. -/
 def matchReducedList (tb : Bindings) : List Atom → List Atom → Option Bindings
@@ -620,44 +633,758 @@ def matchType (tb : Bindings) (expected actual : Atom) : Option Bindings :=
   then some tb
   else matchReduced tb expected actual
 
-/-- Type-check arguments against parameter types `argTypes`, threading type-variable bindings so
-    that e.g. `(-> $t $t ...)` forces both arguments to the same type. An argument is well-typed if
-    any of its declared types unifies (so `Ten : {Nat, Int}` satisfies a `Nat` parameter). Returns
-    the first `(position, expected, actual)` mismatch, or `none` if all check. -/
-def typeCheckArgs (env : MinEnv) (w : World) (argTypes : List Atom) : Nat → Bindings → List Atom → Option (Nat × Atom × Atom)
-  | _, _, [] => none
+/-- Match application argument types left-to-right. A failed argument match
+    invalidates this function-type candidate; successful matches preserve the
+    complete binding state needed by later parametric arguments. -/
+def matchApplicationTypeArguments : Bindings → List Atom → List Atom → Option Bindings
+  | bindings, [], [] => some bindings
+  | bindings, expected :: expecteds, actual :: actuals =>
+      match matchType bindings expected actual with
+      | some next => matchApplicationTypeArguments next expecteds actuals
+      | none => none
+  | _, _, _ => none
+
+/-! ### Capture-avoiding type inference
+
+Upstream Hyperon gives variables returned by each type lookup a fresh hidden
+identity.  This model represents identity by a string, so every function and
+argument type consumed by one inference fold must receive a distinct spelling.
+Otherwise unrelated annotations such as `g : (-> $t A R)` and
+`k : (-> $t)` capture by name: `(g b (k))` is rejected, while alpha-renaming
+only the inner `$t` makes it succeed.
+
+Freshening happens at the consumption boundary, not in the annotation index.
+Consequently unresolved polymorphic variables still escape as variables, but
+each inference occurrence gets an independent scope. -/
+
+/-- Every variable spelling that a type-inference boundary must avoid.  The
+computed candidate types are included because nested inference may already
+have introduced generated names. -/
+def typeInferenceAvoid (env : MinEnv) (context : Atom)
+    (candidateTypes : List Atom) : List VarName :=
+  env.atoms.flatMap Atom.vars ++ context.vars ++
+    candidateTypes.flatMap Atom.vars
+
+/-- Give every variable in one selected type candidate a capture-avoiding
+spelling for this inference position. -/
+def freshenTypeCandidate (avoid : List VarName) (position : Nat)
+    (type : Atom) : Atom :=
+  renameAllVars (captureAvoidingName avoid position) type
+
+/-- Freshen one selected argument type at each source position.  The avoid
+set grows with every result, so private variables from distinct arguments are
+disjoint by construction. -/
+def freshenArgumentTypes (avoid : List VarName) :
+    Nat → List Atom → List Atom
+  | _, [] => []
+  | position, type :: types =>
+      let fresh := freshenTypeCandidate avoid position type
+      fresh :: freshenArgumentTypes (avoid ++ fresh.vars)
+        (position + 1) types
+
+/-- Return the declared or inferred types of an atom (Hyperon `get_atom_types`, all candidates).
+    Grounded literals get their built-in type. A symbol gets its `(: s T)` declarations (possibly
+    several, or `%Undefined%` if undeclared, as gradual typing allows). A `(StateValue ...)` handle
+    gets `(StateMonad ...)`. An application `(f ...)` gets each of `f`'s arrow return types, with
+    type variables instantiated by unifying the declared parameter types against the argument types
+    (parametric inference). `%Undefined%` acts as the gradual top. -/
+def getTypes (env : MinEnv) : Atom → List Atom
+  | Atom.gnd (Ground.int _) => [Atom.sym "Number"]
+  | Atom.gnd (Ground.float _) => [Atom.sym "Number"]
+  | Atom.gnd (Ground.str _) => [Atom.sym "String"]
+  | Atom.gnd (Ground.bool _) => [Atom.sym "Bool"]
+  | Atom.gnd (Ground.external typeName _) =>
+      -- `external` is the structural host-value lane: its first component is
+      -- the intrinsic type tag (the native bridge maps `custom T payload` to
+      -- `external T payload`), matching Hyperon's grounded `type_()` result.
+      [Atom.sym typeName]
+  | Atom.gnd _ => [Atom.sym "Grounded"]
+  | Atom.var _ => [Atom.sym "%Undefined%"]
+  | Atom.sym s => match env.types.getD s [] with | [] => [Atom.sym "%Undefined%"] | ts => ts
+  | Atom.expr [Atom.sym "StateValue", v] =>
+      -- `wrapStates` rewrote a state handle to carry its contents; type it as
+      -- `(StateMonad <type of contents>)`, matching `(: new-state (-> $t (StateMonad $t)))`.
+      -- `getTypes` is nonempty by construction; the default only totalizes `head?`.
+      [Atom.expr [Atom.sym "StateMonad", ((getTypes env v).head?).getD (Atom.sym "%Undefined%")]]
+  | Atom.expr (f :: args) =>
+      -- A direct `(: (e ...) T)` declaration wins over inference (e.g. `(: (A B) PairAB)`).
+      match env.exprTypes.filter (fun p => p.1 == Atom.expr (f :: args)) with
+      | t :: ts => (t :: ts).map (·.2)
+      | [] =>
+      -- Otherwise the application's type is each arrow return type of its head, with type variables
+      -- instantiated by unifying declared parameter types against the argument types (parametric
+      -- inference, e.g. `(new-state 2) : (StateMonad Number)`, `(Cons Z Nil) : (List Nat)`).
+      -- Every ordered combination of declared argument types is a distinct
+      -- private presentation.  Keeping only each lookup's head loses viable
+      -- dependent return types such as `(-> $t $t)` at a multiply-typed
+      -- argument.
+      let rawArgTypeLists := args.map (getTypes env)
+      let rawArgTypeChoices := cartesian rawArgTypeLists
+      let allRawArgTypes := rawArgTypeLists.flatMap id
+      let rawFunctionTypes := getTypes env f
+      let avoid := typeInferenceAvoid env (Atom.expr (f :: args))
+        (rawFunctionTypes ++ allRawArgTypes)
+      let functionAvoid := avoid ++ allRawArgTypes.flatMap Atom.vars
+      let functionTypes := rawFunctionTypes.map
+        (freshenTypeCandidate functionAvoid args.length)
+      match functionTypes.flatMap (fun t =>
+              rawArgTypeChoices.filterMap fun rawArgTs =>
+                let argTs := freshenArgumentTypes avoid 0 rawArgTs
+                match t with
+                | Atom.expr (Atom.sym "->" :: ts) =>
+                    -- A bare `(->)` has no return component and is not a
+                    -- function type.  Reject it instead of fabricating an
+                    -- `%Undefined%` result; `(-> R)` remains a valid nullary
+                    -- function because its last component is `R`.
+                    match ts.getLast? with
+                    | none => none
+                    | some ret =>
+                        match matchApplicationTypeArguments [] ts.dropLast argTs with
+                        | some bindings => some (instantiate bindings ret)
+                        | none => none
+                | _ => none) with
+        | [] => [Atom.sym "%Undefined%"]
+        | rs => rs
+  | Atom.expr [] => [Atom.sym "%Undefined%"]
+
+/-- One rejected actual type at one argument position.  A single argument may
+    contribute several of these because its type lookup is an ordered list. -/
+structure TypeCheckArgsError where
+  position : Nat
+  expected : Atom
+  actual : Atom
+
+/-- Full result of checking one function candidate's argument types.  The
+    successful case retains both the private type bindings and latent errors
+    from other actual types.  Latent errors are discarded only when the whole
+    function candidate succeeds; if a later argument or return check fails,
+    they remain observable. -/
+inductive TypeCheckArgsDetailedOutcome where
+  | success (bindings : Bindings) (latentErrors : List TypeCheckArgsError)
+  | failure (firstError : TypeCheckArgsError) (moreErrors : List TypeCheckArgsError)
+
+/-- Result of classifying every actual type for one argument.  `selected` is
+    the first successful binding presentation, while `failures` retains every
+    failed actual in declaration order, including failures after the winner. -/
+structure ActualTypeScanOutcome where
+  selected : Option Bindings
+  failures : List Atom
+
+def scanActualTypes (bindings : Bindings) (expected : Atom) :
+    List Atom → ActualTypeScanOutcome
+  | [] => ⟨none, []⟩
+  | actual :: actuals =>
+      let tail := scanActualTypes bindings expected actuals
+      match matchType bindings expected actual with
+      | some output => ⟨some output, tail.failures⟩
+      | none => ⟨tail.selected, actual :: tail.failures⟩
+
+/-- Complete classification of one argument's ordered actual-type list.
+    Unlike the compatibility scan above, this retains every successful
+    private type presentation. -/
+structure ActualTypeBranchScanResult where
+  successes : List Bindings
+  failures : List Atom
+
+def scanActualTypeBranches (bindings : Bindings) (expected : Atom) :
+    List Atom → ActualTypeBranchScanResult
+  | [] => ⟨[], []⟩
+  | actual :: actuals =>
+      let tail := scanActualTypeBranches bindings expected actuals
+      match matchType bindings expected actual with
+      | some output => ⟨output :: tail.successes, tail.failures⟩
+      | none => ⟨tail.successes, actual :: tail.failures⟩
+
+/-- All complete argument-applicability branches plus every failed actual
+    diagnostic.  Successful presentations are ordered by argument position
+    and actual-type declaration.  Errors from later argument positions
+    precede errors from earlier positions, matching the published recursive
+    traversal and the reference evaluator. -/
+structure TypeCheckArgsBranchResult where
+  successes : List Bindings
+  errors : List TypeCheckArgsError
+
+/-- Variables visible at the complete application boundary.  Recursive
+argument checking receives this list unchanged, so a later argument cannot
+freshen a private type variable onto an expected type or an earlier source
+argument that is no longer present in the recursive suffix. -/
+def applicationTypeInferenceScope (expected : Atom)
+    (arguments : List Atom) : List VarName :=
+  expected.vars ++ arguments.flatMap Atom.vars
+
+/-- The stable argument-freshening boundary for a seeded application scan.
+    Besides the expected type and every source argument, it retains every
+    variable live when applicability starts.  Branch-local bindings remain an
+    additional dynamic avoidance source at each recursive step. -/
+def applicationTypeInferenceScopeFrom (expected : Atom)
+    (arguments : List Atom) (initialBindings : Bindings) : List VarName :=
+  applicationTypeInferenceScope expected arguments ++ initialBindings.vars
+
+/-- Scope-explicit branch-valued argument checking.  `boundaryScope` is
+constant across the recursion; branch-local bindings and the current suffix
+remain additional dynamic avoidance sources. -/
+def typeCheckArgsBranchesScoped (env : MinEnv) (w : World)
+    (argTypes : List Atom) (boundaryScope : List VarName) :
+    Nat → Bindings → List Atom → TypeCheckArgsBranchResult
+  | _, tb, [] => ⟨[tb], []⟩
   | i, tb, ai :: more =>
       match argTypes[i]? with
-      | none => none  -- more arguments than declared parameters: stop (gradual)
+      | none => ⟨[tb], []⟩  -- defensive fallback; public candidate scans check arity first
       | some ti0 =>
-          let ti := instantiate tb ti0
-          let actuals := getTypes env (typePrep w ai)
-          match actuals.findSome? (fun act => (matchType tb ti act).map (Prod.mk act)) with
-          | some (_, tb') => typeCheckArgs env w argTypes (i + 1) tb' more
-          | none => some (i + 1, ti, (actuals.head?).getD (Atom.sym "%Undefined%"))
+          let reportedExpected := instantiate tb ti0
+          let prepared := typePrep w ai
+          let rawActuals := getTypes env prepared
+          let avoid := boundaryScope ++ typeInferenceAvoid env
+            (Atom.expr (ai :: more)) (argTypes ++ rawActuals) ++ tb.vars
+          let actuals := rawActuals.map (freshenTypeCandidate avoid i)
+          let checked := scanActualTypeBranches tb ti0 actuals
+          let continued := checked.successes.map fun tb' =>
+            typeCheckArgsBranchesScoped env w argTypes boundaryScope
+              (i + 1) tb' more
+          let currentErrors := checked.failures.map fun actual =>
+            { position := i + 1, expected := reportedExpected, actual }
+          ⟨continued.flatMap (·.successes),
+            continued.flatMap (·.errors) ++ currentErrors⟩
 
-/-- Runtime argument type-check for `(op a1 ... an)` (Hyperon `check_if_function_type_is_applicable`).
-    If `op` has a declared arrow type `(-> T1 ... Tn R)`, return the first mismatching argument
-    position with its expected and actual types, or `none` if all check. Undeclared operators pass
-    without checking (gradual typing). -/
-def typeMismatch (env : MinEnv) (w : World) (op : String) (args : List Atom) : Option (Nat × Atom × Atom) :=
-  match env.sigs.get? op with
-  | none => none
-  | some ts => typeCheckArgs env w ts.dropLast 0 [] args
+/-- Ordinary argument checking protects every source argument.  The expected
+result is `%Undefined%` on this lane and contributes no variables. -/
+def typeCheckArgsBranches (env : MinEnv) (w : World)
+    (argTypes : List Atom) (i : Nat) (tb : Bindings)
+    (arguments : List Atom) : TypeCheckArgsBranchResult :=
+  typeCheckArgsBranchesScoped env w argTypes
+    (applicationTypeInferenceScope (Atom.sym "%Undefined%") arguments)
+    i tb arguments
 
-/-- Direct calls to a declared symbol must use the declared arity. `get-type` is intentionally
-    exempt because this runner supports both `(get-type atom)` and `(get-type atom space)`. -/
+/-- Scope-explicit first-success argument checking.  It threads the first
+successful type-variable presentation while retaining every failed actual
+type as a latent diagnostic.  Later argument blocks precede earlier blocks;
+order within a block is the declaration order returned by `getTypes`. -/
+def typeCheckArgsDetailedOutcomeScoped (env : MinEnv) (w : World)
+    (argTypes : List Atom) (boundaryScope : List VarName) :
+    Nat → Bindings → List Atom → TypeCheckArgsDetailedOutcome
+  | _, tb, [] => .success tb []
+  | i, tb, ai :: more =>
+      match argTypes[i]? with
+      | none => .success tb []  -- defensive fallback; public candidate scans check arity first
+      | some ti0 =>
+          let reportedExpected := instantiate tb ti0
+          let prepared := typePrep w ai
+          let rawActuals := getTypes env prepared
+          let avoid := boundaryScope ++ typeInferenceAvoid env
+            (Atom.expr (ai :: more)) (argTypes ++ rawActuals) ++ tb.vars
+          let actuals := rawActuals.map (freshenTypeCandidate avoid i)
+          let checked := scanActualTypes tb ti0 actuals
+          let currentErrors := checked.failures.map fun actual =>
+            { position := i + 1, expected := reportedExpected, actual }
+          match checked.selected with
+          | some tb' =>
+              match typeCheckArgsDetailedOutcomeScoped env w argTypes
+                  boundaryScope (i + 1) tb' more with
+              | .success output laterErrors =>
+                  .success output (laterErrors ++ currentErrors)
+              | .failure firstError laterErrors =>
+                  .failure firstError (laterErrors ++ currentErrors)
+          | none =>
+              match currentErrors with
+              | firstError :: moreErrors => .failure firstError moreErrors
+              | [] => .failure
+                  { position := i + 1, expected := reportedExpected,
+                    actual := Atom.sym "%Undefined%" } []
+
+/-- Compatibility entry point for ordinary candidate selection. -/
+def typeCheckArgsDetailedOutcome (env : MinEnv) (w : World)
+    (argTypes : List Atom) (i : Nat) (tb : Bindings)
+    (arguments : List Atom) : TypeCheckArgsDetailedOutcome :=
+  typeCheckArgsDetailedOutcomeScoped env w argTypes
+    (applicationTypeInferenceScope (Atom.sym "%Undefined%") arguments)
+    i tb arguments
+
+/-- Compatibility view of detailed argument checking.  It intentionally
+    forgets latent errors on success and exposes only the first error on
+    failure.  Existing metatheory that observes this older boundary remains
+    valid, while evaluator selection consumes the detailed result below. -/
+inductive TypeCheckArgsOutcome where
+  | success (bindings : Bindings)
+  | failure (position : Nat) (expected actual : Atom)
+
+/-- Compatibility projection of `typeCheckArgsDetailedOutcome`. -/
+def typeCheckArgsOutcome (env : MinEnv) (w : World) (argTypes : List Atom) :
+    Nat → Bindings → List Atom → TypeCheckArgsOutcome
+  | i, tb, args =>
+      match typeCheckArgsDetailedOutcome env w argTypes i tb args with
+      | .success output _ => .success output
+      | .failure firstError _ =>
+          .failure firstError.position firstError.expected firstError.actual
+
+/-- Compatibility projection used by the type metatheory: `none` means success and `some` exposes
+    the first rejected argument.  The evaluator itself consumes `typeCheckArgsOutcome` so it never
+    loses the successful candidate's private theory. -/
+def typeCheckArgs (env : MinEnv) (w : World) (argTypes : List Atom)
+    (i : Nat) (tb : Bindings) (args : List Atom) : Option (Nat × Atom × Atom) :=
+  match typeCheckArgsOutcome env w argTypes i tb args with
+  | .success _ => none
+  | .failure position expected actual => some (position, expected, actual)
+
+/-- A function candidate selected by the published ordered scan. -/
+structure SelectedFunctionType where
+  functionType : Atom
+  argumentTypes : List Atom
+  returnType : Atom
+  typeBindings : Bindings
+
+/-- Candidate failure retained when every function type is inapplicable. -/
+inductive FunctionTypeError where
+  | incorrectArity
+  | badArgument (position : Nat) (expected actual : Atom)
+
+def TypeCheckArgsError.toFunctionTypeError
+    (error : TypeCheckArgsError) : FunctionTypeError :=
+  .badArgument error.position error.expected error.actual
+
+/-- Published ordered candidate-scan result.  Success stops at the first applicable function;
+    exhaustion retains every function error and whether a non-function candidate enables tuple
+    interpretation. -/
+inductive FunctionTypeScanOutcome where
+  | selected (function : SelectedFunctionType)
+  | exhausted (errors : List FunctionTypeError) (tupleEligible : Bool)
+
+/-- Candidate failure for a scan performed under a nontrivial expected return type.  Argument and
+    arity failures reuse the ordinary scan vocabulary; a return mismatch records the conjunct that
+    distinguished otherwise argument-applicable signatures. -/
+inductive ExpectedFunctionTypeError where
+  | ordinary (error : FunctionTypeError)
+  | badReturn (expected actual : Atom)
+
+/-- Result of the expected-return-aware ordered scan used by the embedded `metta` boundary.  This is
+    deliberately separate from `FunctionTypeScanOutcome`: ordinary unconstrained evaluation keeps
+    its established API and reduction path definitionally unchanged. -/
+inductive ExpectedFunctionTypeScanOutcome where
+  | selected (function : SelectedFunctionType)
+  | exhausted (errors : List ExpectedFunctionTypeError) (tupleEligible : Bool)
+
+/-- Expected-return filtering over every successful argument presentation.
+    The first surviving presentation commits the candidate; when none
+    survives, every return mismatch is retained in presentation order. -/
+structure ExpectedReturnBranchScanResult where
+  selected : Option Bindings
+  errors : List ExpectedFunctionTypeError
+
+def scanExpectedReturnBranches (expected returnType : Atom) :
+    List Bindings → ExpectedReturnBranchScanResult
+  | [] => ⟨none, []⟩
+  | argumentBindings :: branches =>
+      let actualReturn := instantiate argumentBindings returnType
+      match matchType argumentBindings expected returnType with
+      | some typeBindings => ⟨some typeBindings, []⟩
+      | none =>
+          let tail := scanExpectedReturnBranches expected returnType branches
+          ⟨tail.selected, .badReturn expected actualReturn :: tail.errors⟩
+
+def FunctionTypeError.toAtom (expression : Atom) : FunctionTypeError → Atom
+  | .incorrectArity =>
+      Atom.expr [Atom.sym "Error", expression, Atom.sym "IncorrectNumberOfArguments"]
+  | .badArgument position expected actual =>
+      Atom.expr [Atom.sym "Error", expression,
+        Atom.expr [Atom.sym "BadArgType", Atom.gnd (Ground.int (Int.ofNat position)),
+          expected, actual]]
+
+def FunctionTypeScanOutcome.prependError (error : FunctionTypeError) :
+    FunctionTypeScanOutcome → FunctionTypeScanOutcome
+  | .selected function => .selected function
+  | .exhausted errors tupleEligible => .exhausted (error :: errors) tupleEligible
+
+/-- Prepend one failed function candidate's complete ordered error block. -/
+def FunctionTypeScanOutcome.prependErrors (newErrors : List FunctionTypeError) :
+    FunctionTypeScanOutcome → FunctionTypeScanOutcome
+  | .selected function => .selected function
+  | .exhausted errors tupleEligible =>
+      .exhausted (newErrors ++ errors) tupleEligible
+
+def FunctionTypeScanOutcome.markTupleEligible :
+    FunctionTypeScanOutcome → FunctionTypeScanOutcome
+  | .selected function => .selected function
+  | .exhausted errors _ => .exhausted errors true
+
+def ExpectedFunctionTypeScanOutcome.prependError (error : ExpectedFunctionTypeError) :
+    ExpectedFunctionTypeScanOutcome → ExpectedFunctionTypeScanOutcome
+  | .selected function => .selected function
+  | .exhausted errors tupleEligible => .exhausted (error :: errors) tupleEligible
+
+/-- Prepend one failed function candidate's complete ordered error block. -/
+def ExpectedFunctionTypeScanOutcome.prependErrors
+    (newErrors : List ExpectedFunctionTypeError) :
+    ExpectedFunctionTypeScanOutcome → ExpectedFunctionTypeScanOutcome
+  | .selected function => .selected function
+  | .exhausted errors tupleEligible =>
+      .exhausted (newErrors ++ errors) tupleEligible
+
+def ExpectedFunctionTypeScanOutcome.markTupleEligible :
+    ExpectedFunctionTypeScanOutcome → ExpectedFunctionTypeScanOutcome
+  | .selected function => .selected function
+  | .exhausted errors _ => .exhausted errors true
+
+/-- Variables that an operator signature must avoid when it is consumed for
+    one application.  The complete public application scope is included
+    explicitly; `typeInferenceAvoid` adds the live expression, annotation
+    environment, and every raw signature candidate. -/
+def functionTypeSelectionAvoid (env : MinEnv) (expression : Atom)
+    (args : List Atom) (expected : Atom) (rawCandidates : List Atom) :
+    List VarName :=
+  applicationTypeInferenceScope expected args ++
+    typeInferenceAvoid env expression rawCandidates
+
+/-- Extend the public application scope with variable spellings already live
+in the evaluator binding.  Signature-private names must avoid both: a collision
+with an unrelated live binding would make the later #19 seed merge observable. -/
+def functionTypeSelectionAvoiding (env : MinEnv) (expression : Atom)
+    (args : List Atom) (expected : Atom) (liveAvoid : List VarName)
+    (rawCandidates : List Atom) : List VarName :=
+  liveAvoid ++
+    functionTypeSelectionAvoid env expression args expected rawCandidates
+
+/-- Live-binding-aware signature freshening used by expected evaluation.
+Argument-type candidates use positions `0, …, args.length - 1`; the signature
+uses the terminal position `args.length`, so the two generated families are
+disjoint by construction. Mapping preserves declaration order and
+multiplicity. -/
+def freshenFunctionTypeCandidatesAvoiding (env : MinEnv) (expression : Atom)
+    (args : List Atom) (expected : Atom) (liveAvoid : List VarName)
+    (rawCandidates : List Atom) : List Atom :=
+  let avoid := functionTypeSelectionAvoiding env expression args expected
+    liveAvoid rawCandidates
+  rawCandidates.map (freshenTypeCandidate avoid args.length)
+
+/-- Give every operator signature a private presentation before selection.
+This compatibility entry point has no additional live evaluator scope. -/
+def freshenFunctionTypeCandidates (env : MinEnv) (expression : Atom)
+    (args : List Atom) (expected : Atom) (rawCandidates : List Atom) :
+    List Atom :=
+  freshenFunctionTypeCandidatesAvoiding env expression args expected []
+    rawCandidates
+
+/-- Scan the exact ordered type list for one operator.  This is the single selection boundary used
+    by arity checking, argument masks, type errors, tuple eligibility, and return handling. -/
+def scanFunctionTypeCandidates (env : MinEnv) (w : World) (expression : Atom)
+    (args : List Atom) (allowExtraArgs : Bool) : List Atom → FunctionTypeScanOutcome
+  | [] => .exhausted [] false
+  | candidate :: candidates =>
+      match candidate with
+      | Atom.expr (Atom.sym "->" :: signature) =>
+          match signature.getLast? with
+          | none =>
+              FunctionTypeScanOutcome.markTupleEligible
+                (scanFunctionTypeCandidates env w expression args allowExtraArgs candidates)
+          | some returnType =>
+              let argumentTypes := signature.dropLast
+              if allowExtraArgs || args.length == argumentTypes.length then
+                match typeCheckArgsDetailedOutcome env w argumentTypes 0 [] args with
+                | .success typeBindings _ =>
+                    FunctionTypeScanOutcome.selected
+                      ⟨candidate, argumentTypes, returnType, typeBindings⟩
+                | .failure firstError moreErrors =>
+                    FunctionTypeScanOutcome.prependErrors
+                      ((firstError :: moreErrors).map
+                        TypeCheckArgsError.toFunctionTypeError)
+                      (scanFunctionTypeCandidates env w expression args allowExtraArgs candidates)
+              else
+                FunctionTypeScanOutcome.prependError .incorrectArity
+                  (scanFunctionTypeCandidates env w expression args allowExtraArgs candidates)
+      | _ =>
+          FunctionTypeScanOutcome.markTupleEligible
+            (scanFunctionTypeCandidates env w expression args allowExtraArgs candidates)
+
+/-- Ordered function-type selection from the same `getTypes` list observed by `get-type` and the
+    conformance relation.  Applicability always requires exact call/signature arity. -/
+def selectFunctionType (env : MinEnv) (w : World) (operator : Atom)
+    (args : List Atom) : FunctionTypeScanOutcome :=
+  let expression := Atom.expr (operator :: args)
+  scanFunctionTypeCandidates env w expression args false
+    (getTypes env (typePrep w operator))
+
+/-- Ordered function-type selection under a concrete expected result type.  A candidate succeeds
+    only when its arguments and its instantiated return type are jointly applicable; the resulting
+    private type theory is the one shared by argument policy and return policy. -/
+def scanFunctionTypeCandidatesForExpected (env : MinEnv) (w : World) (expression : Atom)
+    (args : List Atom) (expected : Atom) (allowExtraArgs : Bool) :
+    List Atom → ExpectedFunctionTypeScanOutcome
+  | [] => .exhausted [] false
+  | candidate :: candidates =>
+      match candidate with
+      | Atom.expr (Atom.sym "->" :: signature) =>
+          match signature.getLast? with
+          | none =>
+              ExpectedFunctionTypeScanOutcome.markTupleEligible
+                (scanFunctionTypeCandidatesForExpected env w expression args expected
+                  allowExtraArgs candidates)
+          | some returnType =>
+              let argumentTypes := signature.dropLast
+              if allowExtraArgs || args.length == argumentTypes.length then
+                let argumentBranches :=
+                  typeCheckArgsBranchesScoped env w argumentTypes
+                    (applicationTypeInferenceScope expected args) 0 [] args
+                let returnBranches :=
+                  scanExpectedReturnBranches expected returnType
+                    argumentBranches.successes
+                match returnBranches.selected with
+                | some typeBindings =>
+                    ExpectedFunctionTypeScanOutcome.selected
+                      ⟨candidate, argumentTypes, returnType, typeBindings⟩
+                | none =>
+                    ExpectedFunctionTypeScanOutcome.prependErrors
+                      (argumentBranches.errors.map (fun error =>
+                          .ordinary error.toFunctionTypeError) ++
+                        returnBranches.errors)
+                      (scanFunctionTypeCandidatesForExpected env w expression args expected
+                        allowExtraArgs candidates)
+              else
+                ExpectedFunctionTypeScanOutcome.prependError (.ordinary .incorrectArity)
+                  (scanFunctionTypeCandidatesForExpected env w expression args expected
+                    allowExtraArgs candidates)
+      | _ =>
+          ExpectedFunctionTypeScanOutcome.markTupleEligible
+            (scanFunctionTypeCandidatesForExpected env w expression args expected
+              allowExtraArgs candidates)
+
+/-- Expected-return-aware candidate scan seeded by the evaluator's current
+    bindings, as required by the published applicability algorithm.  A
+    candidate which conflicts with a live assignment fails inside the scan,
+    so candidate search continues and its diagnostic is retained; compatibility
+    is not postponed until after selection has committed. -/
+def scanFunctionTypeCandidatesForExpectedFrom (env : MinEnv) (w : World)
+    (expression : Atom) (args : List Atom) (expected : Atom)
+    (allowExtraArgs : Bool) (initialBindings : Bindings) :
+    List Atom → ExpectedFunctionTypeScanOutcome
+  | [] => .exhausted [] false
+  | candidate :: candidates =>
+      match candidate with
+      | Atom.expr (Atom.sym "->" :: signature) =>
+          match signature.getLast? with
+          | none =>
+              ExpectedFunctionTypeScanOutcome.markTupleEligible
+                (scanFunctionTypeCandidatesForExpectedFrom env w expression args
+                  expected allowExtraArgs initialBindings candidates)
+          | some returnType =>
+              let argumentTypes := signature.dropLast
+              if allowExtraArgs || args.length == argumentTypes.length then
+                let argumentBranches :=
+                  typeCheckArgsBranchesScoped env w argumentTypes
+                    (applicationTypeInferenceScopeFrom expected args
+                      initialBindings) 0 initialBindings args
+                let returnBranches :=
+                  scanExpectedReturnBranches expected returnType
+                    argumentBranches.successes
+                match returnBranches.selected with
+                | some typeBindings =>
+                    ExpectedFunctionTypeScanOutcome.selected
+                      ⟨candidate, argumentTypes, returnType, typeBindings⟩
+                | none =>
+                    ExpectedFunctionTypeScanOutcome.prependErrors
+                      (argumentBranches.errors.map (fun error =>
+                          .ordinary error.toFunctionTypeError) ++
+                        returnBranches.errors)
+                      (scanFunctionTypeCandidatesForExpectedFrom env w expression
+                        args expected allowExtraArgs initialBindings candidates)
+              else
+                ExpectedFunctionTypeScanOutcome.prependError
+                  (.ordinary .incorrectArity)
+                  (scanFunctionTypeCandidatesForExpectedFrom env w expression args
+                    expected allowExtraArgs initialBindings candidates)
+      | _ =>
+          ExpectedFunctionTypeScanOutcome.markTupleEligible
+            (scanFunctionTypeCandidatesForExpectedFrom env w expression args
+              expected allowExtraArgs initialBindings candidates)
+
+/-- Expected-return-aware selection whose private signature presentation also
+avoids every variable spelling in the live evaluator binding. -/
+def selectFunctionTypeForExpectedAvoiding (env : MinEnv) (w : World)
+    (operator : Atom) (args : List Atom) (expected : Atom)
+    (liveAvoid : List VarName) : ExpectedFunctionTypeScanOutcome :=
+  let expression := Atom.expr (operator :: args)
+  let rawCandidates := getTypes env (typePrep w operator)
+  scanFunctionTypeCandidatesForExpected env w expression args expected
+    false
+    (freshenFunctionTypeCandidatesAvoiding env expression args expected
+      liveAvoid rawCandidates)
+
+/-- Published expected-return-aware selection from the evaluator's current
+    binding theory.  The same bindings both seed applicability and protect
+    signature-private names from collision. -/
+def selectFunctionTypeForExpectedFrom (env : MinEnv) (w : World)
+    (operator : Atom) (args : List Atom) (expected : Atom)
+    (initialBindings : Bindings) : ExpectedFunctionTypeScanOutcome :=
+  let expression := Atom.expr (operator :: args)
+  let rawCandidates := getTypes env (typePrep w operator)
+  scanFunctionTypeCandidatesForExpectedFrom env w expression args expected
+    false initialBindings
+    (freshenFunctionTypeCandidatesAvoiding env expression args expected
+      initialBindings.vars rawCandidates)
+
+/-- Expected-return-aware selection compatibility entry point with no
+additional live evaluator scope. -/
+def selectFunctionTypeForExpected (env : MinEnv) (w : World) (operator : Atom)
+    (args : List Atom) (expected : Atom) : ExpectedFunctionTypeScanOutcome :=
+  selectFunctionTypeForExpectedAvoiding env w operator args expected []
+
+/-- Compute which arguments to evaluate from the already-selected function type. -/
+def argMask (selected : SelectedFunctionType) (arity : Nat) : List Bool :=
+  (List.range arity).map fun i => match selected.argumentTypes[i]? with
+    | some rawType =>
+        let type := instantiate selected.typeBindings rawType
+        type != Atom.sym "Atom" && type != Atom.sym "Variable" &&
+          type != Atom.sym "Expression"
+    | none => true
+
+/-- Whether the selected function's theory-instantiated return type is `Atom`. -/
+def returnsAtom (selected : SelectedFunctionType) : Bool :=
+  instantiate selected.typeBindings selected.returnType == Atom.sym "Atom"
+
+/-- Expected type carried by each selected argument policy.  Public selection is strict-arity, so
+    a missing formal is only a defensive fallback for direct low-level callers. -/
+def argumentEvaluationPolicies (selected : SelectedFunctionType) (arity : Nat) :
+    List (Bool × Atom) :=
+  (List.range arity).map fun i => match selected.argumentTypes[i]? with
+    | some rawType =>
+        let type := instantiate selected.typeBindings rawType
+        (type != Atom.sym "Atom" && type != Atom.sym "Variable" &&
+          type != Atom.sym "Expression", type)
+    | none => (true, Atom.sym "%Undefined%")
+
+/-- The expected type for recursively evaluating a selected result.  `Expression` is a quoting
+    policy, not a demand that every eventual normal form remain syntactically an expression. -/
+def selectedResultExpected (selected : SelectedFunctionType) : Atom :=
+  let type := instantiate selected.typeBindings selected.returnType
+  if type == Atom.sym "Expression" then Atom.sym "%Undefined%" else type
+
+/-- Variables whose applicability assignments remain observable after the
+    caller binding has already been applied to an expected application.  An
+    equality-only caller class is represented by the variable that survives
+    instantiation, so the post-instantiation expression and expected type are
+    the complete public scope. -/
+def expectedApplicationVisibleScope (expression expected : Atom) : List VarName :=
+  (expected.vars ++ expression.vars).eraseDups
+
+/-- Retain exactly the selected type assignments visible to the caller of an
+    expected application.  Fresh signature and argument-type variables are
+    excluded by the selection boundary's capture-avoidance contract. -/
+def selectedApplicationVisibleBindings (expression expected : Atom)
+    (selected : SelectedFunctionType) : Bindings :=
+  restrictBnd (expectedApplicationVisibleScope expression expected)
+    selected.typeBindings
+
+/-- Merge the caller binding with every visible assignment in one selected
+    type theory.  This boundary is shared by applicability and the subsequent
+    operator-head cast: both produce private presentations, while only their
+    consequences on the post-instantiation application scope may seed
+    evaluation. -/
+def selectedApplicationInitialBindingsFromTheory (incoming : Bindings)
+    (expression expected : Atom) (theory : Bindings) : List Bindings :=
+  Bindings.merge incoming
+    (restrictBnd (expectedApplicationVisibleScope expression expected) theory)
+
+/-- Merge the caller binding with every visible applicability assignment.
+    A successful merge is one initial binding for the complete selected
+    application; an inconsistent merge contributes no evaluation branch. -/
+def selectedApplicationInitialBindings (incoming : Bindings)
+    (expression expected : Atom) (selected : SelectedFunctionType) :
+    List Bindings :=
+  selectedApplicationInitialBindingsFromTheory incoming expression expected
+    selected.typeBindings
+
+/-- Compatibility projection for theorem statements about a single application.  The evaluator
+    consumes the complete scan result and therefore preserves all errors. -/
+def typeMismatch (env : MinEnv) (w : World) (op : String)
+    (args : List Atom) : Option (Nat × Atom × Atom) :=
+  match selectFunctionType env w (Atom.sym op) args with
+  | .selected _ => none
+  | .exhausted _ true => none
+  | .exhausted errors false => errors.findSome? fun
+      | .badArgument position expected actual => some (position, expected, actual)
+      | .incorrectArity => none
+
+/-- Compatibility projection: true exactly when every retained failure is an arity failure and no
+    tuple candidate is available.  Runtime evaluation consumes the complete scan instead. -/
 def arityMismatch (env : MinEnv) (op : String) (args : List Atom) : Bool :=
-  if op == "get-type" then false
-  else match env.sigs.get? op with
-    | none => false
-    | some ts => args.length != ts.dropLast.length
+  match selectFunctionType env World.empty (Atom.sym op) args with
+  | .selected _ => false
+  | .exhausted _ true => false
+  | .exhausted errors false => !errors.isEmpty && errors.all fun
+      | .incorrectArity => true
+      | .badArgument _ _ _ => false
 
-/-- Conjunctively match a list of patterns over `atoms`, threading bindings from earlier conjuncts
-    into later ones (Hyperon's `(match S (, p1 ... pk) tmpl)`). Each stored atom is freshened so its
-    variables cannot capture query variables. Returns the surviving solution bindings and the
-    advanced gensym counter. With a single pattern this reduces to ordinary `match`. -/
-def matchConj (atoms : List Atom) : List Atom → St → List Bindings → (List Bindings × St)
+/-! ### Reflective `metta` type boundary
+
+The embedded `metta` instruction carries an expected type and a selected
+space.  These operands are semantic: the published evaluator casts atoms
+against the expected type and evaluates expressions in the selected space.
+Keeping this check at the instruction boundary also leaves ordinary
+`mettaEval` calls unchanged. -/
+
+/-- First successful expected/actual type match, or every rejected actual
+type in source order. -/
+def matchExpectedType (bindings : Bindings) (expected : Atom) :
+    List Atom → Sum (List Atom) Bindings
+  | [] => .inl []
+  | actual :: actuals =>
+      match matchType bindings expected actual with
+      | some output => .inr output
+      | none =>
+          match matchExpectedType bindings expected actuals with
+          | .inr output => .inr output
+          | .inl rejected => .inl (actual :: rejected)
+
+/-- Variables that a type candidate must avoid when it is consumed by
+    `type_cast`.  Hyperon keeps variables from stored annotations private;
+    the string representation used here realizes that identity discipline by
+    freshening against the complete live cast boundary. -/
+def typeCastInferenceAvoid (env : MinEnv) (prepared atom expected : Atom)
+    (bindings : Bindings) (rawTypes : List Atom) : List VarName :=
+  expected.vars ++ atom.vars ++ bindings.vars ++
+    typeInferenceAvoid env prepared rawTypes
+
+/-- Type-cast one prepared atom while keeping an enclosing evaluator scope
+private from the freshly localized type candidates.  The protected scope is
+prepended to the ordinary cast boundary because freshening order is observable
+through generated names. -/
+def mettaTypeCastAvoiding (protectedScope : List VarName) (env : MinEnv)
+    (world : World) (bindings : Bindings)
+    (atom expected : Atom) : Sum (List Atom) Bindings :=
+  let prepared := typePrep world atom
+  let rawTypes := getTypes env prepared
+  let avoid := protectedScope ++
+    typeCastInferenceAvoid env prepared atom expected bindings rawTypes
+  matchExpectedType bindings expected
+    (freshenArgumentTypes avoid 0 rawTypes)
+
+/-- Type-cast one prepared atom at its own local boundary. -/
+def mettaTypeCast (env : MinEnv) (world : World) (bindings : Bindings)
+    (atom expected : Atom) : Sum (List Atom) Bindings :=
+  mettaTypeCastAvoiding [] env world bindings atom expected
+
+/-- Structured published `BadType` result. -/
+def badTypeAtom (source expected actual : Atom) : Atom :=
+  Atom.expr [Atom.sym "Error", source,
+    Atom.expr [Atom.sym "BadType", expected, actual]]
+
+/-- Complete one non-expression embedded-`metta` cast.  A successful cast
+returns its caller-visible binding consequences through the same projection
+used by expression results; a failed cast retains the caller binding on every
+ordered `BadType` diagnostic. -/
+def finishEmbeddedMettaCast (prev : Stack) (incoming : Bindings)
+    (atom expected : Atom) : Sum (List Atom) Bindings → List Item
+  | .inr output =>
+      retainEmbeddedMettaResults prev incoming expected [(atom, output)]
+  | .inl rejected =>
+      rejected.map fun actual =>
+        finItem prev (badTypeAtom atom expected actual) incoming
+
+def ExpectedFunctionTypeError.toAtom (expression : Atom) :
+    ExpectedFunctionTypeError → Atom
+  | .ordinary error => error.toAtom expression
+  | .badReturn expected actual => badTypeAtom expression expected actual
+
+def matchConjAvoiding
+    (atoms : List Atom) (patternVars : List VarName) :
+    List Atom → St → List Bindings → (List Bindings × St)
   | [], st, sols => (sols, st)
   | p :: ps, st, sols =>
       let (sols', st') := sols.foldl (fun (acc : List Bindings × St) b =>
@@ -666,13 +1393,23 @@ def matchConj (atoms : List Atom) : List Atom → St → List Bindings → (List
         -- Without this it would re-bind against a freshened stored variable (`$x |-> $x#k`) with
         -- no link back to its value, leaking spurious un-instantiated solutions (a3).
         let pInst := instantiate b p
+        let avoid := b.vars ++ patternVars
         let (ext, st2) := atoms.foldl (fun (a2 : List Bindings × St) atom =>
-          let atom' := (freshenRule a2.2.counter atom atom).1
+          let (renamed, nextCounter) := freshenRuleAvoiding a2.2.counter avoid atom atom
+          let atom' := renamed.1
           let more := (matchAtoms pInst atom').flatMap fun mb =>
             (Bindings.merge b mb).filter (fun m => !Bindings.hasLoop m)
-          (a2.1 ++ more, { a2.2 with counter := a2.2.counter + 1 })) ([], acc.2)
+          (a2.1 ++ more, { a2.2 with counter := nextCounter })) ([], acc.2)
         (acc.1 ++ ext, st2)) ([], st)
-      matchConj atoms ps st' sols'
+      matchConjAvoiding atoms patternVars ps st' sols'
+
+/-- Conjunctively match a list of patterns over `atoms`, threading bindings from earlier conjuncts
+into later ones (Hyperon's `(match S (, p1 ... pk) tmpl)`). Every stored atom is alpha-renamed away
+from all query variables and the current branch bindings before matching. Returns the surviving
+solution bindings and the advanced gensym counter. -/
+def matchConj (atoms patterns : List Atom) (st : St) (sols : List Bindings) :
+    List Bindings × St :=
+  matchConjAvoiding atoms (patterns.flatMap Atom.vars) patterns st sols
 
 /-- Build the `@doc-formal` record for `atom` from its `(@doc atom ...)` facts and declared type,
     or return `Empty` if undocumented (Hyperon's `get-doc`, g1_docs). A 3-element
@@ -682,6 +1419,7 @@ def matchConj (atoms : List Atom) : List Atom → St → List Bindings → (List
     when the type is absent or not an arrow of the right arity. -/
 def getDocOf (env : MinEnv) (w : World) (atom : Atom) : Atom :=
   let atoms := env.atoms ++ w.selfExtra
+  -- Missing documentation types intentionally display `%Undefined%`.
   let ty := match atom with
     | Atom.sym s => ((env.types.getD s []).head?).getD (Atom.sym "%Undefined%")
     | _ => ((env.exprTypes.find? (fun p => p.1 == atom)).map (·.2)).getD (Atom.sym "%Undefined%")
@@ -693,6 +1431,8 @@ def getDocOf (env : MinEnv) (w : World) (atom : Atom) : Atom :=
       let n := params.length
       let (paramTys, retTy) := match ty with
         | Atom.expr (Atom.sym "->" :: rest) =>
+            -- The length guard implies `rest` is nonempty; the default is
+            -- unreachable and only totalizes `getLast?`.
             if rest.length == n + 1 then (rest.dropLast, ((rest.getLast?).getD (Atom.sym "%Undefined%")))
             else (List.replicate n (Atom.sym "%Undefined%"), Atom.sym "%Undefined%")
         | _ => (List.replicate n (Atom.sym "%Undefined%"), Atom.sym "%Undefined%")
@@ -710,6 +1450,240 @@ def getDocOf (env : MinEnv) (w : World) (atom : Atom) : Atom :=
       Atom.expr [Atom.sym "@doc-formal", Atom.expr [Atom.sym "@item", atom],
         Atom.expr [Atom.sym "@kind", Atom.sym "atom"], Atom.expr [Atom.sym "@type", ty], desc]
   | _ => Atom.sym "Empty"
+
+/-- The first evaluated argument that changed into `Empty` or an error.
+An argument that was already the same terminal atom is quoted data and does
+not stop its branch. -/
+@[simp] def firstChangedArgumentStop
+    (evaluated source : List Atom) : Option (Atom × Atom) :=
+  (evaluated.zip source).find? fun pair =>
+    (pair.1 == emptyA || pair.1.isError) && pair.1 != pair.2
+
+/-- Evaluate one symbol-headed application after the ordered type scan has selected its argument
+    mask and return policy.  The recursive evaluator and reducer are parameters so this control-flow
+    combinator remains outside their well-founded mutual recursion. -/
+def evaluateSelectedApplication
+    (evalRecursive : St → Bindings → Atom → List (Atom × Bindings) × St)
+    (reduceApplication : St → Atom → List (Atom × Bindings) × St)
+    (st : St) (op : String) (args : List Atom)
+    (mask : List Bool) (returnAtom : Bool) : List (Atom × Bindings) × St :=
+  let queryVars := args.flatMap Atom.vars
+  let (partials, st1) := (args.zip mask).foldl
+    (fun (acc : List (List Atom × Bindings) × St) ae =>
+      acc.1.foldl (fun (acc2 : List (List Atom × Bindings) × St) part =>
+        match firstChangedArgumentStop part.1 args with
+        | some _ => (acc2.1 ++ [part], acc2.2)
+        | none =>
+            if ae.2 then
+              let (results, st') := evalRecursive acc2.2 part.2 ae.1
+              (acc2.1 ++ results.map (fun result =>
+                (part.1 ++ [result.1], restrictBnd queryVars
+                  ((Bindings.merge part.2 result.2).head?.getD result.2))), st')
+            else
+              (acc2.1 ++ [(part.1 ++ [instantiate part.2 ae.1], part.2)], acc2.2))
+        ([], acc.2))
+    ([([], [])], st)
+  partials.foldl
+    (fun (acc : List (Atom × Bindings) × St) part =>
+      match firstChangedArgumentStop part.1 args with
+      | some (error, _) => (acc.1 ++ [(error, part.2)], acc.2)
+      | none =>
+          let application := Atom.expr (Atom.sym op :: part.1)
+          let (pairs, st') := reduceApplication acc.2 application
+          let (out, st'') := pairs.foldl
+            (fun (inner : List (Atom × Bindings) × St) result =>
+              let retained := restrictBnd queryVars
+                ((Bindings.merge part.2 result.2).head?.getD result.2)
+              if result.1 == notReducibleA || result.1 == application then
+                (inner.1 ++ [(application, part.2)], inner.2)
+              else if returnAtom then
+                (inner.1 ++ [(result.1, retained)], inner.2)
+              else
+                let (more, st3) := evalRecursive inner.2 retained result.1
+                (inner.1 ++ more.map (fun next =>
+                  (next.1, restrictBnd queryVars
+                    ((Bindings.merge retained next.2).head?.getD next.2))), st3))
+            ([], st')
+          (acc.1 ++ out, st''))
+    ([], st1)
+
+/-- Variables retained by the expected-aware application worker.  Existing
+argument-variable order stays first so the ordinary empty-seed path is
+unchanged; variables already constrained by the selected public seed are
+appended once, preserving the published binding-threading contract without
+retaining unrelated variables produced inside recursive calls. -/
+def expectedApplicationRetentionScope
+    (initialBindings : Bindings) (args : List Atom) : List VarName :=
+  let queryVars := args.flatMap Atom.vars
+  match initialBindings with
+  | [] => queryVars
+  | _ :: _ =>
+      queryVars ++ initialBindings.vars.filter fun name =>
+        !queryVars.contains name
+
+/-- Evaluate one selected application from one applicability-produced binding
+    while carrying the expected type owned by every evaluated argument and by
+    the selected result.  The same initial binding seeds argument evaluation
+    and the eventual rule reduction, matching the published
+    `interpret_function` boundary. -/
+def evaluateExpectedApplicationFrom
+    (evalRecursive : St → Bindings → Atom → Atom → List (Atom × Bindings) × St)
+    (reduceApplication : St → Atom → List (Atom × Bindings) × St)
+    (initialBindings : Bindings)
+    (st : St) (op : String) (args : List Atom)
+    (selected : SelectedFunctionType) : List (Atom × Bindings) × St :=
+  let queryVars := expectedApplicationRetentionScope initialBindings args
+  let policies := argumentEvaluationPolicies selected args.length
+  let (partials, st1) := (args.zip policies).foldl
+    (fun (acc : List (List Atom × Bindings) × St) ae =>
+      acc.1.foldl (fun (acc2 : List (List Atom × Bindings) × St) part =>
+        match firstChangedArgumentStop part.1 args with
+        | some _ => (acc2.1 ++ [part], acc2.2)
+        | none =>
+            if ae.2.1 then
+              let (results, st') := evalRecursive acc2.2 part.2 ae.1 ae.2.2
+              (acc2.1 ++ results.map (fun result =>
+                (part.1 ++ [result.1], restrictBnd queryVars
+                  ((Bindings.merge part.2 result.2).head?.getD result.2))), st')
+            else
+              (acc2.1 ++ [(part.1 ++ [instantiate part.2 ae.1], part.2)], acc2.2))
+        ([], acc.2))
+    ([([], initialBindings)], st)
+  partials.foldl
+    (fun (acc : List (Atom × Bindings) × St) part =>
+      match firstChangedArgumentStop part.1 args with
+      | some (error, _) => (acc.1 ++ [(error, part.2)], acc.2)
+      | none =>
+          let application := Atom.expr (Atom.sym op :: part.1)
+          let (pairs, st') := reduceApplication acc.2 application
+          let (out, st'') := pairs.foldl
+            (fun (inner : List (Atom × Bindings) × St) result =>
+              let retained := restrictBnd queryVars
+                ((Bindings.merge part.2 result.2).head?.getD result.2)
+              if result.1 == notReducibleA || result.1 == application then
+                (inner.1 ++ [(application, part.2)], inner.2)
+              else if returnsAtom selected then
+                (inner.1 ++ [(result.1, retained)], inner.2)
+              else
+                let (more, st3) := evalRecursive inner.2 retained result.1
+                  (selectedResultExpected selected)
+                (inner.1 ++ more.map (fun next =>
+                  (next.1, restrictBnd queryVars
+                    ((Bindings.merge retained next.2).head?.getD next.2))), st3))
+            ([], st')
+          (acc.1 ++ out, st''))
+    ([], st1)
+
+/-- Empty-seed compatibility boundary for proofs and low-level callers.
+    Runtime entry points use `executeApplicationPlan`, which carries the live
+    caller theory through selection, head evaluation, arguments, and reduction. -/
+def evaluateExpectedApplication
+    (evalRecursive : St → Bindings → Atom → Atom → List (Atom × Bindings) × St)
+    (reduceApplication : St → Atom → List (Atom × Bindings) × St)
+    (st : St) (op : String) (args : List Atom)
+    (selected : SelectedFunctionType) : List (Atom × Bindings) × St :=
+  evaluateExpectedApplicationFrom evalRecursive reduceApplication [] st op args selected
+
+/-- Evaluate one selected application from every compatible public seed, in
+left-to-right order while threading the single runtime state through the
+alternatives.  The reducer receives the same seed as argument evaluation, so
+the applicability output cannot drift between the two continuations. -/
+def evaluateExpectedApplicationSeeds
+    (evalRecursive : St → Bindings → Atom → Atom → List (Atom × Bindings) × St)
+    (reduceApplication : Bindings → St → Atom → List (Atom × Bindings) × St)
+    (initialBindings : List Bindings) (st : St) (op : String)
+    (args : List Atom) (selected : SelectedFunctionType) :
+    List (Atom × Bindings) × St :=
+  initialBindings.foldl
+    (fun acc bindings =>
+      let (more, nextSt) := evaluateExpectedApplicationFrom evalRecursive
+        (reduceApplication bindings) bindings acc.2 op args selected
+      (acc.1 ++ more, nextSt))
+    ([], st)
+
+/-- Execute the selected half of one application plan.  This is the sole
+    runtime boundary between type selection and application evaluation:
+
+    1. evaluate the operator head by casting it against the selected arrow;
+    2. project the resulting public theory into one or more compatible seeds;
+    3. use each seed for both argument evaluation and rule reduction; and
+    4. retain only bindings visible at the application boundary.
+
+    Ordinary and expected-aware evaluation differ only in `expected`; both
+    enter this function with the same live caller binding. -/
+def executeSelectedApplicationPlan
+    (evalRecursive : St → Bindings → Atom → Atom →
+      List (Atom × Bindings) × St)
+    (reduceApplication : Bindings → St → Atom →
+      List (Atom × Bindings) × St)
+    (env : MinEnv) (incoming : Bindings) (st : St)
+    (op : String) (args : List Atom) (expected : Atom)
+    (selected : SelectedFunctionType) : List (Atom × Bindings) × St :=
+  let expression := Atom.expr (Atom.sym op :: args)
+  match mettaTypeCastAvoiding
+      (expectedApplicationVisibleScope expression expected)
+      env st.world selected.typeBindings (Atom.sym op) selected.functionType with
+  | .inl rejected =>
+      let seeds :=
+        selectedApplicationInitialBindings incoming expression expected selected
+      (seeds.flatMap fun bindings =>
+        rejected.map fun actual =>
+          (badTypeAtom (Atom.sym op) selected.functionType actual, bindings), st)
+  | .inr headBindings =>
+      let seeds :=
+        selectedApplicationInitialBindingsFromTheory incoming expression expected
+          headBindings
+      evaluateExpectedApplicationSeeds evalRecursive reduceApplication seeds st
+        op args selected
+
+/-- Select and execute one symbol-headed application under `expected`.
+    Candidate freshening, applicability, operator-head evaluation, argument
+    evaluation, reduction, result checking, and public binding projection are
+    shared by ordinary (`%Undefined%`) and expected-aware entry points.  Tuple
+    fallback remains a separate policy, but consumes the same incoming theory
+    and state chronology. -/
+def executeApplicationPlan
+    (evalRecursive : St → Bindings → Atom → Atom →
+      List (Atom × Bindings) × St)
+    (reduceApplication : Bindings → St → Atom →
+      List (Atom × Bindings) × St)
+    (env : MinEnv) (incoming : Bindings) (st : St)
+    (op : String) (args : List Atom) (expected : Atom) :
+    List (Atom × Bindings) × St :=
+  let expression := Atom.expr (Atom.sym op :: args)
+  match selectFunctionTypeForExpectedFrom env st.world
+      (Atom.sym op) args expected incoming with
+  | .selected selected =>
+      executeSelectedApplicationPlan evalRecursive reduceApplication env incoming
+        st op args expected selected
+  | .exhausted errors tupleEligible =>
+      let errorResults := errors.map fun error =>
+        (error.toAtom expression, incoming)
+      if tupleEligible then
+        let tupleSelected : SelectedFunctionType :=
+          ⟨Atom.sym "%Undefined%", List.replicate args.length (Atom.sym "%Undefined%"),
+            expected, incoming⟩
+        let (tupleResults, st') :=
+          evaluateExpectedApplicationFrom evalRecursive
+            (reduceApplication incoming) incoming st op args tupleSelected
+        (tupleResults ++ errorResults, st')
+      else
+        (errorResults, st)
+
+/-- Apply the published evaluator's success-priority boundary without
+    changing the state threaded while discovering the alternatives.  If any
+    non-error result exists, all errors are latent and therefore suppressed;
+    otherwise every error is retained in its discovery order.  `Empty` is a
+    success here, matching the published filter, which distinguishes only
+    `(Error ...)` atoms. -/
+def prioritizeSemanticResults
+    (execution : List (Atom × Bindings) × St) :
+    List (Atom × Bindings) × St :=
+  let successes := execution.1.filter (fun result => !result.1.isError)
+  if successes.isEmpty then
+    execution
+  else
+    (successes, execution.2)
 
 mutual
 
@@ -758,12 +1732,13 @@ def interpretStack1 (env : MinEnv) (fuel : Nat) (st : St) (it : Item) : List Ite
       | Atom.expr [Atom.sym "decons-atom", Atom.expr (h :: t)] => ([finItem prev (Atom.expr [h, Atom.expr t]) it.bnd], st)
       | Atom.expr [Atom.sym "decons-atom", _] =>
           ([finItem prev (errAtom top.atom "decons-atom: expected (decons-atom <non-empty-expression>)") it.bnd], st)
-      | Atom.expr [Atom.sym "context-space"] => ([finItem prev (Atom.sym "&self") it.bnd], st)
+      | Atom.expr [Atom.sym "context-space"] =>
+          ([finItem prev (contextSpaceAtom env.contextName) it.bnd], st)
       | Atom.expr (Atom.sym "get-type" :: args)
       | Atom.expr (Atom.sym "get-type-space" :: args) =>
-          -- `(get-type atom)`, the space-parameterised `(get-type atom space)` (used by `type-cast`),
-          -- and `(get-type-space space atom)` query the selected type environment. The no-space form
-          -- uses the current program environment; the space forms layer the requested space's atoms
+          -- `(get-type atom)` and `(get-type-space space atom)` query the selected type environment.
+          -- The no-space form uses the current program environment; the explicit-space form layers
+          -- the requested space's atoms
           -- onto the runtime environment so space-local `(: ...)` declarations are visible.
           --
           -- An ill-typed application has no type: `get-type` returns no results when an argument
@@ -775,8 +1750,6 @@ def interpretStack1 (env : MinEnv) (fuel : Nat) (st : St) (it : Item) : List Ite
           -- types (e.g. `(Vec Number (S (S Z)))`, `Number`), so b5/d1 are unchanged.
           let parsed := match top.atom, args with
             | Atom.expr (Atom.sym "get-type" :: _), [x] => some (env, x)
-            | Atom.expr (Atom.sym "get-type" :: _), [x, space] =>
-                some (typeEnvForSpace env st.world (instantiate it.bnd space), x)
             | Atom.expr (Atom.sym "get-type-space" :: _), [space, x] =>
                 some (typeEnvForSpace env st.world (instantiate it.bnd space), x)
             | _, _ => none
@@ -790,28 +1763,71 @@ def interpretStack1 (env : MinEnv) (fuel : Nat) (st : St) (it : Item) : List Ite
               (acc.1 ++ rs.map (fun p => finItem prev p.1 it.bnd), st2)) ([], st0)
           match xi with
           | Atom.expr (Atom.sym op :: args) =>
-              if (typeMismatch typeEnv st.world op args).isSome then ([], st) else emit st
+              match selectFunctionType typeEnv st.world (Atom.sym op) args with
+              | .selected _ => emit st
+              | .exhausted errors tupleEligible =>
+                  if tupleEligible || errors.isEmpty then emit st else ([], st)
           | Atom.expr (f :: args) =>
               -- Expression-headed application (e.g. partial application `(curry-a + 2)`): no type
               -- if the head's function type rejects an argument
               -- (d2: `(get-type ((curry-a + 2) "S"))` is `()`).
-              let illTyped := (getTypes typeEnv (typePrep st.world f)).any (fun ft => match ft with
-                | Atom.expr (Atom.sym "->" :: ts) =>
-                    (typeCheckArgs typeEnv st.world ts.dropLast 0 [] args).isSome
-                | _ => false)
-              if illTyped then ([], st) else emit st
+              match selectFunctionType typeEnv st.world f args with
+              | .selected _ => emit st
+              | .exhausted errors tupleEligible =>
+                  if tupleEligible || errors.isEmpty then emit st else ([], st)
           | _ => emit st
       | Atom.expr [Atom.sym "get-doc", x] =>
           -- Documentation lookup (g1_docs): build the `@doc-formal` for the (uninterpreted) atom
           -- from its `(@doc ...)` facts and declared type, or `Empty` if undocumented. The `help!`
           -- grounded op then formats and prints the result.
           ([finItem prev (getDocOf env st.world (instantiate it.bnd x)) it.bnd], st)
-      | Atom.expr [Atom.sym "metta", atom, _typ, _space] =>
-          -- Full type-directed evaluation of `atom` (Hyperon's `metta` strategy). Internal bindings
-          -- are dropped (Hyperon `apply_and_retain`, "retain nothing locally"). World effects thread
-          -- through `st`.
-          let (pairs, st') := mettaEval env fuel st it.bnd atom
-          (pairs.map (fun p => finItem prev p.1 it.bnd), st')
+      | Atom.expr [Atom.sym "metta", atom, typ, space] =>
+          -- Full type-directed evaluation of `atom` (Hyperon's `metta` strategy). The expected type
+          -- and selected space are semantic operands: meta-type passthroughs return immediately;
+          -- every other atom is cast in the selected type environment before expression evaluation.
+          -- Applicability assignments still live in the caller's continuation are retained;
+          -- let-local and fresh type-inference variables remain private.  World effects still
+          -- thread.
+          let atom' := instantiate it.bnd atom
+          let typ' := instantiate it.bnd typ
+          let space' := instantiate it.bnd space
+          match evalEnvForSpace env st.world space' with
+          | none =>
+              ([finItem prev
+                (errAtom (Atom.expr [Atom.sym "metta", atom', typ', space'])
+                  "metta expects a space as its third argument") it.bnd], st)
+          | some selectedEnv =>
+              if atom' == emptyA || atom'.isError then
+                ([finItem prev atom' it.bnd], st)
+              else if typ' == Atom.sym "Atom" then
+                ([finItem prev atom' it.bnd], st)
+              else
+                let castNonExpression :=
+                  (finishEmbeddedMettaCast prev it.bnd atom' typ'
+                    (mettaTypeCastAvoiding
+                      (embeddedMettaCastProtectedScope prev)
+                      selectedEnv st.world it.bnd atom' typ'), st)
+                match atom' with
+                | Atom.var _ => ([finItem prev atom' it.bnd], st)
+                | Atom.sym _ =>
+                    if typ' == Atom.sym "Symbol" then
+                      ([finItem prev atom' it.bnd], st)
+                    else castNonExpression
+                | Atom.gnd _ =>
+                    if typ' == Atom.sym "Grounded" then
+                      ([finItem prev atom' it.bnd], st)
+                    else castNonExpression
+                | Atom.expr [] =>
+                    if typ' == Atom.sym "Expression" then
+                      ([finItem prev atom' it.bnd], st)
+                    else castNonExpression
+                | Atom.expr (_ :: _) =>
+                    if typ' == Atom.sym "Expression" then
+                      ([finItem prev atom' it.bnd], st)
+                    else
+                      let (pairs, st') :=
+                        mettaEvalExpected selectedEnv fuel st it.bnd atom' typ'
+                      (retainEmbeddedMettaResults prev it.bnd typ' pairs, st')
       | Atom.expr [Atom.sym "capture", atom] =>
           -- `(capture atom)` (Hyperon `core.rs : CaptureOp`, type `(-> Atom Atom)`): interpret
           -- `atom` in the current space and return its results. The argument is taken quoted;
@@ -848,10 +1864,13 @@ def interpretStack1 (env : MinEnv) (fuel : Nat) (st : St) (it : Item) : List Ite
             (sols.filterMap fun m =>
               if Bindings.hasLoop m then none else some (finItem prev (instantiate m template) m), st')
       | Atom.expr [Atom.sym "superpose-bind", Atom.expr pairs] =>
-          (pairs.map (superposeItem prev it.bnd), st)
+          (pairs.flatMap (superposeItems prev it.bnd), st)
       | Atom.expr [Atom.sym "collapse-bind", nested] =>
           let (atoms, st') := interpretFuel env fuel st [{ stack := atomToStack nested [], bnd := it.bnd }] []
-          ([finItem prev (Atom.expr (atoms.map (fun p => Atom.expr [p.1, Atom.unit]))) it.bnd], st')
+          ([finItem prev
+              (Atom.expr (atoms.map fun p =>
+                Atom.expr [p.1, Atom.gnd (Ground.bindings (Bindings.store p.2))]))
+              it.bnd], st')
       -- mutable state cells (e2/e3) and named spaces (e1/c2), operating on the threaded `world`
       | Atom.expr [Atom.sym "new-state", v] =>
           -- allocate a fresh cell holding `v`; return the handle `(State <id>)`
@@ -902,10 +1921,12 @@ def interpretStack1 (env : MinEnv) (fuel : Nat) (st : St) (it : Item) : List Ite
       | Atom.expr [Atom.sym "get-atoms", s] =>
           match spaceName st.world (instantiate it.bnd s) with
           | some "&self" =>
-              let (atoms, st') := freshenSpaceAtoms st (env.visibleAtoms ++ st.world.selfExtra)
+              let avoid := it.bnd.vars ++ liveStackVars it.stack
+              let (atoms, st') := freshenSpaceAtoms st avoid (env.visibleAtoms ++ st.world.selfExtra)
               (atoms.map (fun x => finItem prev x it.bnd), st')
           | some name =>
-              let (atoms, st') := freshenSpaceAtoms st (st.world.spaces.getD name [])
+              let avoid := it.bnd.vars ++ liveStackVars it.stack
+              let (atoms, st') := freshenSpaceAtoms st avoid (st.world.spaces.getD name [])
               (atoms.map (fun x => finItem prev x it.bnd), st')
           | none => ([finItem prev (errAtom (instantiate it.bnd s) "get-atoms: not a space") it.bnd], st)
       | Atom.expr [Atom.sym "bind!", tok, val] =>
@@ -941,8 +1962,8 @@ def interpretStack1 (env : MinEnv) (fuel : Nat) (st : St) (it : Item) : List Ite
             ([finItem prev (errAtom top.atom "unsupported minimal op") it.bnd], st)
           else
             ([{ stack := { top with fin := true } :: prev, bnd := it.bnd }], st)
-  termination_by 3 * fuel + 2
-  decreasing_by all_goals (simp_wf <;> omega)
+  termination_by 4 * fuel + 3
+  decreasing_by all_goals omega
 
 /-- Fuel-bounded interpretation driver (Rust `interpret`'s loop). Processes the work queue until
     it empties or fuel runs out, threading the gensym counter and mutable world throughout.
@@ -961,8 +1982,8 @@ def interpretFuel (env : MinEnv) (fuel : Nat) (st : St) (work : List Item) (done
       let finals := (results.filter isFinal).map finalPair
       let more := results.filter (fun r => !isFinal r)
       interpretFuel env f st' (more ++ rest) (finals.reverse ++ done)
-  termination_by 3 * fuel
-  decreasing_by all_goals (simp_wf <;> omega)
+  termination_by 4 * fuel
+  decreasing_by all_goals omega
 
 /-- Full MeTTa evaluation (`metta`): evaluate each argument whose declared type is not `Atom`,
     then reduce the resulting application to a fixpoint, treating `NotReducible` as "keep the atom".
@@ -977,63 +1998,19 @@ def mettaEval (env : MinEnv) (fuel : Nat) (st : St) (bnd : Bindings) (a : Atom) 
       -- atom, so an exhausted result is distinguishable from a genuine normal form.
       ([(Atom.expr [Atom.sym "Error", instantiate bnd a, Atom.sym "StackOverflow"], bnd)], st)
   | fuel + 1 =>
-    match instantiate bnd a with
+    let source := instantiate bnd a
+    if source == emptyA || source.isError then
+      ([(source, bnd)], st)
+    else prioritizeSemanticResults <| match source with
     | Atom.expr (Atom.sym op :: args) =>
-      if arityMismatch env op args then
-        ([(Atom.expr [Atom.sym "Error", Atom.expr (Atom.sym op :: args),
-            Atom.sym "IncorrectNumberOfArguments"], bnd)], st)
-      else if let some (pos, expected, actual) := typeMismatch env st.world op args then
-        -- Runtime type error: a declared parameter type rejects an argument (Hyperon `BadArgType`).
-        ([(Atom.expr [Atom.sym "Error", Atom.expr (Atom.sym op :: args),
-            Atom.expr [Atom.sym "BadArgType", Atom.gnd (Ground.int (Int.ofNat pos)), expected, actual]], bnd)], st)
-      else
-        -- (1) Type-directed argument evaluation, threading query-variable bindings across arguments
-        --     (Hyperon `apply_and_retain`): a solution found while evaluating one argument (e.g.
-        --     `$x = Fritz` from the Boolean condition `(green $x)`) is retained, restricted to
-        --     the expression's own query variables so `let`-local variables do not leak, and
-        --     reaches its siblings (so `(ift (green $x) $x)` returns `Fritz`). The argument list is
-        --     nondeterministic, so this is a binding-threaded cartesian product; `st` (gensym + world)
-        --     threads through it so mutations sequence left-to-right.
-        let queryVars := args.flatMap Atom.vars
-        let (partials, st1) := (args.zip (argMask env op args.length)).foldl
-          (fun (acc : List (List Atom × Bindings) × St) ae =>
-            acc.1.foldl (fun (acc2 : List (List Atom × Bindings) × St) part =>
-              if ae.2 then
-                let (ps, st') := mettaEval env fuel acc2.2 part.2 ae.1
-                (acc2.1 ++ ps.map (fun p =>
-                  (part.1 ++ [p.1], restrictBnd queryVars ((Bindings.merge part.2 p.2).head?.getD p.2))), st')
-              else
-                (acc2.1 ++ [(part.1 ++ [instantiate part.2 ae.1], part.2)], acc2.2)) ([], acc.2))
-          ([([], [])], st)
-        -- (2) Reduce each (binding-threaded) combination; leave inert on Atom-return (`metta_call`)
-        --     or re-evaluate, carrying the threaded query bindings forward.
-        partials.foldl
-          (fun (acc : List (Atom × Bindings) × St) part =>
-            -- Error propagation (Hyperon `interpret_args`): if a type-directed-evaluated argument
-            -- reduced to an `(Error ...)`, the whole application becomes that error, so
-            -- `(f (+ 5 "S"))` gives `(Error (+ 5 "S") (BadArgType 2 Number String))`. The `h != orig`
-            -- guard is the spec's `$h != $atom`: an `Atom`-typed argument passed through unevaluated
-            -- (or a literal error datum) is unchanged, so `assert*` still receives and compares
-            -- error results rather than propagating them.
-            match (part.1.zip args).find? (fun ho => ho.1.isError && ho.1 != ho.2) with
-            | some (err, _) => (acc.1 ++ [(err, part.2)], acc.2)
-            | none =>
-            let w := Atom.expr (Atom.sym op :: part.1)
-            let (pairs, st') := interpretFuel env (fuel + 1) acc.2
-              [{ stack := atomToStack (Atom.expr [Atom.sym "eval", w]) [], bnd := bnd }] []
-            let (out, st'') := pairs.foldl (fun (a2 : List (Atom × Bindings) × St) p =>
-              let pb := restrictBnd queryVars ((Bindings.merge part.2 p.2).head?.getD p.2)
-              if p.1 == notReducibleA || p.1 == w then (a2.1 ++ [(w, part.2)], a2.2)
-              else if returnsAtom env w then (a2.1 ++ [(p.1, pb)], a2.2)
-              else let (more, st3) := mettaEval env fuel a2.2 pb p.1
-                   -- Re-merge the threaded query bindings `pb`: re-evaluating `p.1` produces fresh
-                   -- output bindings that may not mention a query variable bound inside the evaluated
-                   -- argument (e.g. `$goal`, when the argument reduced to a state handle `(State k)`
-                   -- that no longer contains `$goal`). Without this merge that solution is lost to
-                   -- the continuation, so `(get-state (status (Goal $goal)))` would drop `$goal`.
-                   (a2.1 ++ more.map (fun m =>
-                      (m.1, restrictBnd queryVars ((Bindings.merge pb m.2).head?.getD m.2))), st3)) ([], st')
-            (acc.1 ++ out, st'')) ([], st1)
+      executeApplicationPlan
+        (fun nextSt nextBindings nextAtom nextExpected =>
+          mettaEvalExpected env fuel nextSt nextBindings nextAtom nextExpected)
+        (fun bindings nextSt application =>
+          interpretFuel env (fuel + 1) nextSt
+            [{ stack := atomToStack (Atom.expr [Atom.sym "eval", application]) [],
+               bnd := bindings }] [])
+        env bnd st op args (Atom.sym "%Undefined%")
     | Atom.expr (e :: rest) =>
         -- Expression-headed application. First try to reduce the whole expression by an equality
         -- rule: higher-order combinators are defined with expression-headed LHS, e.g.
@@ -1061,15 +2038,77 @@ def mettaEval (env : MinEnv) (fuel : Nat) (st : St) (bnd : Bindings) (a : Atom) 
             let (more, st') := mettaEval env fuel acc.2 p.2 p.1
             (acc.1 ++ more, st')) ([], st1)
     | w =>
-        -- Bare symbol, variable, or grounded atom: reduce once, then re-evaluate or leave inert.
-        let (pairs, st') := interpretFuel env (fuel + 1) st
-          [{ stack := atomToStack (Atom.expr [Atom.sym "eval", w]) [], bnd := bnd }] []
-        pairs.foldl (fun (a2 : List (Atom × Bindings) × St) p =>
-          if p.1 == notReducibleA || p.1 == w then (a2.1 ++ [(w, bnd)], a2.2)
-          else if returnsAtom env w then (a2.1 ++ [p], a2.2)
-          else let (more, st3) := mettaEval env fuel a2.2 p.2 p.1; (a2.1 ++ more, st3)) ([], st')
-  termination_by 3 * fuel + 1
-  decreasing_by all_goals (simp_wf <;> omega)
+        -- The published `metta` boundary does not reduce bare atoms under an
+        -- undefined expected type: symbols and grounded atoms pass the
+        -- undefined cast, variables pass by meta-type, and `()` is a
+        -- successful empty expression.  Equation reduction begins only for
+        -- non-empty expressions.
+        ([(w, bnd)], st)
+  termination_by 4 * fuel + 1
+  decreasing_by all_goals omega
+
+/-- Full evaluation under a concrete expected type.  The ordinary `%Undefined%` case delegates to
+    `mettaEval` unchanged.  Expression atoms enter the published conjunctive function-candidate
+    scan directly; the boundary type cast is retained only for non-expression atoms.  Recursive
+    argument/result evaluation carries the selected signature's instantiated expectations. -/
+def mettaEvalExpected (env : MinEnv) (fuel : Nat) (st : St) (bnd : Bindings)
+    (a expected : Atom) : List (Atom × Bindings) × St :=
+  if expected == Atom.sym "%Undefined%" then
+    mettaEval env fuel st bnd a
+  else
+    let source := instantiate bnd a
+    if source == emptyA || source.isError then
+      ([(source, bnd)], st)
+    else if expected == Atom.atomType ||
+        expected == Atom.typeAtomOfMetaType source.metaType ||
+        source.metaType == .variable then
+      ([(source, bnd)], st)
+    else prioritizeSemanticResults <| match (match source with
+      | Atom.expr (_ :: _) => Sum.inr bnd
+      | _ => mettaTypeCast env st.world bnd source expected) with
+    | .inl rejected =>
+        (rejected.map fun actual => (badTypeAtom source expected actual, bnd), st)
+    | .inr typedBindings =>
+      match fuel with
+      | 0 =>
+          ([(Atom.expr [Atom.sym "Error", instantiate typedBindings source,
+              Atom.sym "StackOverflow"], typedBindings)], st)
+      | fuel + 1 =>
+        match instantiate typedBindings source with
+        | Atom.expr (Atom.sym op :: args) =>
+          executeApplicationPlan
+            (fun nextSt nextBindings nextAtom nextExpected =>
+              mettaEvalExpected env fuel nextSt nextBindings nextAtom nextExpected)
+            (fun bindings nextSt application =>
+              interpretFuel env (fuel + 1) nextSt
+                [{ stack := atomToStack (Atom.expr [Atom.sym "eval", application]) [],
+                   bnd := bindings }] [])
+            env typedBindings st op args expected
+        | Atom.expr (e :: rest) =>
+            let whole := Atom.expr (e :: rest)
+            let (ruleRes, st1) := interpretFuel env (fuel + 1) st
+              [{ stack := atomToStack (Atom.expr [Atom.sym "eval", whole]) [],
+                 bnd := typedBindings }] []
+            let reduced := ruleRes.filter (fun p => p.1 != whole && p.1 != notReducibleA)
+            if reduced.isEmpty then
+              let (tupleRes, st2) := interpretFuel env (fuel + 1) st1
+                [{ stack := atomToStack (Atom.expr [Atom.sym "eval",
+                    Atom.expr [Atom.sym "interpret-tuple", whole, Atom.sym "&self"]]) [],
+                   bnd := typedBindings }] []
+              tupleRes.foldl (fun (acc : List (Atom × Bindings) × St) p =>
+                if p.1 == whole then (acc.1 ++ [p], acc.2)
+                else
+                  let (more, st') :=
+                    mettaEvalExpected env fuel acc.2 p.2 p.1 expected
+                  (acc.1 ++ more, st')) ([], st2)
+            else
+              reduced.foldl (fun (acc : List (Atom × Bindings) × St) p =>
+                let (more, st') :=
+                  mettaEvalExpected env fuel acc.2 p.2 p.1 expected
+                (acc.1 ++ more, st')) ([], st1)
+        | w => ([(w, typedBindings)], st)
+  termination_by 4 * fuel + 2
+  decreasing_by all_goals omega
 
 end
 

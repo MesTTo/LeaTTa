@@ -232,9 +232,14 @@ theorem Bindings.resolveAtomAux_singleton_val_unbound (key : VarName) (value : A
         Bindings.eqClassAux, Bindings.eqStep, Bindings.eqVarsInOrder,
         Bindings.classValues_singleton_val_ne value h]
 
+/-- The empty binding set has no dependency loop. -/
+@[simp] theorem Bindings.hasLoop_empty :
+    Bindings.hasLoop [] = false := by
+  rfl
+
 /-- A singleton value binding whose key is absent from its value has no direct
     or recursive dependency loop. -/
-theorem Bindings.hasLoop_singleton_val_of_not_mem (key : VarName) (value : Atom)
+@[simp] theorem Bindings.hasLoop_singleton_val_of_not_mem (key : VarName) (value : Atom)
     (hnot : key ∉ value.vars) :
     Bindings.hasLoop [BindingRel.val key value] = false := by
   let direct : Bool := [BindingRel.val key value].any fun r =>
@@ -272,6 +277,18 @@ theorem Bindings.hasLoop_singleton_val_of_not_mem (key : VarName) (value : Atom)
       (Bindings.resolutionFuel [BindingRel.val key value] (Atom.var x)) (by
         simp [Bindings.resolutionFuel])
     simp [hunbound]
+
+/-- A non-reflexive singleton equality class cannot contain either a direct
+    self-loop or a recursive value dependency. -/
+@[simp] theorem Bindings.hasLoop_singleton_eq_of_ne (x y : VarName)
+    (hne : x ≠ y) :
+    Bindings.hasLoop [BindingRel.eq x y] = false := by
+  simp [Bindings.hasLoop, Bindings.vars, List.eraseDups_cons,
+    Bindings.resolveAtomAux, Bindings.resolutionFuel,
+    Bindings.eqRepresentative, Bindings.eqClassOrdered,
+    Bindings.classValues, Bindings.lookupVal,
+    Bindings.eqVarsInOrder, Bindings.eqClass, Bindings.eqClassAux,
+    Bindings.eqStep, hne, Ne.symm hne]
 
 /-- A singleton value binding is inert on atoms that do not mention its key. -/
 theorem instantiate_singleton_val_inert (key : VarName) (value : Atom) :

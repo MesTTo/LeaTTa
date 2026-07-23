@@ -5,13 +5,15 @@
 Module: MettaHyperonFull.Core.Atom
 Layer: Core
 Purpose: The core MeTTa atom datatype and the values it carries. Defines symbols, variables, grounded
-  payloads, and expressions, together with structural equality, the syntactic meta-types, the built-in
-  type designators, the arrow constructor, and basic measures over atoms. Structural equality is
-  hand-written so it reduces definitionally for the metatheory layer.
+  payloads, expressions, and the binding relations carried by `collapse-bind`, together with structural
+  equality, the syntactic meta-types, the built-in type designators, the arrow constructor, and basic
+  measures over atoms. Structural equality is hand-written so it reduces definitionally for the
+  metatheory layer.
 Imports: (none beyond core)
 Trusted boundary: none
-Main exports: VarName, Ground, Atom, Atom.beq, Atom.beqList, the BEq Atom instance, MetaType,
-  ReduceResult, the built-in type-designator atoms, Atom.isError, Atom.metaType,
+Main exports: VarName, StoredGround, StoredAtom, StoredBinding, Ground, Atom, Atom.beq,
+  Atom.beqList, the BEq Atom instance, MetaType, ReduceResult, the built-in type-designator atoms,
+  Atom.isError, Atom.metaType,
   Atom.typeAtomOfMetaType, Atom.isBuiltinTypeSymbol, Atom.mkArrow, Atom.isArrow, Atom.head?,
   Atom.args?, Atom.size, Atom.vars
 Open obligations: none
@@ -21,8 +23,90 @@ namespace Metta
 /-- Names of MeTTa variables, without the leading `$`. -/
 abbrev VarName := String
 
+/- A grounded binding object can recursively contain atoms, including further grounded bindings.
+These stored carriers are a lossless type-erased snapshot, separate from the live `Atom` datatype so
+ordinary atom equality remains definitionally reducible for the metatheory. -/
+mutual
+  inductive StoredGround where
+    | int : Int → StoredGround
+    | float : Float → StoredGround
+    | str : String → StoredGround
+    | bool : Bool → StoredGround
+    | unit : StoredGround
+    | error : String → StoredGround
+    | external : String → String → StoredGround
+    | bindings : List StoredBinding → StoredGround
+    deriving Repr, Inhabited
+
+  inductive StoredAtom where
+    | sym : String → StoredAtom
+    | var : VarName → StoredAtom
+    | gnd : StoredGround → StoredAtom
+    | expr : List StoredAtom → StoredAtom
+    deriving Repr, Inhabited
+
+  inductive StoredBinding where
+    | val : VarName → StoredAtom → StoredBinding
+    | eq : VarName → VarName → StoredBinding
+    deriving Repr, Inhabited
+end
+
+mutual
+
+/-- Reducible structural equality for grounded values stored by
+`collapse-bind`. -/
+def StoredGround.beq : StoredGround → StoredGround → Bool
+  | .int left, .int right => left == right
+  | .float left, .float right => left == right
+  | .str left, .str right => left == right
+  | .bool left, .bool right => left == right
+  | .unit, .unit => true
+  | .error left, .error right => left == right
+  | .external leftTag leftPayload, .external rightTag rightPayload =>
+      leftTag == rightTag && leftPayload == rightPayload
+  | .bindings left, .bindings right => StoredBinding.beqList left right
+  | _, _ => false
+
+/-- Reducible structural equality for atoms stored by `collapse-bind`. -/
+def StoredAtom.beq : StoredAtom → StoredAtom → Bool
+  | .sym left, .sym right => left == right
+  | .var left, .var right => left == right
+  | .gnd left, .gnd right => StoredGround.beq left right
+  | .expr left, .expr right => StoredAtom.beqList left right
+  | _, _ => false
+
+/-- Pointwise structural equality for stored atom lists. -/
+def StoredAtom.beqList : List StoredAtom → List StoredAtom → Bool
+  | [], [] => true
+  | left :: lefts, right :: rights =>
+      StoredAtom.beq left right && StoredAtom.beqList lefts rights
+  | _, _ => false
+
+/-- Reducible structural equality for one stored binding relation. -/
+def StoredBinding.beq : StoredBinding → StoredBinding → Bool
+  | .val leftName leftValue, .val rightName rightValue =>
+      leftName == rightName && StoredAtom.beq leftValue rightValue
+  | .eq leftA leftB, .eq rightA rightB =>
+      leftA == rightA && leftB == rightB
+  | _, _ => false
+
+/-- Pointwise structural equality for stored binding lists. -/
+def StoredBinding.beqList : List StoredBinding → List StoredBinding → Bool
+  | [], [] => true
+  | left :: lefts, right :: rights =>
+      StoredBinding.beq left right && StoredBinding.beqList lefts rights
+  | _, _ => false
+
+end
+
+
+instance : BEq StoredGround := ⟨StoredGround.beq⟩
+instance : BEq StoredAtom := ⟨StoredAtom.beq⟩
+instance : BEq StoredBinding := ⟨StoredBinding.beq⟩
+
 /-- Grounded payloads implemented directly by the Lean runtime. Use `external tag payload`
-    for host-language values whose semantics lies outside this interpreter. -/
+for host-language values whose semantics lies outside this interpreter. `bindings` is the opaque,
+lossless payload produced by `collapse-bind`. -/
 inductive Ground where
   | int : Int → Ground
   | float : Float → Ground
@@ -31,18 +115,21 @@ inductive Ground where
   | unit : Ground
   | error : String → Ground
   | external : String → String → Ground
+  | bindings : List StoredBinding → Ground
   deriving Repr, BEq, Inhabited
 
-namespace Ground
-
-/-- Runtime equality for grounded values. Hyperon's `Number` grounding compares integer and float
-values by numeric value, so `1` and `1.0` match even though their constructors differ. -/
-def equiv : Ground → Ground → Bool
-  | Ground.int a, Ground.float b => Float.ofInt a == b
-  | Ground.float a, Ground.int b => a == Float.ofInt b
-  | a, b => a == b
-
-end Ground
+/-- Reducible structural equality for live grounded payloads. -/
+def Ground.beq : Ground → Ground → Bool
+  | .int left, .int right => left == right
+  | .float left, .float right => left == right
+  | .str left, .str right => left == right
+  | .bool left, .bool right => left == right
+  | .unit, .unit => true
+  | .error left, .error right => left == right
+  | .external leftTag leftPayload, .external rightTag rightPayload =>
+      leftTag == rightTag && leftPayload == rightPayload
+  | .bindings left, .bindings right => StoredBinding.beqList left right
+  | _, _ => false
 
 /-- MeTTa atoms: symbols, variables, grounded atoms, and expressions. -/
 inductive Atom where
@@ -63,7 +150,7 @@ mutual
 def Atom.beq : Atom → Atom → Bool
   | Atom.sym a, Atom.sym b => a == b
   | Atom.var a, Atom.var b => a == b
-  | Atom.gnd a, Atom.gnd b => a == b
+  | Atom.gnd a, Atom.gnd b => Ground.beq a b
   | Atom.expr a, Atom.expr b => Atom.beqList a b
   | _, _ => false
 /-- Pointwise structural equality of atom lists (companion to `Atom.beq`). -/
@@ -74,6 +161,17 @@ def Atom.beqList : List Atom → List Atom → Bool
 end
 
 instance : BEq Atom := ⟨Atom.beq⟩
+
+namespace Ground
+
+/-- Runtime equality for grounded values. Hyperon's `Number` grounding compares integer and float
+values by numeric value, so `1` and `1.0` match even though their constructors differ. -/
+def equiv : Ground → Ground → Bool
+  | Ground.int a, Ground.float b => Float.ofInt a == b
+  | Ground.float a, Ground.int b => a == Float.ofInt b
+  | a, b => Ground.beq a b
+
+end Ground
 
 mutual
 
@@ -133,17 +231,18 @@ def groundedType : Atom := Atom.sym "Grounded"
 /-- The `ErrorType` symbol: the type of `(Error …)` atoms. -/
 def errorType : Atom := Atom.sym "ErrorType"
 
-/-- True if `a` is an error atom: either `(Error … …)` or a grounded `Ground.error`. -/
+/-- True if `a` is an error atom: either an expression headed by `Error` or a grounded
+`Ground.error`.  The expression form follows the interpreter specification's `(Error ...)`
+pattern, whose tail is not arity-restricted. -/
 def isError : Atom → Bool
-  | Atom.expr [Atom.sym "Error", _, _] => true
+  | Atom.expr (Atom.sym "Error" :: _) => true
   | Atom.gnd (Ground.error _) => true
   | _ => false
 
-/-- The syntactic meta-type (kind) of an atom: symbol / variable / grounded / expression, with the
-    reserved symbols `Type` and `ErrorType` recognised specially. -/
+/-- The syntactic meta-type (kind) of an atom: symbol / variable / grounded /
+expression.  `Type` and `ErrorType` are ordinary symbol atoms here; their
+declared types belong to the type environment, not to syntactic meta-typing. -/
 def metaType : Atom → MetaType
-  | Atom.sym "Type" => MetaType.typeType
-  | Atom.sym "ErrorType" => MetaType.errorType
   | Atom.sym _ => MetaType.symbol
   | Atom.var _ => MetaType.variable
   | Atom.gnd _ => MetaType.grounded

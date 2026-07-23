@@ -39,6 +39,7 @@ def groundKey : Metta.Ground → String
   | .unit => "unit"
   | .error e => "error:" ++ e
   | .external t p => "ext:" ++ toString t.length ++ ":" ++ t ++ ":" ++ p
+  | .bindings relations => "bindings:" ++ reprStr relations
 
 mutual
   /-- Embed a MeTTa atom into a GSLT term. -/

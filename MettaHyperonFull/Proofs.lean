@@ -10,7 +10,8 @@ Purpose: Aggregator for the metatheory layer. Pulls together every proof module 
   complete rule indexing, and interpreter-to-specification correspondence.
 Imports: every module under MettaHyperonFull.Proofs (Basic, Substitution, SubstitutionAudit, Alpha,
   BindingLaws, Indexing, IndexingComplete, SpaceLaws, WorldLaws, Results, TypeSoundness, Confluence,
-  Preservation, TypeConstructors, Gradual, Correspondence, CorrespondenceR14)
+  Preservation, TypeConstructors, Gradual, TypeInferenceFreshening, Correspondence,
+  CorrespondenceR14)
 Trusted boundary: none (fully proved)
 Main exports: re-exports of the proof modules; no new declarations of its own
 Open obligations: none. The 4-register MOPS semantics, its bisimulation, and the gas model live in
@@ -21,6 +22,8 @@ import MettaHyperonFull.Proofs.Substitution
 import MettaHyperonFull.Proofs.SubstitutionAudit
 import MettaHyperonFull.Proofs.Alpha
 import MettaHyperonFull.Proofs.BindingLaws
+import MettaHyperonFull.Proofs.CaptureAvoidingFreshening
+import MettaHyperonFull.Proofs.TypeInferenceFreshening
 import MettaHyperonFull.Proofs.Indexing
 import MettaHyperonFull.Proofs.IndexingComplete
 import MettaHyperonFull.Proofs.SpaceLaws
@@ -41,6 +44,7 @@ import MettaHyperonFull.Proofs.MorkMM2Resources
 import MettaHyperonFull.Proofs.WorldLaws
 import MettaHyperonFull.Proofs.Results
 import MettaHyperonFull.Proofs.TypeSoundness
+import MettaHyperonFull.Proofs.MultipleSignatureSelection
 import MettaHyperonFull.Proofs.Confluence
 import MettaHyperonFull.Proofs.Preservation
 import MettaHyperonFull.Proofs.TypeConstructors

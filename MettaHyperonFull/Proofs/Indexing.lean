@@ -136,8 +136,13 @@ theorem matchAtoms_headKey {lhs toEval : Atom} {k : String}
     · -- expression vs symbol: cannot match (vacuous).
       exact absurd (matchAtoms_expr_sym (Atom.sym k' :: ls) k) hm
     · -- both expressions: the head elements must match, again by `String` equality.
+      have hraw : matchAll none [[]]
+          (Atom.sym k' :: ls) (Atom.sym k :: rs) ≠ [] := by
+        intro hnone
+        apply hm
+        simp [matchAtoms, matchAtomsWith, hnone]
       have hfst := matchAll_fst none (Atom.sym k') (Atom.sym k) ls rs
-        (by simpa [matchAtoms, matchAtomsWith] using hm)
+        hraw
       simp only [matchAtomsWith] at hfst
       split at hfst
       · rename_i h; exact eq_of_beq h

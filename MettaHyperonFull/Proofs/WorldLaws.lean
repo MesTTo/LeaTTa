@@ -57,4 +57,67 @@ theorem eraseSelf_visible (w : World) (a : Atom) :
 
 end World
 
+/-! ## The conjunctive matcher does not write the world
+
+`matchConj` threads `St` so that stored atoms can be alpha-renamed away from
+the query variables, which advances the gensym counter.  It never touches the
+world: both of `matchConjAvoiding`'s nested folds rebuild the state with a
+counter-only record update.  Stating this here, beside the other world laws,
+keeps the fact on the public proof boundary — downstream developments consume
+`matchConj_preservesWorld` and never the recursion helper. -/
+
+/-- The recursion helper preserves the world, at every pattern list, state and
+solution set. -/
+theorem matchConjAvoiding_preservesWorld (atoms : List Atom)
+    (patternVars : List VarName) :
+    ∀ (patterns : List Atom) (st : St) (sols : List Bindings),
+      (matchConjAvoiding atoms patternVars patterns st sols).2.world = st.world := by
+  intro patterns
+  induction patterns with
+  | nil => intro st sols; rfl
+  | cons p rest ih =>
+      intro st sols
+      rw [matchConjAvoiding, ih]
+      -- the per-solution fold, and inside it the per-atom fold, are counter-only
+      have inner : ∀ (bs : List Bindings) (acc : List Bindings × St),
+          (bs.foldl (fun (acc : List Bindings × St) b =>
+            let pInst := instantiate b p
+            let avoid := b.vars ++ patternVars
+            let (ext, st2) := atoms.foldl (fun (a2 : List Bindings × St) atom =>
+              let (renamed, nextCounter) := freshenRuleAvoiding a2.2.counter avoid atom atom
+              let atom' := renamed.1
+              let more := (matchAtoms pInst atom').flatMap fun mb =>
+                (Bindings.merge b mb).filter (fun m => !Bindings.hasLoop m)
+              (a2.1 ++ more, { a2.2 with counter := nextCounter })) ([], acc.2)
+            (acc.1 ++ ext, st2)) acc).2.world = acc.2.world := by
+        intro bs
+        induction bs with
+        | nil => intro acc; rfl
+        | cons b rest2 ih2 =>
+            intro acc
+            simp only [List.foldl_cons]
+            rw [ih2]
+            have perAtom : ∀ (source : List Atom) (a2 : List Bindings × St),
+                (source.foldl (fun (a2 : List Bindings × St) atom =>
+                  let (renamed, nextCounter) := freshenRuleAvoiding a2.2.counter
+                    (b.vars ++ patternVars) atom atom
+                  let atom' := renamed.1
+                  let more := (matchAtoms (instantiate b p) atom').flatMap fun mb =>
+                    (Bindings.merge b mb).filter (fun m => !Bindings.hasLoop m)
+                  (a2.1 ++ more, { a2.2 with counter := nextCounter })) a2).2.world
+                  = a2.2.world := by
+              intro source
+              induction source with
+              | nil => intro a2; rfl
+              | cons x rest3 ih3 => intro a2; simp only [List.foldl_cons]; rw [ih3]
+            exact perAtom atoms _
+      exact inner sols ([], st)
+
+/-- **`matchConj` never writes the world.**  The public boundary fact. -/
+theorem matchConj_preservesWorld (atoms patterns : List Atom) (st : St)
+    (sols : List Bindings) :
+    (matchConj atoms patterns st sols).2.world = st.world := by
+  rw [matchConj]
+  exact matchConjAvoiding_preservesWorld atoms _ patterns st sols
+
 end Metta

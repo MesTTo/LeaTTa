@@ -1,3 +1,6 @@
+-- SPDX-FileCopyrightText: 2026 MesTTo
+-- SPDX-License-Identifier: Apache-2.0
+
 /-
 Module: MettaHyperonFull.Proofs.MultipleSignatureSelection
 Layer: Proofs
@@ -330,8 +333,8 @@ private theorem multiSignature_eval_a_expected :
   have hCast :
       mettaTypeCast multiSignatureEnv St.init.world [] (.sym "a") (.sym "A") =
         .inr [] := by
-    rw [mettaTypeCast]
-    simp only [St.init]
+    rw [mettaTypeCast, mettaTypeCastAvoiding]
+    simp only [St.init, List.nil_append]
     rw [typePrep_empty_symbol, multiSignature_a_type]
     rw [show freshenArgumentTypes
       (typeCastInferenceAvoid multiSignatureEnv (.sym "a") (.sym "a")
@@ -359,55 +362,7 @@ incompatible declaration. -/
 theorem mettaEval_uses_first_applicable_signature :
     (mettaEval multiSignatureEnv 2 St.init [] applicationA).1 =
       [(applicationA, [])] := by
-  rw [mettaEval.eq_2, instantiate_nil]
-  simp only [applicationA]
-  have hSelection :
-      selectFunctionType multiSignatureEnv St.init.world (.sym "f") [.sym "a"] =
-        .selected ⟨arrowA, [.sym "A"], .sym "RA", []⟩ := by
-    simpa [St.init] using multiSignature_selection
-  rw [hSelection]
-  simp only
-  have hPolicies :
-      argumentEvaluationPolicies
-        ⟨arrowA, [.sym "A"], .sym "RA", []⟩ 1 =
-        [(true, .sym "A")] := by
-    have hAtom : ((.sym "A" : Atom) != .sym "Atom") = true := by rfl
-    have hVariable : ((.sym "A" : Atom) != .sym "Variable") = true := by rfl
-    have hExpression : ((.sym "A" : Atom) != .sym "Expression") = true := by rfl
-    simp [argumentEvaluationPolicies, instantiate_nil,
-      hAtom, hVariable, hExpression]
-  have hReturn : returnsAtom ⟨arrowA, [.sym "A"], .sym "RA", []⟩ = false := by
-    have hRA : ((.sym "RA" : Atom) == .sym "Atom") = false := by rfl
-    simp [returnsAtom, instantiate_nil, hRA]
-  change
-    (prioritizeSemanticResults (evaluateExpectedApplication
-      (fun nextSt nextBindings nextAtom nextExpected =>
-        mettaEvalExpected multiSignatureEnv 1 nextSt nextBindings nextAtom
-          nextExpected)
-      (fun nextSt application =>
-        interpretFuel multiSignatureEnv 2 nextSt
-          [{ stack := atomToStack (.expr [.sym "eval", application]) [], bnd := [] }] [])
-      St.init "f" [.sym "a"]
-      ⟨arrowA, [.sym "A"], .sym "RA", []⟩)).1 =
-        [(.expr [.sym "f", .sym "a"], [])]
-  have hReduce :
-      interpretFuel multiSignatureEnv 2 St.init
-        [{ stack := atomToStack (.expr [.sym "eval", .expr [.sym "f", .sym "a"]]) [],
-           bnd := [] }] [] = ([(notReducibleA, [])], St.init) := by
-    simpa [applicationA] using multiSignature_reduce_application
-  have hNotError : (.sym "a" : Atom).isError = false := by rfl
-  have hSame : ((.sym "a" : Atom) != .sym "a") = false := by rfl
-  have hNotReducibleSelf : (notReducibleA == notReducibleA) = true := by rfl
-  have hMerge : Bindings.merge [] [] = [[]] := by rfl
-  have hVars : (.sym "a" : Atom).vars = [] := by simp [Atom.vars]
-  have hRestrict : restrictBnd [] [] = [] := by rfl
-  have hApplicationNotError :
-      (Atom.expr [Atom.sym "f", Atom.sym "a"]).isError = false := rfl
-  simp [evaluateExpectedApplication, evaluateExpectedApplicationFrom,
-    hPolicies, hReturn,
-    multiSignature_eval_a_expected, hReduce, hNotError, hSame,
-    hNotReducibleSelf, hMerge, hVars, hRestrict,
-    hApplicationNotError, prioritizeSemanticResults]
+  cbv
 
 /-! ## Published evaluation-boundary canaries -/
 

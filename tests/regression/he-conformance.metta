@@ -42,3 +42,15 @@
   (eval (chain (context-space) $ctx
     (metta (get-type $ctx) %Undefined% &self)))
   SpaceType)
+
+; Nested query solutions survive tuple-head and sibling evaluation.
+(= (he-chain-zero A) T)
+(= (he-chain-one $x) (he-chain-zero $x))
+(= (he-chain-two $x) (he-chain-one $x))
+(= (he-chain-three $x) (he-chain-two $x))
+!(assertEqual ($x (he-chain-three $x)) (A T))
+
+(= (he-other A) T)
+(= (he-and T T) T)
+(= (he-combined $x) (he-and (he-chain-one $x) (he-other $x)))
+!(assertEqual ($x (he-combined $x)) (A T))

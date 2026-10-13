@@ -199,6 +199,53 @@ theorem addVarEquality_conflict {b : Bindings} {x y : VarName}
 /-- Merging an empty right-hand binding set is the identity singleton. -/
 theorem merge_empty_right (b : Bindings) : merge b [] = [b] := rfl
 
+/-- Replaying an explicit alias does not duplicate its stored edge. -/
+theorem addEqRaw_of_mem (b : Bindings) (x y : VarName)
+    (present : BindingRel.eq x y ∈ b) : addEqRaw b x y = b := by
+  have found : b.any (fun r => match r with
+      | BindingRel.eq left right => left == x && right == y
+      | _ => false) = true :=
+    List.any_eq_true.mpr ⟨BindingRel.eq x y, present, by simp⟩
+  unfold addEqRaw
+  split
+  · rfl
+  · exact if_pos found
+
+/-- Duplicate suppression preserves exactly the non-reflexive relation set. -/
+theorem mem_addEqRaw_iff (b : Bindings) (x y : VarName) (different : x ≠ y)
+    (relation : BindingRel) :
+    relation ∈ addEqRaw b x y ↔ relation ∈ BindingRel.eq x y :: b := by
+  unfold addEqRaw
+  split
+  · rename_i same
+    exact False.elim (different (by simpa using same))
+  · split
+    · rename_i found
+      obtain ⟨edge, member, edgeMatch⟩ := List.any_eq_true.mp found
+      have present : BindingRel.eq x y ∈ b := by
+        cases edge with
+        | val key value => simp at edgeMatch
+        | eq left right =>
+            have equal : left = x ∧ right = y := by simpa using edgeMatch
+            rcases equal with ⟨rfl, rfl⟩
+            exact member
+      constructor
+      · exact List.mem_cons_of_mem _
+      · intro member
+        rcases List.mem_cons.mp member with equal | member
+        · exact equal ▸ present
+        · exact member
+    · rfl
+
+/-- Alias insertion is idempotent for every input, including raw binding sets. -/
+theorem addEqRaw_idempotent (b : Bindings) (x y : VarName) :
+    addEqRaw (addEqRaw b x y) x y = addEqRaw b x y := by
+  by_cases same : x = y
+  · subst y
+    simp [addEqRaw]
+  · apply addEqRaw_of_mem
+    exact (mem_addEqRaw_iff b x y same _).mpr (by simp)
+
 end Bindings
 
 /-- Decomposing two variable-free atoms can produce no variable constraints. -/

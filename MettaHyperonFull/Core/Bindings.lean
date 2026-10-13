@@ -154,6 +154,36 @@ def eqClassAux (b : Bindings) : Nat → List VarName → List VarName
   | 0, acc => acc
   | fuel + 1, acc => eqClassAux b fuel (eqStep b acc)
 
+/-- Stop equality saturation once a pass adds no variables. -/
+def eqClassAuxFast (b : Bindings) : Nat → List VarName → List VarName
+  | 0, acc => acc
+  | fuel + 1, acc =>
+      let next := eqStep b acc
+      if next = acc then acc else eqClassAuxFast b fuel next
+
+theorem eqClassAux_of_stable (b : Bindings) (acc : List VarName)
+    (stable : eqStep b acc = acc) (fuel : Nat) :
+    eqClassAux b fuel acc = acc := by
+  induction fuel with
+  | zero => rfl
+  | succ fuel ih => simpa only [eqClassAux, stable] using ih
+
+theorem eqClassAuxFast_eq (b : Bindings) (fuel : Nat) (acc : List VarName) :
+    eqClassAuxFast b fuel acc = eqClassAux b fuel acc := by
+  induction fuel generalizing acc with
+  | zero => rfl
+  | succ fuel ih =>
+      by_cases stable : eqStep b acc = acc
+      · simp only [eqClassAuxFast, stable, eqClassAux]
+        exact (eqClassAux_of_stable b acc stable fuel).symm
+      · simp only [eqClassAuxFast, stable, if_false, eqClassAux]
+        exact ih _
+
+/-- The executable shortcut preserves the original fuelled closure exactly. -/
+@[csimp] theorem eqClassAux_eq_fast : eqClassAux = eqClassAuxFast := by
+  funext b fuel acc
+  exact (eqClassAuxFast_eq b fuel acc).symm
+
 /-- All variables explicitly equality-connected to `x`, including `x`. -/
 def eqClass (b : Bindings) (x : VarName) : List VarName :=
   eqClassAux b (2 * b.length + 1) [x]
@@ -173,6 +203,15 @@ def eqClassOrdered (b : Bindings) (x : VarName) : List VarName :=
   match (eqVarsInOrder b).filter (fun y => (eqClass b x).contains y) with
   | [] => [x]
   | cls => cls
+
+/-- Compute the closure once before filtering the stable representative order. -/
+def eqClassOrderedFast (b : Bindings) (x : VarName) : List VarName :=
+  let closure := eqClass b x
+  match (eqVarsInOrder b).filter (fun y => closure.contains y) with
+  | [] => [x]
+  | cls => cls
+
+@[csimp] theorem eqClassOrdered_eq_fast : eqClassOrdered = eqClassOrderedFast := rfl
 
 /-- Stable representative of `x`'s explicit equality class. -/
 def eqRepresentative (b : Bindings) (x : VarName) : VarName :=
@@ -287,8 +326,14 @@ def hasLoop (b : Bindings) : Bool :=
     (that is `addVarBinding`'s job). -/
 def addValRaw (b : Bindings) (x : VarName) (a : Atom) : Bindings := BindingRel.val x a :: removeVal b x
 
-/-- Add the alias `$x = $y` (a no-op when `x = y`). Raw: no consistency check. -/
-def addEqRaw (b : Bindings) (x y : VarName) : Bindings := if x == y then b else BindingRel.eq x y :: b
+/-- Add the alias `$x = $y` once. Replaying an existing edge leaves its original
+representative order intact. Raw insertion performs no consistency check. -/
+def addEqRaw (b : Bindings) (x y : VarName) : Bindings :=
+  if x == y then b
+  else if b.any (fun r => match r with
+      | BindingRel.eq left right => left == x && right == y
+      | _ => false) then b
+  else BindingRel.eq x y :: b
 
 end Bindings
 

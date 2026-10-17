@@ -51,12 +51,20 @@ example :
     evalMinimal cfg emptyCtx
       (Atom.expr [Atom.sym "unify", Atom.sym "a", Atom.var "x", Atom.var "x", Atom.sym "bad"])
       = [Atom.sym "a"] := by
-  simp [cfg, emptyCtx, evalMinimal, evalUnifyInstr, matchAtoms, matchAtomsWith, instantiate,
-    Bindings.resolveAtom, Bindings.resolve, Bindings.resolveAtomAux, Bindings.resolutionFuel,
-    Bindings.relationResolutionFuel, Bindings.classValues, Bindings.eqClassOrdered,
-    Bindings.eqClass, Bindings.eqClassAux, Bindings.eqStep, Bindings.eqVarsInOrder,
-    Bindings.lookupVal, Bindings.eqRepresentative, List.filterMap,
-    Subst.occurs, Atom.size]
+  have hloop : Bindings.hasLoop [BindingRel.val "x" (Atom.sym "a")] = false := by
+    simp [Bindings.hasLoop, Bindings.vars, Atom.vars, Bindings.resolveAtomAux,
+      Bindings.resolutionFuel, Bindings.relationResolutionFuel, Bindings.classValues,
+      Bindings.eqClassOrdered, Bindings.eqClass, Bindings.eqClassAux, Bindings.eqStep,
+      Bindings.eqVarsInOrder, Bindings.lookupVal, Bindings.eqRepresentative, Atom.size]
+  have hresolve :
+      Bindings.resolveAtom [BindingRel.val "x" (Atom.sym "a")] (Atom.var "x") =
+        Atom.sym "a" := by
+    simp [Bindings.resolveAtom, Bindings.resolve, Bindings.resolveAtomAux,
+      Bindings.resolutionFuel, Bindings.relationResolutionFuel, Bindings.classValues,
+      Bindings.eqClassOrdered, Bindings.eqClass, Bindings.eqClassAux, Bindings.eqStep,
+      Bindings.eqVarsInOrder, Bindings.lookupVal, Atom.size]
+  simp [cfg, emptyCtx, evalMinimal, evalUnifyInstr, matchAtoms, matchAtomsWith,
+    instantiate, hloop, hresolve, Subst.occurs]
 
 example :
     evalMinimal cfg emptyCtx

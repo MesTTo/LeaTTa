@@ -6,11 +6,14 @@ Module: MettaHyperonFull.Core.Bindings
 Layer: Core
 Purpose: The binding sets that matching and unification produce. A binding set is a conjunction of
   variable-binding relations, comprising value bindings and variable aliases (Hyperon's `Bindings`).
+  It also supplies the lossless conversion to and from the opaque stored carrier used by
+  `collapse-bind`.
   Provides lookup, alias classes, removal, loop detection, and the raw insertion primitives. The
   consistency-checking merge lives in Matching.lean.
 Imports: MettaHyperonFull.Core.Atom, MettaHyperonFull.Core.Pretty
 Trusted boundary: none
-Main exports: BindingRel, Bindings, Bindings.empty, Bindings.lookupVal, Bindings.eqClassOrdered,
+Main exports: BindingRel, Bindings, Bindings.store, Bindings.restore, Bindings.empty,
+  Bindings.lookupVal, Bindings.eqClassOrdered,
   Bindings.classValues, Bindings.resolve, Bindings.resolveAtom, Bindings.removeVal,
   Bindings.hasLoop, Bindings.addValRaw, Bindings.addEqRaw
 Open obligations: none
@@ -26,11 +29,108 @@ inductive BindingRel where
   | eq : VarName → VarName → BindingRel
   deriving Repr, BEq, Inhabited
 
-/-- A binding set: a conjunction of variable-binding relations, comprising value bindings `$x ← a` and
-    `$x = $y` aliases (Hyperon's `Bindings`, the output of matching/unification). -/
+/-- A binding set: a conjunction of variable-binding relations, comprising value bindings `$x ← a`
+and `$x = $y` aliases (Hyperon's `Bindings`, the output of matching/unification). -/
 abbrev Bindings := List BindingRel
 
+namespace StoredGround
+
+/-- Store one live grounded value inside an opaque binding payload. Nested binding payloads are
+already stored and remain opaque. -/
+def ofGround : Ground → StoredGround
+  | Ground.int value => .int value
+  | Ground.float value => .float value
+  | Ground.str value => .str value
+  | Ground.bool value => .bool value
+  | Ground.unit => .unit
+  | Ground.error message => .error message
+  | Ground.external tag payload => .external tag payload
+  | Ground.bindings relations => .bindings relations
+
+/-- Restore one grounded value from an opaque binding payload. -/
+def toGround : StoredGround → Ground
+  | StoredGround.int value => .int value
+  | StoredGround.float value => .float value
+  | StoredGround.str value => .str value
+  | StoredGround.bool value => .bool value
+  | StoredGround.unit => .unit
+  | StoredGround.error message => .error message
+  | StoredGround.external tag payload => .external tag payload
+  | StoredGround.bindings relations => .bindings relations
+
+@[simp] theorem toGround_ofGround (value : Ground) :
+    toGround (ofGround value) = value := by
+  cases value <;> rfl
+
+end StoredGround
+
+namespace StoredAtom
+
+/-- Losslessly store a live atom inside an opaque binding payload. -/
+def ofAtom : Atom → StoredAtom
+  | Atom.sym name => .sym name
+  | Atom.var name => .var name
+  | Atom.gnd value => .gnd (StoredGround.ofGround value)
+  | Atom.expr children => .expr (children.map ofAtom)
+
+/-- Restore a live atom from an opaque binding payload. -/
+def toAtom : StoredAtom → Atom
+  | StoredAtom.sym name => .sym name
+  | StoredAtom.var name => .var name
+  | StoredAtom.gnd value => .gnd (StoredGround.toGround value)
+  | StoredAtom.expr children => .expr (children.map toAtom)
+
+mutual
+  @[simp] theorem toAtom_ofAtom : ∀ atom : Atom, toAtom (ofAtom atom) = atom
+    | Atom.sym _ => by simp [ofAtom, toAtom]
+    | Atom.var _ => by simp [ofAtom, toAtom]
+    | Atom.gnd _ => by simp [ofAtom, toAtom]
+    | Atom.expr children => by
+        simp only [ofAtom, toAtom]
+        rw [map_toAtom_ofAtom children]
+
+  theorem map_toAtom_ofAtom : ∀ atoms : List Atom,
+      (atoms.map ofAtom).map toAtom = atoms
+    | [] => rfl
+    | atom :: rest => by
+        simp only [List.map_cons]
+        rw [toAtom_ofAtom atom, map_toAtom_ofAtom rest]
+end
+
+end StoredAtom
+
+namespace StoredBinding
+
+/-- Store one live relation in a grounded binding object. -/
+def ofBindingRel : BindingRel → StoredBinding
+  | BindingRel.val name value => .val name (StoredAtom.ofAtom value)
+  | BindingRel.eq left right => .eq left right
+
+/-- Restore one live relation from a grounded binding object. -/
+def toBindingRel : StoredBinding → BindingRel
+  | StoredBinding.val name value => .val name (StoredAtom.toAtom value)
+  | StoredBinding.eq left right => .eq left right
+
+@[simp] theorem toBindingRel_ofBindingRel (relation : BindingRel) :
+    toBindingRel (ofBindingRel relation) = relation := by
+  cases relation with
+  | val name value => simp [ofBindingRel, toBindingRel]
+  | eq left right => rfl
+
+end StoredBinding
+
 namespace Bindings
+
+/-- Store a complete binding set in the opaque carrier used by grounded values. -/
+def store (bindings : Bindings) : List StoredBinding :=
+  bindings.map StoredBinding.ofBindingRel
+
+/-- Restore a complete binding set from an opaque grounded payload. -/
+def restore (bindings : List StoredBinding) : Bindings :=
+  bindings.map StoredBinding.toBindingRel
+
+@[simp] theorem restore_store (bindings : Bindings) : restore (store bindings) = bindings := by
+  simp [store, restore, List.map_map, Function.comp_def]
 
 def empty : Bindings := []
 
@@ -54,6 +154,36 @@ def eqClassAux (b : Bindings) : Nat → List VarName → List VarName
   | 0, acc => acc
   | fuel + 1, acc => eqClassAux b fuel (eqStep b acc)
 
+/-- Stop equality saturation once a pass adds no variables. -/
+def eqClassAuxFast (b : Bindings) : Nat → List VarName → List VarName
+  | 0, acc => acc
+  | fuel + 1, acc =>
+      let next := eqStep b acc
+      if next = acc then acc else eqClassAuxFast b fuel next
+
+theorem eqClassAux_of_stable (b : Bindings) (acc : List VarName)
+    (stable : eqStep b acc = acc) (fuel : Nat) :
+    eqClassAux b fuel acc = acc := by
+  induction fuel with
+  | zero => rfl
+  | succ fuel ih => simpa only [eqClassAux, stable] using ih
+
+theorem eqClassAuxFast_eq (b : Bindings) (fuel : Nat) (acc : List VarName) :
+    eqClassAuxFast b fuel acc = eqClassAux b fuel acc := by
+  induction fuel generalizing acc with
+  | zero => rfl
+  | succ fuel ih =>
+      by_cases stable : eqStep b acc = acc
+      · simp only [eqClassAuxFast, stable, eqClassAux]
+        exact (eqClassAux_of_stable b acc stable fuel).symm
+      · simp only [eqClassAuxFast, stable, if_false, eqClassAux]
+        exact ih _
+
+/-- The executable shortcut preserves the original fuelled closure exactly. -/
+@[csimp] theorem eqClassAux_eq_fast : eqClassAux = eqClassAuxFast := by
+  funext b fuel acc
+  exact (eqClassAuxFast_eq b fuel acc).symm
+
 /-- All variables explicitly equality-connected to `x`, including `x`. -/
 def eqClass (b : Bindings) (x : VarName) : List VarName :=
   eqClassAux b (2 * b.length + 1) [x]
@@ -73,6 +203,15 @@ def eqClassOrdered (b : Bindings) (x : VarName) : List VarName :=
   match (eqVarsInOrder b).filter (fun y => (eqClass b x).contains y) with
   | [] => [x]
   | cls => cls
+
+/-- Compute the closure once before filtering the stable representative order. -/
+def eqClassOrderedFast (b : Bindings) (x : VarName) : List VarName :=
+  let closure := eqClass b x
+  match (eqVarsInOrder b).filter (fun y => closure.contains y) with
+  | [] => [x]
+  | cls => cls
+
+@[csimp] theorem eqClassOrdered_eq_fast : eqClassOrdered = eqClassOrderedFast := rfl
 
 /-- Stable representative of `x`'s explicit equality class. -/
 def eqRepresentative (b : Bindings) (x : VarName) : VarName :=
@@ -187,8 +326,14 @@ def hasLoop (b : Bindings) : Bool :=
     (that is `addVarBinding`'s job). -/
 def addValRaw (b : Bindings) (x : VarName) (a : Atom) : Bindings := BindingRel.val x a :: removeVal b x
 
-/-- Add the alias `$x = $y` (a no-op when `x = y`). Raw: no consistency check. -/
-def addEqRaw (b : Bindings) (x y : VarName) : Bindings := if x == y then b else BindingRel.eq x y :: b
+/-- Add the alias `$x = $y` once. Replaying an existing edge leaves its original
+representative order intact. Raw insertion performs no consistency check. -/
+def addEqRaw (b : Bindings) (x y : VarName) : Bindings :=
+  if x == y then b
+  else if b.any (fun r => match r with
+      | BindingRel.eq left right => left == x && right == y
+      | _ => false) then b
+  else BindingRel.eq x y :: b
 
 end Bindings
 

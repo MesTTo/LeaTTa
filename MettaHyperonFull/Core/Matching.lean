@@ -171,19 +171,26 @@ def matchAtomsWith (custom : Option GroundMatcher) : Atom → Atom → List Bind
   | l, r => if Atom.equiv l r then [[]] else []
 
 /-- Pointwise-match two atom lists, threading the consistent binding sets accumulated so far
-    (`acc`). Lists of different lengths do not match. -/
+    (`acc`). Each completed child match is pruned before merge-back, while the public `matchAtoms`
+    boundary below performs the same check on the completed whole result. Lists of different
+    lengths do not match. -/
 def matchAll (custom : Option GroundMatcher) (acc : List Bindings) : List Atom → List Atom → List Bindings
   | [], [] => acc
   | x :: xs, y :: ys =>
-      let subs := matchAtomsWith custom x y
+      let subs := (matchAtomsWith custom x y).filter (fun bindings => !bindings.hasLoop)
       matchAll custom (acc.flatMap (fun a => subs.flatMap (fun b => Bindings.merge a b))) xs ys
   | _, _ => []
 
 end
 
-/-- Match pattern `l` against `r` with the default matcher (no custom grounded matching), returning
-    every binding set under which they unify. -/
-def matchAtoms (l r : Atom) : List Bindings := matchAtomsWith none l r
+/-- Match pattern `l` against `r` with the default matcher (no custom grounded
+    matching), returning every acyclic binding set under which they unify.
+
+    The recursive matcher deliberately builds candidates before the complete
+    dependency graph is known.  The published `match_atoms` contract and
+    Hyperon's public matcher both reject whole-result variable loops here. -/
+def matchAtoms (l r : Atom) : List Bindings :=
+  (matchAtomsWith none l r).filter (fun bindings => !bindings.hasLoop)
 
 /-- Apply a binding set as a substitution. Equality-only relations do not choose an orientation;
     value bindings do. -/

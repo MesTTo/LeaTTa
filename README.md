@@ -11,8 +11,8 @@ kernel. The runnable interpreter is total, fuel-bounded, and Mathlib-free.
 Version `1.0.8` adds the MORK/MM2 resource-readback proof surface on top of the `1.0.7` distributed
 atomspace release. The public branch has five checked surfaces:
 
-- the minimal interpreter and standard library run Hyperon's oracle corpus: 270 assertions across 22
-  vendored files;
+- the minimal interpreter and standard library run Hyperon's oracle corpus: 270 passing assertions
+  across 22 vendored files;
 - `Metatheory` and `Operational` prove determinism, confluence of the deterministic fragment, type
   soundness, indexing soundness and completeness, query correspondence, observation records,
   MORK-backed query readback, MM2 lowering, ACT resource isolation, and the published four-register
@@ -29,6 +29,86 @@ convergence without replay assumptions, the full MeTTaIL-to-rho theorem, or the 
 goals. Public theorem targets build with no `sorry`, `admit`, `native_decide`, `partial`, or `unsafe`.
 The longer Hyperon comparison is in the book appendix at
 [mestto.github.io/LeaTTa](https://mestto.github.io/LeaTTa/).
+
+## HE evaluator repair batch
+
+The `he-conformance-repairs` branch collects the complete evaluator repair batch from
+[`26d05f0`](https://github.com/godelclaw/LeaTTa/commit/26d05f0663a1083085565b2e161a683542df53a8)
+on top of MesTTo's `metatheory` at `3885010`. It keeps Lean 4.31.0 and incorporates the
+signature-selection proof corrections from the Lean 4.33.1 integration commit `e5c5d36`.
+
+| Repair area | Implementation and evidence |
+| --- | --- |
+| Equality-class reconciliation, transient aliases, malformed `unify` errors | Already included in the upstream base: `aab8a11`, `8614cd1`, `b052568` |
+| Idempotent alias replay and equality saturation | `Core/Bindings.lean`, `Proofs/BindingLaws.lean`; nested query regressions in `he-conformance.metta` |
+| Cyclic matching and numeric type matching | `Core/Matching.lean`, `Core/Atom.lean`, `Minimal/Interpreter.lean`; matching regressions |
+| Failed application-type matches, annotation freshening and intrinsic grounded types | `Proofs/TypeSoundness.lean`, `Proofs/TypeInferenceFreshening.lean`; `typeops.metta` |
+| Ordered overload selection, argument masks, dependent return checks and complete diagnostics | `Proofs/MultipleSignatureSelection.lean`; `typeops.metta` |
+| Capture avoidance in rules, queries and returned space atoms | `Minimal/CaptureAvoidingFreshening.lean`, `Proofs/CaptureAvoidingFreshening.lean`; `freshness.metta` |
+| Live applicability bindings and caller-visible result bindings | The shared application plan in `Minimal/Interpreter.lean`; `typeops.metta` |
+| First changed `Empty` or `Error` argument, quoted terminal data and operator evaluation | `he-conformance.metta` |
+| Embedded `metta` expected type and selected space | `typeops.metta`, `spaces.metta` |
+| Lossless collapsed binding payloads and conflict checks on resumption | `Core/Bindings.lean`, `Proofs/BindingLaws.lean`; `control.metta` |
+| Grounded context-space handles, error-head classification and symbol meta-types | `Core/Atom.lean`, `Proofs/Basic.lean`; `he-conformance.metta`, `typeops.metta` |
+
+Implementation paths in this table are relative to `MettaHyperonFull/`; fixtures are under
+`tests/regression/`. The runnable kernel remains Mathlib-free. The original runtime repairs
+are preserved in full, with checked proofs and additional regression coverage.
+
+Validation on 2026-10-13: the full default build passes, and the regression suite passes
+101/101 plus the MeTTaIL runtime check. License-header, forbidden-placeholder and build-warning
+checks pass; `NOTICE` is unchanged. The complete vendored corpus passes 270/270 across all
+22 files, using the original assertions, default fuel and existing timeout.
+
+A separate check passes 67 assertions from `typeops.metta` and `he-conformance.metta`
+with the actual Hyperon 0.2.10 release:
+
+```bash
+python -m pip install hyperon==0.2.10
+python scripts/run-he-conformance.py
+# HE CONFORMANCE OK: 67/67 assertions
+```
+
+An earlier revision of this repair branch timed out in four corpus files. Live binding
+propagation caused repeated merges to accumulate duplicate aliases: one backchaining merge
+contained 7,201 relations but only six distinct constraints. Raw alias insertion is now
+idempotent, with proofs that it preserves the relation set and leaves the existing binding
+list unchanged when an edge is replayed.
+Compiler rewrite theorems also prove that stopping saturation at its fixed point and computing
+the closure once per ordered lookup return exactly the original results for every input and
+fuel. The repairs to binding propagation remain in place. Two small HE-checked nested-query
+regressions cover the tuple-head and sibling cases that exposed the slowdown.
+
+Three alternating paired runs on the same machine give a median corpus runtime of
+3.291 seconds for this branch and 2.028 seconds for an isolated upstream `3885010` build.
+Both measurements include process startup and use the same corpus and default fuel.
+
+| Previously hanging file | This branch, median | Upstream, median |
+| --- | --- | --- |
+| `b3_direct.metta` | 32.4 ms | 10.2 ms |
+| `b2_backchain.metta` | 135.6 ms | 20.8 ms |
+| `test_stdlib.metta` | 740.9 ms | 1761.3 ms |
+| `b5_types_prelim.metta` | 299.6 ms | 11.2 ms |
+
+The hangs are resolved; some per-file overhead remains.
+
+Use a Python version supported by that Hyperon release. The existing `freshness.metta`
+fixture deliberately uses an internal `#` variable spelling; Hyperon's source parser rejects
+that spelling, so this fixture tests LeaTTa's internal collision handling separately.
+
+This batch does not establish full equivalence to HE. For example, malformed arrow
+annotations still differ:
+
+```metta
+(: bad-nullary (->))
+(: bad-nullary (-> R))
+!(get-type (bad-nullary))
+```
+
+This branch returns `R`; HE 0.2.10 also returns `((->))`. The branch filters the malformed
+candidate. Stateful evaluation order, module-loading coverage and the mixed tuple/function
+policy also remain outside the differential guarantee above. PLeaTTa's Prolog profile and
+the match-by-equality prototype belong to separate branches.
 
 ## Start here
 
@@ -98,7 +178,7 @@ The regression suite includes that CLI path:
 
 ```bash
 ./scripts/run-regression.sh
-# REGRESSION TOTAL: PASS=47 FAIL=0
+# REGRESSION TOTAL: PASS=101 FAIL=0
 # mettail-runtime: PASS
 # REGRESSION OK
 ```
@@ -138,10 +218,11 @@ preserved, so each `!` query sees exactly the knowledge base before it.
 
 The oracle gate runs Hyperon's unmodified corpus vendored under [tests/corpus/](tests/corpus/) (MIT,
 commit `3f76dc4`). An assertion passes when it evaluates to `()`. The script builds the interpreter,
-runs every `!` assertion, compares expected output, and exits nonzero on any mismatch.
+runs every `!` assertion, compares expected output, and exits nonzero on any mismatch or timeout.
+On this repair branch, all 270 assertions pass across the 22 included files.
 
 ```bash
-./scripts/run-oracle.sh                                    # 270 / 270, ORACLE OK
+./scripts/run-oracle.sh                                  # 270 / 270, ORACLE OK
 lake exe LeaTTa --oracle tests/corpus/test_stdlib.metta    # single file
 ```
 
@@ -149,7 +230,8 @@ lake exe LeaTTa --oracle tests/corpus/test_stdlib.metta    # single file
 |---|---|
 | `lib/tests/test_stdlib.metta` | 39 / 39 |
 | `a1_symbols`, `a2_opencoggy`, `a3_twoside` | 7 / 7, 1 / 1, 4 / 4 |
-| `b0_chaining_prelim`, `b1_equal_chain`, `b2_backchain`, `b3_direct` | 5 / 5, 8 / 8, 6 / 6, 4 / 4 |
+| `b0_chaining_prelim`, `b1_equal_chain` | 5 / 5, 8 / 8 |
+| `b2_backchain`, `b3_direct` | 6 / 6, 4 / 4 |
 | `b4_nondeterm.metta` | 11 / 11 |
 | `b5_types_prelim.metta` | 26 / 26 |
 | `c1_grounded_basic.metta`, `c3_pln_stv.metta` | 21 / 21, 5 / 5 |

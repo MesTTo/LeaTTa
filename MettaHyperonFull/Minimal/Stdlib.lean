@@ -348,6 +348,7 @@ def preludeSrc : String :=
    (: <= (-> Number Number Bool))
    (: >= (-> Number Number Bool))
    (: get-type (-> Atom Atom))
+   (: get-type-space (-> SpaceType Atom Atom))
    (: get-doc (-> Atom %Undefined%))
    (: help! (-> Atom %Undefined%))
    (: eval (-> Atom Atom))
@@ -615,7 +616,7 @@ def preludeSrc : String :=
       (function (chain (eval (get-metatype $atom)) $meta
         (eval (if-equal $type $meta
           (return $atom)
-          (chain (eval (collapse-bind (eval (get-type $atom $space)))) $collapsed
+          (chain (eval (collapse-bind (eval (get-type-space $space $atom)))) $collapsed
             (chain (eval (map-atom $collapsed $pair (eval (first-from-pair $pair)))) $actual-types
               (chain (eval (foldl-atom $actual-types False $a $b (eval (match-type-or $a $b $type)))) $is-some-comp
                 (eval (if $is-some-comp

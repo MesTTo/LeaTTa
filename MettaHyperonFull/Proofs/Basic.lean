@@ -72,10 +72,51 @@ theorem var_structurallyReflexive (v : VarName) : StructurallyReflexive (Atom.va
   simp [StructurallyReflexive, Atom.beq]
 
 theorem sym_matchReflexive (s : String) : MatchReflexive (Atom.sym s) := by
-  simp [MatchReflexive, matchAtoms, matchAtomsWith]
+  simp [MatchReflexive, matchAtoms, matchAtomsWith, Bindings.hasLoop,
+    Bindings.vars]
 
 theorem var_matchReflexive (v : VarName) : MatchReflexive (Atom.var v) := by
-  simp [MatchReflexive, matchAtoms, matchAtomsWith]
+  simp [MatchReflexive, matchAtoms, matchAtomsWith, Bindings.hasLoop,
+    Bindings.vars]
+
+/-- Every expression headed by `Error` is an error atom, independently of the
+length of its diagnostic payload. -/
+@[simp]
+theorem isError_errorHead (tail : List Atom) :
+    (Atom.expr (Atom.sym "Error" :: tail)).isError = true := rfl
+
+/-- The bare `Error` symbol is not itself an error result; the reserved syntax
+requires an expression headed by that symbol. -/
+@[simp]
+theorem isError_bareError : (Atom.sym "Error").isError = false := rfl
+
+/-- An expression with a different head remains an ordinary expression. -/
+@[simp]
+theorem isError_otherHead (head : String) (tail : List Atom)
+    (hne : head ≠ "Error") :
+    (Atom.expr (Atom.sym head :: tail)).isError = false := by
+  simp [Atom.isError, hne]
+
+/-- Error classification of a symbol-headed expression depends only on its
+head, so rebuilding an application's argument tail cannot change whether it
+is an error. -/
+theorem isError_expr_symbol_tail_irrel
+    (head : String) (left right : List Atom) :
+    (Atom.expr (Atom.sym head :: left)).isError =
+      (Atom.expr (Atom.sym head :: right)).isError := by
+  by_cases h : head = "Error"
+  · subst head
+    rfl
+  · simp [Atom.isError, h]
+
+/-- `Type` is syntactically a symbol; its declared type is an environment
+fact rather than a special meta-type case. -/
+@[simp] theorem metaType_type : (Atom.sym "Type").metaType = .symbol := rfl
+
+/-- The published HE semantics gives `ErrorType` no special syntactic
+meaning, so it has the ordinary symbol meta-type as well. -/
+@[simp] theorem metaType_errorType :
+    (Atom.sym "ErrorType").metaType = .symbol := rfl
 
 end Atom
 
